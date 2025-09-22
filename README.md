@@ -1,4 +1,4 @@
-# Universal Comment Fixer v1.1.0
+# Universal Comment Fixer v1.2.0
 
 **Professional Comment Standardization Tool for JavaScript/TypeScript Projects**
 
@@ -106,7 +106,7 @@ SECURITY ALERT: Binary execution attempt blocked
 npx @chahuadev/fix-comments@latest
 
 # Or specify exact version
-npx @chahuadev/fix-comments@1.1.0
+npx @chahuadev/fix-comments@1.2.0
 ```
 
 ### Method 2: Project Installation
@@ -451,6 +451,4 @@ MIT License - See [LICENSE](LICENSE) for details
 [![GitHub forks](https://img.shields.io/github/forks/chahuadev/chahuadev-fix-comments.svg?style=social&label=Fork)](https://github.com/chahuadev/chahuadev-fix-comments/fork)
 [![GitHub watchers](https://img.shields.io/github/watchers/chahuadev/chahuadev-fix-comments.svg?style=social&label=Watch)](https://github.com/chahuadev/chahuadev-fix-comments)
 
-</div>#   c h a h u a d e v - f i x - c o m m e n t s 
- 
- 
+</div>
