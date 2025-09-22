@@ -2,28 +2,43 @@
 
 **Professional Comment Standardization Tool for JavaScript/TypeScript Projects**
 
+<div align="center">
+
 [![npm version](https://img.shields.io/npm/v/@chahuadev/fix-comments.svg?style=flat-square)](https://www.npmjs.com/package/@chahuadev/fix-comments)
 [![license](https://img.shields.io/npm/l/@chahuadev/fix-comments.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/blob/main/LICENSE)
 [![downloads](https://img.shields.io/npm/dm/@chahuadev/fix-comments.svg?style=flat-square)](https://www.npmjs.com/package/@chahuadev/fix-comments)
+
 [![security](https://img.shields.io/badge/security-hardened-green.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/blob/main/SECURITY.md)
 [![typescript](https://img.shields.io/badge/typescript-supported-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![ci/cd](https://img.shields.io/badge/ci%2Fcd-github_actions-brightgreen.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/actions)
 
+</div>
+
 ---
 
 ## Languages / ภาษา
-- [English](#english-documentation) | [ไทย](#thai-documentation)
+
+| English | ไทย |
+|---------|-----|
+| [Documentation](#english-documentation) | [เอกสาร](#thai-documentation) |
 
 ---
 
 ## SECURITY WARNING - คำเตือนด้านความปลอดภัย
 
-**ENTERPRISE SECURITY PROTECTION - การป้องกันระดับองค์กร**
+<div align="center">
+
+### ENTERPRISE SECURITY PROTECTION
+### การป้องกันระดับองค์กร
+
+</div>
 
 This tool implements **ADVANCED SECURITY MEASURES** to protect against malicious attacks:
+
 เครื่องมือนี้ใช้ **มาตรการรักษาความปลอดภัยขั้นสูง** เพื่อป้องกันการโจมตีที่เป็นอันตราย:
 
 ### BLOCKED SYSTEM PATHS - พาธระบบที่ถูกบล็อค
+
 ```bash
 # BLOCKED - ไฟล์ระบบสำคัญถูกป้องกัน
 /etc/passwd
@@ -37,18 +52,21 @@ C:\Program Files\
 ```
 
 ### System Protection - การป้องกันระบบ
+
 Tool จะปฏิเสธการเข้าถึง:
-- Windows System directories (`C:\Windows\`, `C:\Program Files\`, `C:\System Volume Information\`)
-- Linux System directories (`/etc/`, `/usr/`, `/bin/`, `/root/`, `/boot/`, `/proc/`, `/sys/`)
-- MacOS System directories (`/System/`, `/usr/bin/`, `/bin/`, `/sbin/`)
-- ไฟล์ที่มี null bytes หรือ dangerous characters
-- ไฟล์ขนาดใหญ่เกิน 10MB
-- Path traversal attempts (`../`, `..\\`, etc.)
-- Command injection patterns
-- Script execution attempts
-- Binary executable files
+
+- **Windows System directories** (`C:\Windows\`, `C:\Program Files\`, `C:\System Volume Information\`)
+- **Linux System directories** (`/etc/`, `/usr/`, `/bin/`, `/root/`, `/boot/`, `/proc/`, `/sys/`)
+- **MacOS System directories** (`/System/`, `/usr/bin/`, `/bin/`, `/sbin/`)
+- **Dangerous files** ไฟล์ที่มี null bytes หรือ dangerous characters
+- **Large files** ไฟล์ขนาดใหญ่เกิน 10MB
+- **Path traversal** attempts (`../`, `..\\`, etc.)
+- **Command injection** patterns
+- **Script execution** attempts
+- **Binary executable** files
 
 ### SECURE USAGE ONLY - การใช้งานปลอดภัยเท่านั้น
+
 - **ใช้ `--dry-run` ก่อนเสมอ** เพื่อดูผลลัพธ์
 - **ใช้ `--backup` สำหรับไฟล์สำคัญ**
 - **ทดสอบโค้ดหลังแก้ไขคอมเมนต์** เพื่อให้แน่ใจว่าทำงานปกติ
@@ -57,7 +75,9 @@ Tool จะปฏิเสธการเข้าถึง:
 - **ตรวจสอบ output** ก่อนยืนยันการดำเนินการ
 
 ### ATTACK DETECTION - สัญญาณเตือนการโจมตี
+
 Tool จะแสดงข้อความเตือนเมื่อตรวจพบ:
+
 ```bash
 SECURITY ALERT: Path traversal detected
 SECURITY ALERT: System directory access denied  
@@ -425,11 +445,12 @@ MIT License - See [LICENSE](LICENSE) for details
 
 **หากคุณคิดว่าโปรเจ็กต์นี้มีประโยชน์ กรุณา Star ให้ด้วยนะครับ!**
 
-[⭐ Star this project](https://github.com/chahuadev/chahuadev-fix-comments) | [🐛 Report Bug](https://github.com/chahuadev/chahuadev-fix-comments/issues) | [💡 Request Feature](https://github.com/chahuadev/chahuadev-fix-comments/issues)
+[Star this project](https://github.com/chahuadev/chahuadev-fix-comments) | [Report Bug](https://github.com/chahuadev/chahuadev-fix-comments/issues) | [Request Feature](https://github.com/chahuadev/chahuadev-fix-comments/issues)
 
 [![GitHub stars](https://img.shields.io/github/stars/chahuadev/chahuadev-fix-comments.svg?style=social&label=Star)](https://github.com/chahuadev/chahuadev-fix-comments)
 [![GitHub forks](https://img.shields.io/github/forks/chahuadev/chahuadev-fix-comments.svg?style=social&label=Fork)](https://github.com/chahuadev/chahuadev-fix-comments/fork)
 [![GitHub watchers](https://img.shields.io/github/watchers/chahuadev/chahuadev-fix-comments.svg?style=social&label=Watch)](https://github.com/chahuadev/chahuadev-fix-comments)
 
-</div>#   c h a h u a d e v - f i x - c o m m e n t s  
+</div>#   c h a h u a d e v - f i x - c o m m e n t s 
+ 
  
