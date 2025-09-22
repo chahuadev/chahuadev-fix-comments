@@ -1,0 +1,80 @@
+{
+    "name": "@chahuadev/fix-comments",
+    "version": "1.1.0",
+    "description": "🔧 แก้ไข /** */ comments เป็น // format พร้อมคำอธิบายสองภาษา (ไทย/English) สำหรับไฟล์ JavaScript - Fix /** */ comments to // format with bilingual descriptions for AI-friendly code",
+    "main": "fix-comments.js",
+    "bin": {
+        "fix-comments": "fix-comments.js",
+        "chahuadev-fix-comments": "fix-comments.js"
+    },
+    "scripts": {
+        "fix": "node fix-comments.js",
+        "test": "node test-suite.js",
+        "test:demo": "node prototype-tokenizer-v2.js",
+        "test:basic": "node test-suite.js --basic",
+        "validate": "node scripts/pre-publish.js",
+        "pretest": "echo 'Running comprehensive test suite...'",
+        "install-global": "npm install -g .",
+        "uninstall-global": "npm uninstall -g @chahuadev/fix-comments",
+        "prepublishOnly": "npm test && npm run validate"
+    },
+    "keywords": [
+        "javascript",
+        "typescript",
+        "jsx",
+        "tsx",
+        "comments",
+        "format",
+        "formatter",
+        "bilingual",
+        "thai",
+        "english",
+        "chahuadev",
+        "fix",
+        "jsdoc",
+        "ai-friendly",
+        "artificial-intelligence",
+        "claude",
+        "chatgpt",
+        "copilot",
+        "cli",
+        "automation",
+        "tool",
+        "developer-tools",
+        "code-quality",
+        "tokenizer",
+        "ast",
+        "parser",
+        "zones",
+        "organization"
+    ],
+    "author": {
+        "name": "Chahuadev",
+        "email": "contact@chahuadev.com",
+        "url": "https://chahuadev.com"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=12.0.0"
+    },
+    "files": [
+        "fix-comments.js",
+        "prototype-tokenizer-v2.js",
+        "test-suite.js",
+        "scripts/",
+        "README.md",
+        "CHANGELOG.md",
+        "ROADMAP.md",
+        "FUTURE-APPLICATIONS.md",
+        "IMPLEMENTATION-PLAN.md",
+        "LICENSE"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/chahuadev/chahuadev-fix-comments"
+    },
+    "bugs": {
+        "url": "https://github.com/chahuadev/chahuadev-fix-comments/issues"
+    },
+    "homepage": "https://github.com/chahuadev/chahuadev-fix-comments#readme"
+}
