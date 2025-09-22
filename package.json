@@ -1,7 +1,7 @@
 {
     "name": "@chahuadev/fix-comments",
-    "version": "1.1.0",
-    "description": "🔧 แก้ไข /** */ comments เป็น // format พร้อมคำอธิบายสองภาษา (ไทย/English) สำหรับไฟล์ JavaScript - Fix /** */ comments to // format with bilingual descriptions for AI-friendly code",
+    "version": "1.2.0",
+    "description": "Professional Comment Standardization Tool v1.2.0 - Transform /** */ comments to // format with bilingual descriptions (Thai/English) for JavaScript/TypeScript projects with enterprise security and CI/CD integration",
     "main": "fix-comments.js",
     "bin": {
         "fix-comments": "fix-comments.js",

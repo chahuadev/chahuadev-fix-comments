@@ -429,7 +429,7 @@ MIT License - See [LICENSE](LICENSE) for details
 
 **Chahua Development Co., Ltd. (บริษัท ชาหัว ดีเวลลอปเมนต์ จำกัด)**
 - Website: https://chahuadev.com
-- Email: contact@chahuadev.com
+- Email: chahuadev@gmail.com
 - GitHub: [@chahuadev](https://github.com/chahuadev)
 
 ### Contributors
