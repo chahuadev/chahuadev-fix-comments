@@ -1640,7 +1640,11 @@ class SmartFileAnalyzer {
             // Phase 5: กำหนดบริบทของไฟล์
             this.determineFileContext();
 
+            // Phase 6: AI-Powered Intent Understanding (NEW!)
+            this.aiIntentAnalysis = this.analyzeCodeIntent();
+
             console.log(` Smart Analysis Complete: Found ${this.fileBlueprint.classes.size} classes, ${this.fileBlueprint.functions.size} functions, ${this.fileBlueprint.keywords.size} keywords`);
+            console.log(` AI Intent Analysis: Detected ${this.aiIntentAnalysis.patterns.length} logical patterns, ${this.aiIntentAnalysis.risks.length} potential risks`);
 
             return this.fileBlueprint;
 
@@ -2381,6 +2385,548 @@ class SmartFileAnalyzer {
         if (name.includes('component') || name.includes('widget')) return 'component_base';
 
         return 'abstract_class';
+    }
+
+    // ===================================================================
+    // AI Intent Understanding Engine - เครื่องมืออัจฉริยะเข้าใจความตั้งใจของโค้ด
+    // ===================================================================
+
+    /**
+     * วิเคราะห์ความตั้งใจและความหมายของโค้ด
+     * Analyze intent and semantic meaning of code
+     * Evolution: From "Grammar Expert" to "Literary Critic"
+     */
+    analyzeCodeIntent() {
+        try {
+            console.log('\n AI Intent Understanding Engine: เริ่มการวิเคราะห์ความตั้งใจของโค้ด...');
+
+            // สร้าง Intent Map
+            const intentMap = {
+                businessLogic: new Map(),
+                dataFlow: new Map(),
+                errorHandling: new Map(),
+                performanceOptimization: new Map(),
+                securityMeasures: new Map(),
+                userInteraction: new Map(),
+                systemIntegration: new Map(),
+                algorithmicPurpose: new Map()
+            };
+
+            // วิเคราะห์แต่ละ class และ function
+            this.analyzeClassesIntent(intentMap);
+            this.analyzeFunctionsIntent(intentMap);
+            this.analyzeDataFlowIntent(intentMap);
+            this.analyzeLogicalPatterns(intentMap);
+
+            // สร้าง Smart Comments จาก Intent Analysis
+            this.generateIntentBasedComments(intentMap);
+
+            console.log(' AI Intent Analysis เสร็จสมบูรณ์');
+            return intentMap;
+
+        } catch (error) {
+            console.error(' AI Intent Analysis ล้มเหลว:', error.message);
+            return null;
+        }
+    }
+
+    /**
+     * วิเคราะห์ความตั้งใจของ Classes
+     */
+    analyzeClassesIntent(intentMap) {
+        this.fileBlueprint.classes.forEach((classInfo, className) => {
+            // Pattern Analysis: Business Logic Intent
+            const businessIntent = this.inferBusinessIntent(className, classInfo);
+            if (businessIntent) {
+                intentMap.businessLogic.set(className, businessIntent);
+            }
+
+            // Pattern Analysis: Architecture Intent  
+            const architectureRole = this.inferArchitectureRole(className, classInfo);
+            if (architectureRole) {
+                intentMap.systemIntegration.set(className, architectureRole);
+            }
+
+            // Pattern Analysis: Security Intent
+            const securityRole = this.inferSecurityRole(className, classInfo);
+            if (securityRole) {
+                intentMap.securityMeasures.set(className, securityRole);
+            }
+        });
+    }
+
+    /**
+     * วิเคราะห์ความตั้งใจของ Functions
+     */
+    analyzeFunctionsIntent(intentMap) {
+        this.fileBlueprint.functions.forEach((funcInfo, funcName) => {
+            // Algorithmic Purpose Analysis
+            const algorithmIntent = this.inferAlgorithmicIntent(funcName, funcInfo);
+            if (algorithmIntent) {
+                intentMap.algorithmicPurpose.set(funcName, algorithmIntent);
+            }
+
+            // Performance Intent Analysis
+            const performanceIntent = this.inferPerformanceIntent(funcName, funcInfo);
+            if (performanceIntent) {
+                intentMap.performanceOptimization.set(funcName, performanceIntent);
+            }
+
+            // Error Handling Intent
+            const errorHandlingIntent = this.inferErrorHandlingIntent(funcName, funcInfo);
+            if (errorHandlingIntent) {
+                intentMap.errorHandling.set(funcName, errorHandlingIntent);
+            }
+        });
+    }
+
+    /**
+     * วิเคราะห์การไหลของข้อมูล และความสัมพันธ์
+     */
+    analyzeDataFlowIntent(intentMap) {
+        // Analyze variable assignments and data transformations
+        const dataFlowPatterns = this.extractDataFlowPatterns();
+
+        dataFlowPatterns.forEach((pattern, operation) => {
+            const intent = this.inferDataFlowIntent(operation, pattern);
+            if (intent) {
+                intentMap.dataFlow.set(operation, intent);
+            }
+        });
+    }
+
+    /**
+     * วิเคราะห์รูปแบบทางตรรกะและการตัดสินใจ
+     */
+    analyzeLogicalPatterns(intentMap) {
+        // Look for conditional logic patterns
+        const conditionalPatterns = this.extractConditionalPatterns();
+
+        conditionalPatterns.forEach((pattern, condition) => {
+            const logicalIntent = this.inferLogicalIntent(condition, pattern);
+            if (logicalIntent) {
+                intentMap.businessLogic.set(`logic_${condition}`, logicalIntent);
+            }
+        });
+    }
+
+    /**
+     * อนุมานความตั้งใจทางธุรกิจของ Class
+     */
+    inferBusinessIntent(className, classInfo) {
+        const name = className.toLowerCase();
+        const methods = Array.isArray(classInfo.methods) ? classInfo.methods : [];
+
+        // E-commerce Patterns
+        if (name.includes('order') || name.includes('cart') || name.includes('payment')) {
+            return {
+                domain: 'e-commerce',
+                purpose: 'การจัดการการซื้อขายและการชำระเงิน',
+                businessValue: 'สร้างรายได้และจัดการธุรกรรม',
+                userImpact: 'ช่วยให้ผู้ใช้สามารถซื้อสินค้าได้อย่างปลอดภัย'
+            };
+        }
+
+        // User Management Patterns
+        if (name.includes('user') || name.includes('auth') || name.includes('account')) {
+            return {
+                domain: 'user-management',
+                purpose: 'การจัดการผู้ใช้และการรับรองตัวตน',
+                businessValue: 'สร้างและรักษาฐานผู้ใช้',
+                userImpact: 'ให้ผู้ใช้เข้าถึงระบบได้อย่างปลอดภัย'
+            };
+        }
+
+        // Data Processing Patterns
+        if (name.includes('processor') || name.includes('analyzer') || name.includes('parser')) {
+            return {
+                domain: 'data-processing',
+                purpose: 'การประมวลผลและวิเคราะห์ข้อมูล',
+                businessValue: 'เปลี่ยนข้อมูลดิบให้เป็นข้อมูลที่มีค่า',
+                userImpact: 'ได้รับข้อมูลที่ถูกต้องและมีประโยชน์'
+            };
+        }
+
+        return null;
+    }    /**
+     * อนุมานบทบาททางสถาปัตยกรรม
+     */
+    inferArchitectureRole(className, classInfo) {
+        const name = className.toLowerCase();
+
+        // MVC Pattern Detection
+        if (name.includes('controller')) {
+            return {
+                pattern: 'MVC',
+                role: 'Controller',
+                responsibility: 'จัดการ Request และ Response',
+                coupling: 'กลาง - เชื่อมต่อ Model และ View'
+            };
+        }
+
+        if (name.includes('model') || name.includes('entity')) {
+            return {
+                pattern: 'MVC',
+                role: 'Model',
+                responsibility: 'จัดการข้อมูลและ Business Logic',
+                coupling: 'ต่ำ - ไม่ขึ้นกับ UI'
+            };
+        }
+
+        // Repository Pattern Detection
+        if (name.includes('repository') || name.includes('dao')) {
+            return {
+                pattern: 'Repository',
+                role: 'Data Access',
+                responsibility: 'แยก Business Logic จาก Data Access',
+                coupling: 'ต่ำ - เฉพาะ Data Layer'
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * อนุมานบทบาทด้านความปลอดภัย
+     */
+    inferSecurityRole(className, classInfo) {
+        const name = className.toLowerCase();
+        const methods = Array.isArray(classInfo.methods) ? classInfo.methods : [];
+
+        if (name.includes('security') || name.includes('crypto') || name.includes('auth')) {
+            const hasEncryption = methods.some(m => (typeof m === 'string' ? m : '').includes('encrypt') || (typeof m === 'string' ? m : '').includes('decrypt'));
+            const hasValidation = methods.some(m => (typeof m === 'string' ? m : '').includes('validate') || (typeof m === 'string' ? m : '').includes('verify'));
+
+            return {
+                level: hasEncryption ? 'high' : 'medium',
+                measures: {
+                    encryption: hasEncryption,
+                    validation: hasValidation,
+                    authentication: name.includes('auth')
+                },
+                threat_protection: 'ป้องกันการเข้าถึงที่ไม่ได้รับอนุญาต'
+            };
+        }
+
+        return null;
+    }    /**
+     * อนุมานความตั้งใจของ Algorithm
+     */
+    inferAlgorithmicIntent(funcName, funcInfo) {
+        const name = funcName.toLowerCase();
+        const params = funcInfo.parameters || [];
+
+        // Sorting Algorithm Detection
+        if (name.includes('sort')) {
+            return {
+                type: 'sorting',
+                purpose: 'จัดเรียงข้อมูลตามเกณฑ์ที่กำหนด',
+                complexity: params.length > 2 ? 'complex' : 'simple',
+                optimization: 'เพื่อการค้นหาและประมวลผลที่รวดเร็ว'
+            };
+        }
+
+        // Search Algorithm Detection
+        if (name.includes('search') || name.includes('find')) {
+            return {
+                type: 'searching',
+                purpose: 'ค้นหาข้อมูลตามเงื่อนไขที่กำหนด',
+                strategy: name.includes('binary') ? 'binary_search' : 'linear_search',
+                optimization: 'ลดเวลาในการค้นหาข้อมูล'
+            };
+        }
+
+        // Validation Algorithm Detection
+        if (name.includes('validate') || name.includes('check')) {
+            return {
+                type: 'validation',
+                purpose: 'ตรวจสอบความถูกต้องของข้อมูล',
+                scope: 'data_integrity',
+                importance: 'critical'
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * อนุมานความตั้งใจด้าน Performance
+     */
+    inferPerformanceIntent(funcName, funcInfo) {
+        const name = funcName.toLowerCase();
+
+        if (name.includes('cache') || name.includes('memoize')) {
+            return {
+                strategy: 'caching',
+                goal: 'ลดการคำนวณซ้ำ',
+                impact: 'เพิ่มความเร็วในการตอบสนอง'
+            };
+        }
+
+        if (name.includes('async') || name.includes('promise')) {
+            return {
+                strategy: 'asynchronous',
+                goal: 'ป้องกันการบล็อกการทำงาน',
+                impact: 'ทำงานหลายอย่างพร้อมกันได้'
+            };
+        }
+
+        if (name.includes('optimize') || name.includes('efficient')) {
+            return {
+                strategy: 'optimization',
+                goal: 'ลดการใช้ทรัพยากร',
+                impact: 'ประหยัดหน่วยความจำและพลังงาน'
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * อนุมานความตั้งใจด้าน Error Handling
+     */
+    inferErrorHandlingIntent(funcName, funcInfo) {
+        const name = funcName.toLowerCase();
+
+        if (name.includes('try') || name.includes('catch') || name.includes('handle')) {
+            return {
+                approach: 'defensive_programming',
+                goal: 'ป้องกันการ crash ของระบบ',
+                user_experience: 'ให้ข้อความ error ที่เข้าใจง่าย'
+            };
+        }
+
+        if (name.includes('retry') || name.includes('fallback')) {
+            return {
+                approach: 'resilience',
+                goal: 'ทำให้ระบบทำงานต่อได้แม้เกิดปัญหา',
+                reliability: 'สูง'
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * สกัดรูปแบบการไหลของข้อมูล
+     */
+    extractDataFlowPatterns() {
+        const patterns = new Map();
+        const lines = this.content.split('\n');
+
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+
+            // Assignment patterns
+            if (trimmed.includes('=') && !trimmed.includes('==') && !trimmed.includes('!=')) {
+                const assignment = trimmed.match(/(\w+)\s*=\s*(.+)/);
+                if (assignment) {
+                    patterns.set(`assignment_${index}`, {
+                        variable: assignment[1],
+                        value: assignment[2],
+                        line: index + 1,
+                        intent: 'data_transformation'
+                    });
+                }
+            }
+
+            // Function calls that transform data
+            if (trimmed.includes('.map(') || trimmed.includes('.filter(') ||
+                trimmed.includes('.reduce(') || trimmed.includes('.transform(')) {
+                patterns.set(`transformation_${index}`, {
+                    type: 'data_transformation',
+                    line: index + 1,
+                    intent: 'data_processing'
+                });
+            }
+        });
+
+        return patterns;
+    }
+
+    /**
+     * สกัดรูปแบบเงื่อนไข
+     */
+    extractConditionalPatterns() {
+        const patterns = new Map();
+        const lines = this.content.split('\n');
+
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+
+            // If statements
+            if (trimmed.startsWith('if ') || trimmed.includes('if(')) {
+                patterns.set(`condition_${index}`, {
+                    type: 'conditional_logic',
+                    line: index + 1,
+                    condition: trimmed,
+                    intent: 'decision_making'
+                });
+            }
+
+            // Switch statements
+            if (trimmed.startsWith('switch ') || trimmed.includes('switch(')) {
+                patterns.set(`switch_${index}`, {
+                    type: 'multiple_choice',
+                    line: index + 1,
+                    intent: 'route_selection'
+                });
+            }
+        });
+
+        return patterns;
+    }
+
+    /**
+     * อนุมานความตั้งใจของการไหลข้อมูล
+     */
+    inferDataFlowIntent(operation, pattern) {
+        if (pattern.intent === 'data_transformation') {
+            return {
+                purpose: 'เปลี่ยนรูปแบบข้อมูลให้เหมาะกับการใช้งาน',
+                impact: 'ทำให้ข้อมูลใช้งานได้ง่ายขึ้น',
+                type: 'transformation'
+            };
+        }
+
+        if (pattern.intent === 'data_processing') {
+            return {
+                purpose: 'ประมวลผลข้อมูลเพื่อหาผลลัพธ์ที่ต้องการ',
+                impact: 'ได้ข้อมูลใหม่ที่มีค่ามากขึ้น',
+                type: 'processing'
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * อนุมานความตั้งใจทางตรรกะ
+     */
+    inferLogicalIntent(condition, pattern) {
+        if (pattern.intent === 'decision_making') {
+            return {
+                purpose: 'ตัดสินใจเลือกเส้นทางการทำงาน',
+                impact: 'ควบคุมการไหลของโปรแกรม',
+                complexity: 'medium'
+            };
+        }
+
+        if (pattern.intent === 'route_selection') {
+            return {
+                purpose: 'เลือกการดำเนินการตามสถานการณ์',
+                impact: 'จัดการกรณีต่างๆ ได้อย่างเป็นระบบ',
+                complexity: 'high'
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * สร้าง Smart Comments จาก Intent Analysis
+     */
+    generateIntentBasedComments(intentMap) {
+        console.log('\n กำลังสร้าง Smart Comments จาก AI Intent Analysis...');
+
+        // สร้าง comment สำหรับ business logic
+        intentMap.businessLogic.forEach((intent, item) => {
+            if (intent.purpose && intent.businessValue) {
+                const smartComment = this.createSmartComment(item, intent, 'business');
+                this.addSmartCommentToBlueprint(item, smartComment);
+            }
+        });
+
+        // สร้าง comment สำหรับ algorithmic purpose
+        intentMap.algorithmicPurpose.forEach((intent, item) => {
+            if (intent.purpose && intent.optimization) {
+                const smartComment = this.createSmartComment(item, intent, 'algorithm');
+                this.addSmartCommentToBlueprint(item, smartComment);
+            }
+        });
+
+        // สร้าง comment สำหรับ security measures
+        intentMap.securityMeasures.forEach((intent, item) => {
+            if (intent.threat_protection) {
+                const smartComment = this.createSmartComment(item, intent, 'security');
+                this.addSmartCommentToBlueprint(item, smartComment);
+            }
+        });
+
+        console.log(' Smart Comments สร้างเสร็จแล้ว');
+    }
+
+    /**
+     * สร้าง Smart Comment จาก Intent
+     */
+    createSmartComment(item, intent, category) {
+        switch (category) {
+            case 'business':
+                return {
+                    thai: `//  ${intent.purpose} - ${intent.businessValue}`,
+                    english: `//  ${intent.purpose} - Creates business value through ${intent.businessValue}`,
+                    impact: intent.userImpact
+                };
+
+            case 'algorithm':
+                return {
+                    thai: `//  ${intent.purpose} - เพื่อ${intent.optimization}`,
+                    english: `//  ${intent.purpose} - Optimized for ${intent.optimization}`,
+                    complexity: intent.complexity
+                };
+
+            case 'security':
+                return {
+                    thai: `//  ${intent.threat_protection} - ระดับความปลอดภัย: ${intent.level}`,
+                    english: `//  ${intent.threat_protection} - Security level: ${intent.level}`,
+                    measures: intent.measures
+                };
+
+            default:
+                return {
+                    thai: `//  วัตถุประสงค์: ${intent.purpose || 'ไม่ระบุ'}`,
+                    english: `//  Purpose: ${intent.purpose || 'Not specified'}`
+                };
+        }
+    }
+
+    /**
+     * เพิ่ม Smart Comment ไปยัง Blueprint
+     */
+    addSmartCommentToBlueprint(item, smartComment) {
+        if (!this.fileBlueprint.smartComments) {
+            this.fileBlueprint.smartComments = new Map();
+        }
+
+        this.fileBlueprint.smartComments.set(item, smartComment);
+    }
+
+    /**
+     * ดึงข้อมูล Intent Analysis ทั้งหมด
+     */
+    getIntentAnalysisReport() {
+        const intentAnalysis = this.analyzeCodeIntent();
+
+        if (!intentAnalysis) {
+            return null;
+        }
+
+        return {
+            summary: {
+                totalBusinessLogic: intentAnalysis.businessLogic ? intentAnalysis.businessLogic.size : 0,
+                totalAlgorithms: intentAnalysis.algorithmicPurpose ? intentAnalysis.algorithmicPurpose.size : 0,
+                totalSecurityMeasures: intentAnalysis.securityMeasures ? intentAnalysis.securityMeasures.size : 0,
+                totalDataFlows: intentAnalysis.dataFlow ? intentAnalysis.dataFlow.size : 0
+            },
+            details: {
+                businessLogic: intentAnalysis.businessLogic ? Array.from(intentAnalysis.businessLogic.entries()) : [],
+                algorithms: intentAnalysis.algorithmicPurpose ? Array.from(intentAnalysis.algorithmicPurpose.entries()) : [],
+                security: intentAnalysis.securityMeasures ? Array.from(intentAnalysis.securityMeasures.entries()) : [],
+                dataFlow: intentAnalysis.dataFlow ? Array.from(intentAnalysis.dataFlow.entries()) : []
+            },
+            smartComments: this.fileBlueprint && this.fileBlueprint.smartComments ?
+                Array.from(this.fileBlueprint.smartComments.entries()) : []
+        };
     }
 }
 
@@ -3704,8 +4250,23 @@ function analyzeFileWithSmartLearning(content, options = {}) {
             return null;
         }
 
+        //  เรียกใช้ AI Intent Understanding Engine
+        console.log('\n เริ่มต้น AI Intent Understanding Engine...');
+        const intentReport = analyzer.getIntentAnalysisReport();
+
+        if (intentReport) {
+            console.log(` Business Logic: ${intentReport.summary.totalBusinessLogic} items`);
+            console.log(` Algorithms: ${intentReport.summary.totalAlgorithms} items`);
+            console.log(` Security Measures: ${intentReport.summary.totalSecurityMeasures} items`);
+            console.log(` Data Flows: ${intentReport.summary.totalDataFlows} items`);
+            console.log(` Smart Comments: ${intentReport.smartComments.length} generated`);
+
+            // เพิ่ม intent analysis ไปยัง blueprint
+            blueprint.intentAnalysis = intentReport;
+        }
+
         // แสดงผลสรุปการวิเคราะห์
-        console.log(' Smart Learning Results:');
+        console.log('\n Smart Learning Results:');
         console.log(`   - Classes: ${blueprint.classes.size}`);
         console.log(`   - Functions: ${blueprint.functions.size}`);
         console.log(`   - Patterns: ${blueprint.patterns.size}`);
@@ -4834,8 +5395,8 @@ function organizeCodeByZones(content) {
 function showHelp() {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                       Universal Comment Fixer v1.2.0                          ║
-║                Professional Comment Standardization Tool                        ║
+║                      Universal Code Magician v1.3.0                           ║
+║           Professional Comment & Formatting Standardization Tool               ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
 
 USAGE:
@@ -4854,6 +5415,8 @@ OPTIONS:
   --add-missing         Add comments to functions without comments
   --ai-mode             AI-friendly mode (add @function, @description)
   --organize-zones      Organize code into logical zones
+  --format              Format code beautifully (Code Magician mode)
+  -s, --smart-learning  Enable AI Intent Understanding Engine
   --ext <list>          Specify file extensions (comma-separated)
   -h, --help            Show this help message
   --version             Show version information
@@ -4864,6 +5427,8 @@ EXAMPLES:
   fix-comments . -r --add-missing              # Recursive with missing comments
   fix-comments ./src --ai-mode --verbose       # AI-friendly with details
   fix-comments . --dry-run                     # Preview changes only
+  fix-comments messy-code.js --format          # Format messy code beautifully
+  fix-comments ./src --format -r               # Format all files recursively
 
 SUPPORTED FILES:
   .js, .ts, .jsx, .tsx - JavaScript/TypeScript files
@@ -4891,8 +5456,8 @@ For more information: https://github.com/chahuadev/chahuadev-fix-comments
 // Show version/แสดงเวอร์ชัน
 // ======================================================================
 function showVersion() {
-    console.log('Universal Comment Fixer v1.2.0');
-    console.log('Professional Comment Standardization Tool');
+    console.log('Universal Code Magician v1.3.0');
+    console.log('Professional Comment & Formatting Standardization Tool');
     console.log('Copyright (c) 2025 Chahua Development Co., Ltd.');
 }
 
@@ -4987,6 +5552,457 @@ function processDirectory(dirPath, options = {}) {
 // ======================================================================
 // Main function/ฟังก์ชันหลัก
 // ======================================================================
+
+// ======================================================================
+// Code Formatter Engine/เครื่องมือจัดรูปแบบโค้ด  
+// ======================================================================
+
+/**
+ * Code Formatter - เครื่องมือจัดรูปแบบโค้ดให้สวยงาม
+ * ทำงานร่วมกับ StructureParser เพื่อ rewrite โค้ดในรูปแบบที่สวยงาม
+ */
+
+/**
+ * จัดรูปแบบโค้ดให้สวยงาม - Professional Surgeon v3.0
+ * ใช้หลักการ "วินิจฉัยก่อน จึงลงมือ" เหมือนศัลยแพทย์
+ */
+function formatCode(content, options = {}) {
+    try {
+        // ========================================================================
+        // PHASE 1: CODE HEALTH DIAGNOSIS/การวินิจฉัยสุขภาพโค้ด
+        // ========================================================================
+        console.log('Starting Code Health Diagnosis...');
+
+        const healthCheck = performCodeHealthCheck(content);
+
+        if (!healthCheck.isHealthy) {
+            console.error('CODE HEALTH CHECK FAILED:');
+            console.error(`   Syntax Error detected at line ${healthCheck.errorLine}, column ${healthCheck.errorColumn}`);
+            console.error(`   Error: ${healthCheck.errorMessage}`);
+            console.error('   OPERATION ABORTED: Cannot format unhealthy code.');
+            console.error('   Please fix syntax errors first, then try again.');
+
+            // Return original content with diagnostic info
+            return content + `\n\n// WARNING: FORMATTING ABORTED: Syntax Error at line ${healthCheck.errorLine}\n// ${healthCheck.errorMessage}`;
+        }
+
+        console.log('Code Health Check PASSED - Patient is ready for surgery');
+        console.log(`   Analysis: ${healthCheck.stats.functions} functions, ${healthCheck.stats.classes} classes, ${healthCheck.stats.complexity} complexity`);
+
+        // ========================================================================
+        // PHASE 1.5: AI INTENT UNDERSTANDING (if enabled)
+        // ========================================================================
+        if (options.enableSmartLearning) {
+            console.log('\n Phase 1.5: AI Intent Understanding Engine...');
+            const smartAnalysis = analyzeFileWithSmartLearning(content, { security: { maxDepth: 50, maxTokens: 100000, maxParsingTime: 15000 } });
+
+            if (smartAnalysis && smartAnalysis.intentAnalysis) {
+                console.log(' AI Intent Analysis completed successfully');
+                console.log('\n Intent Analysis Results:');
+                console.log(JSON.stringify(smartAnalysis.intentAnalysis.summary, null, 2));
+
+                // แสดง smart comments ที่สร้างขึ้น
+                if (smartAnalysis.intentAnalysis.smartComments.length > 0) {
+                    console.log('\n Generated Smart Comments:');
+                    smartAnalysis.intentAnalysis.smartComments.forEach(([item, comment]) => {
+                        console.log(`   ${item}: ${comment.thai}`);
+                    });
+                }
+
+                // ใช้ข้อมูล intent analysis สำหรับ smart formatting
+                options.intentAnalysis = smartAnalysis.intentAnalysis;
+            } else {
+                console.log(' AI Intent Analysis failed or returned no results');
+            }
+        }
+
+        // ========================================================================
+        // PHASE 2: SAFE SURGICAL FORMATTING/การจัดรูปแบบอย่างปลอดภัย
+        // ========================================================================
+        console.log('Starting Safe Surgical Formatting...');
+
+        const indentSize = options.indentSize || 4;
+
+        // Step 1: Pre-processing with better logic
+        let formatted = content;
+
+        // Fix method declarations after closing braces
+        formatted = formatted.replace(/}([a-zA-Z_][a-zA-Z0-9_]*\s*\()/g, '}\n\n$1');
+        formatted = formatted.replace(/}(async\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\()/g, '}\n\n$1');
+        formatted = formatted.replace(/}(class\s+[a-zA-Z_][a-zA-Z0-9_]*)/g, '}\n\n$1');
+        formatted = formatted.replace(/}(function\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\()/g, '}\n\n$1');
+
+        // Fix destructuring and requires
+        formatted = formatted.replace(/const\s*{\s*([^}]+)\s*}\s*=/g, (match, vars) => {
+            const cleanVars = vars.replace(/\s*,\s*/g, ', ').trim();
+            return `const { ${cleanVars} } =`;
+        });
+
+        // Add proper spacing for operators BEFORE splitting
+        formatted = addComprehensiveSpacing(formatted);
+
+        // Add line breaks after semicolons (careful with for loops)
+        formatted = formatted.replace(/;(?![^{]*})(?![^()]*\))/g, ';\n');
+
+        // Add line breaks around braces (but preserve inline objects)
+        formatted = formatted.replace(/{(?![^}]*}[^{]*$)/g, '{\n');
+        formatted = formatted.replace(/([^{;\n\s])}/g, '$1\n}');
+
+        // Split and process lines
+        const lines = formatted.split('\n');
+        const result = [];
+        let indentLevel = 0;
+        let insideFunction = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim();
+
+            if (!line) continue;
+
+            // Track function/class context
+            if (line.includes('function ') || line.includes('class ') || line.startsWith('async ')) {
+                insideFunction = true;
+            }            // Handle closing braces
+            if (line === '}' || line.startsWith('}')) {
+                indentLevel = Math.max(0, indentLevel - 1);
+                insideFunction = false;
+            }
+
+            // Add indentation
+            const indentation = ' '.repeat(indentLevel * indentSize);
+            result.push(indentation + line);
+
+            // Handle opening braces  
+            if (line.endsWith('{')) {
+                indentLevel++;
+            }
+        }
+
+        return smartCleanup(result.join('\n'));
+
+    } catch (error) {
+        console.error('Enhanced Format error:', error.message);
+        return content;
+    }
+}
+
+// ======================================================================
+// Code Health Diagnosis System/ระบบวินิจฉัยสุขภาพโค้ด
+// ======================================================================
+
+/**
+ * ตรวจสอบสุขภาพโค้ดก่อนการจัดรูปแบบ
+ * ใช้ Tokenizer และ StructureParser เพื่อวิเคราะห์ความถูกต้องของ syntax
+ */
+function performCodeHealthCheck(content) {
+    const healthReport = {
+        isHealthy: false,
+        errorLine: null,
+        errorColumn: null,
+        errorMessage: '',
+        stats: {
+            functions: 0,
+            classes: 0,
+            complexity: 'simple',
+            tokens: 0
+        }
+    };
+
+    try {
+        // Phase 1: Tokenization Health Check
+        console.log('   Phase 1: Tokenization Analysis...');
+        const tokenizer = new JavaScriptTokenizer(content);  // Pass content as first parameter
+        const tokens = tokenizer.tokenize();
+
+        if (!tokens || tokens.length === 0) {
+            healthReport.errorMessage = 'Failed to tokenize content - possible syntax error';
+            healthReport.errorLine = 1;
+            healthReport.errorColumn = 1;
+            return healthReport;
+        }
+
+        healthReport.stats.tokens = tokens.length;
+
+        // Phase 2: Structure Parsing Health Check  
+        console.log('   Phase 2: Structure Analysis...');
+        const analyzer = new StructureAnalyzer(tokens, content);
+        const structures = analyzer.analyzeAll();
+
+        // Phase 3: Syntax Validation
+        console.log('   Phase 3: Syntax Validation...');
+        const syntaxCheck = validateSyntax(content, tokens);
+
+        if (!syntaxCheck.isValid) {
+            healthReport.errorLine = syntaxCheck.errorLine;
+            healthReport.errorColumn = syntaxCheck.errorColumn;
+            healthReport.errorMessage = syntaxCheck.errorMessage;
+            return healthReport;
+        }
+
+        // Phase 4: Statistical Analysis
+        healthReport.stats.functions = countFunctions(structures);
+        healthReport.stats.classes = countClasses(structures);
+        healthReport.stats.complexity = assessComplexity(structures);
+
+        // All checks passed
+        healthReport.isHealthy = true;
+        console.log('   All health checks PASSED');
+
+        return healthReport;
+
+    } catch (error) {
+        console.error('   Health check failed:', error.message);
+
+        // Extract line/column info from error if possible
+        const lineMatch = error.message.match(/line (\d+)/i);
+        const colMatch = error.message.match(/column (\d+)/i);
+
+        healthReport.errorLine = lineMatch ? parseInt(lineMatch[1]) : 1;
+        healthReport.errorColumn = colMatch ? parseInt(colMatch[1]) : 1;
+        healthReport.errorMessage = error.message;
+
+        return healthReport;
+    }
+}
+
+/**
+ * ตรวจสอบ syntax ด้วย token analysis
+ */
+function validateSyntax(content, tokens) {
+    const result = {
+        isValid: true,
+        errorLine: null,
+        errorColumn: null,
+        errorMessage: ''
+    };
+
+    try {
+        // Check for unmatched braces, brackets, parentheses
+        const stack = [];
+        const pairs = {
+            '{': '}',
+            '[': ']',
+            '(': ')'
+        };
+
+        for (const token of tokens) {
+            if (token.type === 'BRACE_OPEN' || token.type === 'BRACKET_OPEN' || token.type === 'PAREN_OPEN') {
+                stack.push({ token: token.value, line: token.line, column: token.column });
+            } else if (token.type === 'BRACE_CLOSE' || token.type === 'BRACKET_CLOSE' || token.type === 'PAREN_CLOSE') {
+                if (stack.length === 0) {
+                    result.isValid = false;
+                    result.errorLine = token.line;
+                    result.errorColumn = token.column;
+                    result.errorMessage = `Unexpected closing '${token.value}'`;
+                    return result;
+                }
+
+                const lastOpen = stack.pop();
+                const expectedClose = pairs[lastOpen.token];
+
+                if (expectedClose !== token.value) {
+                    result.isValid = false;
+                    result.errorLine = token.line;
+                    result.errorColumn = token.column;
+                    result.errorMessage = `Mismatched: expected '${expectedClose}' but found '${token.value}'`;
+                    return result;
+                }
+            }
+        }
+
+        // Check for unclosed pairs
+        if (stack.length > 0) {
+            const unclosed = stack[stack.length - 1];
+            result.isValid = false;
+            result.errorLine = unclosed.line;
+            result.errorColumn = unclosed.column;
+            result.errorMessage = `Unclosed '${unclosed.token}'`;
+            return result;
+        }
+
+        return result;
+
+    } catch (error) {
+        result.isValid = false;
+        result.errorMessage = `Syntax validation failed: ${error.message}`;
+        return result;
+    }
+}
+
+/**
+ * นับจำนวน functions
+ */
+function countFunctions(structures) {
+    let count = 0;
+    if (structures && structures.functions) {
+        count = structures.functions.length || 0;
+    }
+    return count;
+}
+
+/**
+ * นับจำนวน classes
+ */
+function countClasses(structures) {
+    let count = 0;
+    if (structures && structures.classes) {
+        count = structures.classes.length || 0;
+    }
+    return count;
+}
+
+/**
+ * ประเมินความซับซ้อนของโค้ด
+ */
+function assessComplexity(structures) {
+    const functionCount = countFunctions(structures);
+    const classCount = countClasses(structures);
+    const totalElements = functionCount + classCount;
+
+    if (totalElements <= 5) return 'simple';
+    if (totalElements <= 15) return 'moderate';
+    return 'complex';
+}/**
+ * เพิ่มช่องว่างที่ครอบคลุม
+ */
+function addComprehensiveSpacing(content) {
+    let formatted = content;
+
+    // Fix arrow function spacing (handle edge cases)
+    formatted = formatted.replace(/=\s*>/g, ' => ');
+    formatted = formatted.replace(/\s+=>\s+/g, ' => ');
+
+    // Assignment operators
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])=([^=])/g, '$1 = $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])==([^=])/g, '$1 == $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])===([^=])/g, '$1 === $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])!=([^=])/g, '$1 != $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])!==([^=])/g, '$1 !== $2');
+
+    // Comparison operators
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])<([a-zA-Z0-9_(\[])/g, '$1 < $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])>([a-zA-Z0-9_(\[])/g, '$1 > $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])<=([a-zA-Z0-9_(\[])/g, '$1 <= $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])>=([a-zA-Z0-9_(\[])/g, '$1 >= $2');
+
+    // Logical operators
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])&&([a-zA-Z0-9_(\[])/g, '$1 && $2');
+    formatted = formatted.replace(/([a-zA-Z0-9_)\]])\|\|([a-zA-Z0-9_(\[])/g, '$1 || $2');
+
+    // Arithmetic operators (avoid negative numbers)
+    formatted = formatted.replace(/(\w)\+(\w)/g, '$1 + $2');
+    formatted = formatted.replace(/(\w)-(\w)/g, '$1 - $2');
+    formatted = formatted.replace(/(\w)\*(\w)/g, '$1 * $2');
+    formatted = formatted.replace(/(\w)\/(\w)/g, '$1 / $2');
+
+    // Keywords
+    formatted = formatted.replace(/\b(if|for|while|switch|catch)\(/g, '$1 (');
+    formatted = formatted.replace(/\b(function|class|async function)\s+/g, '$1 ');
+
+    // Braces
+    formatted = formatted.replace(/([^{\s]){/g, '$1 {');
+
+    // Commas
+    formatted = formatted.replace(/,(?!\s)/g, ', ');
+
+    // Colons in objects
+    formatted = formatted.replace(/(\w):(?!\s)/g, '$1: ');
+
+    return formatted;
+}
+
+/**
+ * Smart cleanup with better logic
+ */
+function smartCleanup(content) {
+    let cleaned = content;
+
+    // Remove excessive empty lines
+    cleaned = cleaned.replace(/\n{4,}/g, '\n\n\n');
+
+    // Add empty lines before major declarations (but not the first one)
+    cleaned = cleaned.replace(/(\n.+\n)(\s*)(class |function |async function )/g, '$1\n$2$3');
+
+    // Add empty lines after class/function closing braces
+    cleaned = cleaned.replace(/(\n\s*})\n(\s*)(class |function |const |let |var )/g, '$1\n\n$2$3');
+
+    // Remove trailing spaces
+    cleaned = cleaned.replace(/[ \t]+$/gm, '');
+
+    // Fix indentation inconsistencies
+    const lines = cleaned.split('\n');
+    const indentSize = 4;
+    let indentLevel = 0;
+    const fixedLines = [];
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+            fixedLines.push('');
+            continue;
+        }
+
+        // Adjust indent for closing braces
+        if (trimmed === '}' || trimmed.startsWith('}')) {
+            indentLevel = Math.max(0, indentLevel - 1);
+        }
+
+        // Apply consistent indentation
+        fixedLines.push(' '.repeat(indentLevel * indentSize) + trimmed);
+
+        // Adjust indent for opening braces
+        if (trimmed.endsWith('{')) {
+            indentLevel++;
+        }
+    }
+
+    return fixedLines.join('\n').trim();
+}
+
+
+
+/**
+ * จัดรูปแบบไฟล์โค้ด
+ */
+function formatFile(filePath, options = {}) {
+    try {
+        // ตรวจสอบนามสกุลไฟล์
+        const ext = path.extname(filePath).toLowerCase();
+        if (!options.extensions.includes(ext)) {
+            return { success: false, error: `Unsupported file extension: ${ext}` };
+        }
+
+        // อ่านไฟล์
+        const content = fs.readFileSync(filePath, 'utf8');
+
+        // จัดรูปแบบเนื้อหา
+        const formattedContent = formatCode(content, options);
+
+        if (options.dryRun) {
+            return {
+                success: true,
+                changes: formattedContent !== content,
+                preview: formattedContent
+            };
+        } else {
+            // สร้าง backup ถ้าต้องการ
+            if (options.backup && formattedContent !== content) {
+                createBackup(filePath);
+            }
+
+            // เขียนไฟล์ใหม่ถ้ามีการเปลี่ยนแปลง
+            if (formattedContent !== content) {
+                fs.writeFileSync(filePath, formattedContent, 'utf8');
+                return { success: true, changes: true };
+            } else {
+                return { success: true, changes: false };
+            }
+        }
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
 function main() {
     const args = process.argv.slice(2);
 
@@ -5010,6 +6026,8 @@ function main() {
         addMissing: args.includes('--add-missing'),
         aiMode: args.includes('--ai-mode'),
         organizeZones: args.includes('--organize-zones'),
+        formatOnly: args.includes('--format'),
+        enableSmartLearning: args.includes('--smart-learning') || args.includes('-s'),
         extensions: ['.js', '.ts', '.jsx', '.tsx']
     };
 
@@ -5074,7 +6092,7 @@ function main() {
     const targetLower = target.toLowerCase();
     for (const forbidden of forbiddenPaths) {
         if (targetLower.includes(forbidden.toLowerCase())) {
-            console.error(`❌ Security Error: Access to '${forbidden}' directories is prohibited for safety.`);
+            console.error(` Security Error: Access to '${forbidden}' directories is prohibited for safety.`);
             process.exit(1);
         }
     }
@@ -5086,9 +6104,12 @@ function main() {
     }
 
     // เริ่มประมวลผล
-    console.log(`Starting Comment Fixer v1.2.0...`);
+    console.log(`Starting Code Magician v1.3.0...`);
     console.log(`Target: ${target}`);
     console.log(`Mode: ${options.dryRun ? 'DRY RUN' : 'LIVE'}`);
+    if (options.formatOnly) {
+        console.log(`Operation: CODE FORMATTING ONLY`);
+    }
 
     const startTime = Date.now();
     const stat = fs.statSync(target);
@@ -5097,22 +6118,39 @@ function main() {
     if (stat.isFile()) {
         // ประมวลผลไฟล์เดียว
         console.log(`Processing single file...`);
-        const result = processFile(target, options);
 
-        if (result.success) {
-            if (result.changes) {
-                console.log(`✓ File processed successfully`);
+        if (options.formatOnly) {
+            // Format-only mode
+            const result = formatFile(target, options);
+            if (result.success) {
+                console.log(` File formatted successfully`);
                 if (options.dryRun && result.preview) {
-                    console.log('\n--- PREVIEW ---');
+                    console.log('\n--- FORMATTED PREVIEW ---');
                     console.log(result.preview);
                     console.log('--- END PREVIEW ---\n');
                 }
             } else {
-                console.log(`- No changes needed`);
+                console.error(` Error formatting file: ${result.error}`);
             }
+            results = { processed: 1, modified: result.success ? 1 : 0, errors: result.success ? 0 : 1 };
         } else {
-            console.error(`✗ Error: ${result.error}`);
-            process.exit(1);
+            // Normal comment processing
+            const result = processFile(target, options);
+            if (result.success) {
+                if (result.changes) {
+                    console.log(` File processed successfully`);
+                    if (options.dryRun && result.preview) {
+                        console.log('\n--- PREVIEW ---');
+                        console.log(result.preview);
+                        console.log('--- END PREVIEW ---\n');
+                    }
+                } else {
+                    console.log(`- No changes needed`);
+                }
+            } else {
+                console.error(` Error processing file: ${result.error}`);
+            }
+            results = { processed: 1, modified: result.changes ? 1 : 0, errors: result.success ? 0 : 1 };
         }
 
     } else if (stat.isDirectory()) {
@@ -5159,6 +6197,11 @@ module.exports = {
     JavaScriptTokenizer,
     FunctionPatternMatcher,
     CommentGenerator,
+    SmartFileAnalyzer,
+    StructureAnalyzer,
+    TokenizerSecurityManager,
+    formatCode,
+    formatFile,
     createBackup,
     organizeCodeByZones
 };
