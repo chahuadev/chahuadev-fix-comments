@@ -415,6 +415,7 @@ class FunctionPatternMatcher {
 
     // รูปแบบ: function name() {} - Function declaration pattern
     matchFunctionDeclaration() {
+        // รูปแบบปกติ: function name() {}
         if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
             this.currentToken()?.value === 'function' &&
             this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
@@ -435,6 +436,77 @@ class FunctionPatternMatcher {
                 isAsync: false
             };
         }
+
+        // รูปแบบ generator: function* name() {}
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'function' &&
+            this.peekToken(1)?.value === '*' &&
+            this.peekToken(2)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(3)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const functionToken = this.currentToken();
+            const nameToken = this.peekToken(2);
+
+            // กรองชื่อที่ไม่ถูกต้อง - ป้องกันการใช้ * เป็นชื่อ
+            if (!nameToken.value ||
+                nameToken.value.trim() === '' ||
+                nameToken.value === '*' ||
+                nameToken.value.includes('*') ||
+                /^[^\w]/.test(nameToken.value) ||
+                nameToken.value.length < 2) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 3);
+            this.cursor += 4; // ข้าม 'function', '*', name, '('
+
+            return {
+                type: 'generator_function',
+                name: nameToken.value,
+                line: functionToken.line,
+                column: functionToken.column,
+                parameters: params,
+                isAsync: false,
+                isGenerator: true
+            };
+        }
+
+        // รูปแบบ const name = function* () {}
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            (this.currentToken()?.value === 'const' || this.currentToken()?.value === 'let' || this.currentToken()?.value === 'var') &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.EQUALS &&
+            this.peekToken(3)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(3)?.value === 'function' &&
+            this.peekToken(4)?.value === '*') {
+
+            const keywordToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // กรองชื่อที่ไม่ถูกต้อง
+            if (!nameToken.value ||
+                nameToken.value.trim() === '' ||
+                nameToken.value === '*' ||
+                nameToken.value.includes('*') ||
+                /^[^\w]/.test(nameToken.value) ||
+                nameToken.value.length < 2) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 5);
+            this.cursor += 6; // ข้าม keyword, name, '=', 'function', '*', '('
+
+            return {
+                type: 'generator_function',
+                name: nameToken.value,
+                line: keywordToken.line,
+                column: keywordToken.column,
+                parameters: params,
+                isAsync: false,
+                isGenerator: true
+            };
+        }
+
         return null;
     }
 
@@ -469,6 +541,7 @@ class FunctionPatternMatcher {
 
     // รูปแบบ: async function name() {} - Async function pattern
     matchAsyncFunction() {
+        // รูปแบบปกติ: async function name() {}
         if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
             this.currentToken()?.value === 'async' &&
             this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
@@ -491,6 +564,81 @@ class FunctionPatternMatcher {
                 isAsync: true
             };
         }
+
+        // รูปแบบ async generator: async function* name() {}
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'async' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(1)?.value === 'function' &&
+            this.peekToken(2)?.value === '*' &&
+            this.peekToken(3)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(4)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const asyncToken = this.currentToken();
+            const nameToken = this.peekToken(3);
+
+            // กรองชื่อที่ไม่ถูกต้อง
+            if (!nameToken.value ||
+                nameToken.value.trim() === '' ||
+                nameToken.value === '*' ||
+                nameToken.value.includes('*') ||
+                /^[^\w]/.test(nameToken.value) ||
+                nameToken.value.length < 2) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 4);
+            this.cursor += 5; // ข้าม 'async', 'function', '*', name, '('
+
+            return {
+                type: 'async_generator_function',
+                name: nameToken.value,
+                line: asyncToken.line,
+                column: asyncToken.column,
+                parameters: params,
+                isAsync: true,
+                isGenerator: true
+            };
+        }
+
+        // รูปแบบ const name = async function* () {}
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            (this.currentToken()?.value === 'const' || this.currentToken()?.value === 'let' || this.currentToken()?.value === 'var') &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.EQUALS &&
+            this.peekToken(3)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(3)?.value === 'async' &&
+            this.peekToken(4)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(4)?.value === 'function' &&
+            this.peekToken(5)?.value === '*') {
+
+            const keywordToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // กรองชื่อที่ไม่ถูกต้อง
+            if (!nameToken.value ||
+                nameToken.value.trim() === '' ||
+                nameToken.value === '*' ||
+                nameToken.value.includes('*') ||
+                /^[^\w]/.test(nameToken.value) ||
+                nameToken.value.length < 2) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 6);
+            this.cursor += 7; // ข้าม keyword, name, '=', 'async', 'function', '*', '('
+
+            return {
+                type: 'async_generator_function',
+                name: nameToken.value,
+                line: keywordToken.line,
+                column: keywordToken.column,
+                parameters: params,
+                isAsync: true,
+                isGenerator: true
+            };
+        }
+
         return null;
     }
 
@@ -1813,6 +1961,23 @@ class CommentGenerator {
     // หาจุดเริ่มต้นที่แท้จริงของฟังก์ชัน (รวม decorators, exports, etc.)
     findRealStartLine(lines, functionLine) {
         let startLine = functionLine;
+        const originalLine = lines[functionLine];
+
+        if (!originalLine) return startLine;
+
+        // ตรวจสอบว่าบรรทัดปัจจุบันเป็นจุดเริ่มต้นที่เหมาะสมหรือไม่
+        const currentTrimmed = originalLine.trim();
+
+        // ถ้าเป็นส่วนท้ายของบล็อค หรือในกลางโค้ด ไม่ควรใส่คอมเมนต์
+        if (currentTrimmed === '}' ||
+            currentTrimmed === '});' ||
+            currentTrimmed === ');' ||
+            currentTrimmed.startsWith('}') ||
+            currentTrimmed.includes('return ') ||
+            currentTrimmed.includes('yield ') ||
+            !this.isValidStartLine(currentTrimmed)) {
+            return -1; // ไม่เหมาะสมที่จะใส่คอมเมนต์
+        }
 
         // ตรวจสอบย้อนหลังเพื่อหา decorators, exports, หรือ annotations
         for (let i = functionLine - 1; i >= Math.max(0, functionLine - 10); i--) {
@@ -1826,7 +1991,7 @@ class CommentGenerator {
 
             // Comment - ถ้าเป็นคอมเมนต์ของเราแล้ว หยุด
             if (trimmed.startsWith('//') || trimmed.startsWith('/*')) {
-                if (trimmed.includes('======') || trimmed.includes('EN:') || trimmed.includes(':ชื่อ')) {
+                if (trimmed.includes('======') || trimmed.includes('EN:') || trimmed.includes(':ชื่อ') || trimmed.includes(':คลาส') || trimmed.includes('class:')) {
                     break; // เจอคอมเมนต์ของเราแล้ว
                 }
                 continue;
@@ -1838,8 +2003,8 @@ class CommentGenerator {
                 trimmed.startsWith('import') ||
                 trimmed.includes('interface ') ||
                 trimmed.includes('type ') ||
-                trimmed.endsWith(',') ||
-                trimmed.endsWith(';')) {
+                (trimmed.endsWith(',') && !trimmed.includes('{')) ||
+                (trimmed.endsWith(';') && !trimmed.includes('{'))) {
                 startLine = i;
                 continue;
             }
@@ -1849,6 +2014,102 @@ class CommentGenerator {
         }
 
         return startLine;
+    }
+
+    // ตรวจสอบว่าบรรทัดนี้เหมาะสมที่จะเป็นจุดเริ่มต้นหรือไม่
+    isValidStartLine(trimmedLine) {
+        // รูปแบบที่เหมาะสมสำหรับการเริ่มต้น
+        const validPatterns = [
+            /^class\s+\w+/,           // class declarations
+            /^function\s+\w+/,        // function declarations
+            /^async\s+function/,      // async functions
+            /^function\*/,            // generator functions
+            /^async\s+function\*/,    // async generator functions
+            /^const\s+\w+\s*=/,       // const declarations
+            /^let\s+\w+\s*=/,         // let declarations
+            /^var\s+\w+\s*=/,         // var declarations
+            /^\w+\s*:/,               // object methods
+            /^\w+\s*\(/,              // function calls (methods)
+            /^export/,                // exports
+            /^module\.exports/        // module exports
+        ];
+
+        // ตรวจสอบว่าตรงกับรูปแบบใดรูปแบบหนึ่งหรือไม่
+        return validPatterns.some(pattern => pattern.test(trimmedLine));
+    }
+
+    // ตรวจสอบว่าตำแหน่งนี้เหมาะสมสำหรับการใส่คอมเมนต์หรือไม่
+    isAppropriateCommentLocation(lines, lineIndex) {
+        const currentLine = lines[lineIndex];
+        if (!currentLine) return false;
+
+        const trimmed = currentLine.trim();
+
+        // ไม่ควรใส่คอมเมนต์ที่ตำแหน่งเหล่านี้
+        const inappropriatePatterns = [
+            /^}/,                     // closing braces
+            /^}\);/,                  // closing function calls
+            /^\);/,                   // closing parentheses
+            /^,/,                     // comma
+            /^;/,                     // semicolon
+            /^return\s/,              // return statements
+            /^yield\s/,               // yield statements
+            /^break;?$/,              // break statements
+            /^continue;?$/,           // continue statements
+            /^case\s/,                // case statements
+            /^default:/,              // default case
+            /^else/,                  // else statements
+            /^catch/,                 // catch blocks
+            /^finally/,               // finally blocks
+            /^\s*$|^$/                // empty lines
+        ];
+
+        // ตรวจสอบบรรทัดปัจจุบัน
+        if (inappropriatePatterns.some(pattern => pattern.test(trimmed))) {
+            return false;
+        }
+
+        // ตรวจสอบบริบทรอบข้าง - ไม่ควรอยู่ในกลางบล็อค
+        let openBraces = 0;
+        let isInFunction = false;
+        let isInClass = false;
+
+        // ตรวจสอบจากบรรทัดก่อนหน้า
+        for (let i = Math.max(0, lineIndex - 20); i < lineIndex; i++) {
+            const line = lines[i];
+            if (!line) continue;
+
+            const lineTrimmed = line.trim();
+
+            // นับ braces
+            for (const char of lineTrimmed) {
+                if (char === '{') openBraces++;
+                if (char === '}') openBraces--;
+            }
+
+            // ตรวจสอบว่าเรากำลังอยู่ในฟังก์ชันหรือคลาส
+            if (lineTrimmed.includes('function ') || lineTrimmed.includes('class ')) {
+                if (openBraces > 0) {
+                    isInFunction = lineTrimmed.includes('function ');
+                    isInClass = lineTrimmed.includes('class ');
+                }
+            }
+        }
+
+        // ถ้าอยู่ลึกในบล็อค (openBraces > 1) ไม่ควรใส่คอมเมนต์
+        if (openBraces > 1) {
+            return false;
+        }
+
+        // ถ้าอยู่ในกลางฟังก์ชันหรือคลาส และไม่ใช่จุดเริ่มต้นของ method ใหม่
+        if ((isInFunction || isInClass) && openBraces > 0) {
+            // ตรวจสอบว่าเป็น method ใหม่หรือไม่
+            if (!this.isValidStartLine(trimmed)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // สร้าง zone header - Generate zone header
@@ -2038,6 +2299,15 @@ function addMissingComments(content, options = {}) {
 
             // หาจุดเริ่มต้นที่แท้จริง (รวม decorators, exports)
             const realStartLine = generator.findRealStartLine(processedLines, originalLineIndex);
+
+            // ถ้า realStartLine เป็น -1 แสดงว่าไม่เหมาะสมที่จะใส่คอมเมนต์
+            if (realStartLine === -1) {
+                if (options.verbose) {
+                    console.log(`  Skipping comment for ${item.name} at line ${item.line} - invalid position`);
+                }
+                return;
+            }
+
             const lineIndex = realStartLine;
 
             // ตรวจสอบว่าบรรทัดก่อนหน้ามีคอมเมนต์หรือไม่
@@ -2056,6 +2326,15 @@ function addMissingComments(content, options = {}) {
                         }
                     }
                 }
+            }
+
+            // ตรวจสอบเพิ่มเติมว่าบรรทัดนี้อยู่ในบริบทที่เหมาะสมหรือไม่
+            const currentLine = processedLines[lineIndex];
+            if (!currentLine || !generator.isAppropriateCommentLocation(processedLines, lineIndex)) {
+                if (options.verbose) {
+                    console.log(`  Skipping comment for ${item.name} at line ${item.line} - inappropriate context`);
+                }
+                return;
             }
 
             // ถ้าไม่มีคอมเมนต์ ให้เพิ่มคอมเมนต์
