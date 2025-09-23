@@ -71,25 +71,130 @@ const KEYWORDS = new Set([
     'import', 'export', 'default', 'from', 'as'
 ]);
 
+// ======================================================================
+// Security Manager สำหรับ Parser/ระบบจัดการความปลอดภัยสำหรับ Parser
+// ======================================================================
+class TokenizerSecurityManager {
+    constructor(options = {}) {
+        // SECURITY: กำหนดขีดจำกัดการทำงานเพื่อป้องกัน DoS attacks
+        this.MAX_DEPTH = options.maxDepth || 100;           // ความลึกสูงสุดของ nested structures
+        this.MAX_TOKENS = options.maxTokens || 500000;      // จำนวน token สูงสุด
+        this.MAX_PARSING_TIME = options.maxParsingTime || 30000; // เวลาประมวลผลสูงสุด (30 วินาที)
+        this.MAX_LOOP_ITERATIONS = options.maxLoopIterations || 1000000; // จำนวนการวนลูปสูงสุด
+
+        this.startTime = null;
+        this.iterationCount = 0;
+        this.currentDepth = 0;
+        this.warnings = [];
+    }
+
+    // เริ่มต้นการตรวจสอบ
+    startParsing() {
+        this.startTime = Date.now();
+        this.iterationCount = 0;
+        this.currentDepth = 0;
+        this.warnings = [];
+    }
+
+    // ตรวจสอบการวนลูปแต่ละครั้ง
+    checkIteration() {
+        this.iterationCount++;
+
+        // ตรวจสอบ timeout
+        if (this.startTime && (Date.now() - this.startTime) > this.MAX_PARSING_TIME) {
+            throw new Error(`SECURITY: Parsing timeout after ${this.MAX_PARSING_TIME}ms. File may contain malicious patterns.`);
+        }
+
+        // ตรวจสอบจำนวนการวนลูป
+        if (this.iterationCount > this.MAX_LOOP_ITERATIONS) {
+            throw new Error(`SECURITY: Too many parsing iterations (${this.MAX_LOOP_ITERATIONS}). File may contain complexity attack patterns.`);
+        }
+    }
+
+    // ตรวจสอบความลึก
+    enterDepth() {
+        this.currentDepth++;
+        if (this.currentDepth > this.MAX_DEPTH) {
+            throw new Error(`SECURITY: Parsing depth exceeded ${this.MAX_DEPTH} levels. File may contain deeply nested malicious structures.`);
+        }
+    }
+
+    // ออกจากความลึก
+    exitDepth() {
+        if (this.currentDepth > 0) {
+            this.currentDepth--;
+        }
+    }
+
+    // ตรวจสอบจำนวน tokens
+    checkTokenCount(tokenCount) {
+        if (tokenCount > this.MAX_TOKENS) {
+            throw new Error(`SECURITY: Token count exceeded ${this.MAX_TOKENS}. File too complex for safe processing.`);
+        }
+    }
+
+    // เพิ่มคำเตือน
+    addWarning(message) {
+        this.warnings.push(`SECURITY WARNING: ${message}`);
+    }
+
+    // รับสถิติ
+    getStats() {
+        return {
+            processingTime: this.startTime ? Date.now() - this.startTime : 0,
+            iterations: this.iterationCount,
+            maxDepth: this.currentDepth,
+            warnings: this.warnings
+        };
+    }
+}
+
 // JavaScript Tokenizer:โทเค็นไนเซอร์ JavaScript
 class JavaScriptTokenizer {
-    constructor(code) {
+    constructor(code, securityOptions = {}) {
         this.code = code;
         this.cursor = 0;
         this.line = 1;
         this.column = 1;
         this.tokens = [];
+        // SECURITY: เพิ่ม Security Manager
+        this.security = new TokenizerSecurityManager(securityOptions);
     }
 
     // แปลงโค้ดทั้งหมดเป็น tokens - Tokenize entire code
     tokenize() {
-        while (this.cursor < this.code.length) {
-            this.readNextToken();
-        }
+        // SECURITY: เริ่มต้นการตรวจสอบ
+        this.security.startParsing();
 
-        // เพิ่ม EOF token
-        this.addToken(TOKEN_TYPES.EOF, '', this.line, this.column);
-        return this.tokens;
+        try {
+            while (this.cursor < this.code.length) {
+                // SECURITY: ตรวจสอบในแต่ละการวนลูป
+                this.security.checkIteration();
+                this.readNextToken();
+            }
+
+            // SECURITY: ตรวจสอบจำนวน tokens ทั้งหมด
+            this.security.checkTokenCount(this.tokens.length);
+
+            // เพิ่ม EOF token
+            this.addToken(TOKEN_TYPES.EOF, '', this.line, this.column);
+
+            // แสดงสถิติความปลอดภัยถ้ามีคำเตือน
+            const stats = this.security.getStats();
+            if (stats.warnings.length > 0) {
+                console.warn('Tokenizer Security Warnings:');
+                stats.warnings.forEach(warning => console.warn(` - ${warning}`));
+            }
+
+            return this.tokens;
+        } catch (error) {
+            // รายงานข้อผิดพลาดด้านความปลอดภัย
+            if (error.message.includes('SECURITY:')) {
+                console.error(`SECURITY ALERT: ${error.message}`);
+                console.error('File processing stopped for security reasons.');
+            }
+            throw error;
+        }
     }
 
     // อ่าน token ถัดไป - Read next token
@@ -333,7 +438,7 @@ class JavaScriptTokenizer {
 
 // Function Pattern Matcher:ตัวจับรูปแบบฟังก์ชัน
 class FunctionPatternMatcher {
-    constructor(tokens) {
+    constructor(tokens, securityOptions = {}) {
         this.tokens = tokens.filter(t => t.type !== TOKEN_TYPES.WHITESPACE);
         this.functions = [];
         this.cursor = 0;
@@ -341,22 +446,47 @@ class FunctionPatternMatcher {
         this.braceDepth = 0;  // เก็บระดับ {}
         this.inClass = false; // ตรวจสอบว่าอยู่ใน class หรือไม่
         this.classNames = []; // เก็บชื่อคลาสที่พบ
+        // SECURITY: เพิ่ม Security Manager
+        this.security = new TokenizerSecurityManager(securityOptions);
     }
 
     // ค้นหาฟังก์ชันทั้งหมด - Find all functions
     findFunctions() {
-        this.buildScopeMap(); // สร้าง scope map ก่อน
-        this.cursor = 0; // reset cursor
+        // SECURITY: เริ่มต้นการตรวจสอบ
+        this.security.startParsing();
 
-        while (this.cursor < this.tokens.length) {
-            const func = this.matchFunctionPattern();
-            if (func) {
-                this.functions.push(func);
-            } else {
-                this.cursor++;
+        try {
+            this.buildScopeMap(); // สร้าง scope map ก่อน
+            this.cursor = 0; // reset cursor
+
+            while (this.cursor < this.tokens.length) {
+                // SECURITY: ตรวจสอบในแต่ละการวนลูป
+                this.security.checkIteration();
+
+                const func = this.matchFunctionPattern();
+                if (func) {
+                    this.functions.push(func);
+                } else {
+                    this.cursor++;
+                }
             }
+
+            // แสดงสถิติความปลอดภัยถ้ามีคำเตือน
+            const stats = this.security.getStats();
+            if (stats.warnings.length > 0) {
+                console.warn('Parser Security Warnings:');
+                stats.warnings.forEach(warning => console.warn(` - ${warning}`));
+            }
+
+            return this.functions;
+        } catch (error) {
+            // รายงานข้อผิดพลาดด้านความปลอดภัย
+            if (error.message.includes('SECURITY:')) {
+                console.error(`SECURITY ALERT: ${error.message}`);
+                console.error('Function parsing stopped for security reasons.');
+            }
+            throw error;
         }
-        return this.functions;
     }
 
     // สร้าง scope map เพื่อเข้าใจโครงสร้างโค้ด
@@ -375,10 +505,18 @@ class FunctionPatternMatcher {
 
             if (token.type === TOKEN_TYPES.BRACE_OPEN) {
                 braceDepth++;
+                // SECURITY: ตรวจสอบความลึกเกินขีดจำกัด
+                if (braceDepth > this.security.MAX_DEPTH) {
+                    this.security.addWarning(`Deep nesting detected: ${braceDepth} levels (max recommended: ${this.security.MAX_DEPTH})`);
+                    // ข้ามการประมวลผลในระดับที่ลึกเกินไป
+                    continue;
+                }
+                this.security.enterDepth();
             }
 
             if (token.type === TOKEN_TYPES.BRACE_CLOSE) {
                 braceDepth--;
+                this.security.exitDepth();
                 // ถ้าออกจากระดับคลาส
                 if (inClass && braceDepth < classDepth) {
                     inClass = false;
@@ -2422,8 +2560,15 @@ function fixComments(content) {
 // ======================================================================
 function addMissingComments(content, options = {}) {
     try {
+        // SECURITY: กำหนดขีดจำกัดความปลอดภัยสำหรับการประมวลผล
+        const securityOptions = {
+            maxDepth: 50,           // ลดความลึกสำหรับการวิเคราะห์โค้ด
+            maxTokens: 100000,      // จำกัด tokens สำหรับไฟล์ปกติ
+            maxParsingTime: 15000   // จำกัดเวลา 15 วินาที
+        };
+
         // ใช้ tokenizer และ structure analyzer เพื่อวิเคราะห์โค้ด
-        const tokenizer = new JavaScriptTokenizer(content);
+        const tokenizer = new JavaScriptTokenizer(content, securityOptions);
         const tokens = tokenizer.tokenize();
 
         // สร้าง Structure Analyzer เพื่อเข้าใจโครงสร้างโค้ด
@@ -2431,7 +2576,7 @@ function addMissingComments(content, options = {}) {
         const structures = structureAnalyzer.analyzeAll();
 
         // ใช้ Function Pattern Matcher สำหรับหาฟังก์ชัน
-        const matcher = new FunctionPatternMatcher(tokens);
+        const matcher = new FunctionPatternMatcher(tokens, securityOptions);
         const functions = matcher.findFunctions();
 
         if (functions.length === 0 && structures.length === 0) {
@@ -2765,11 +2910,20 @@ EXAMPLES:
 SUPPORTED FILES:
   .js, .ts, .jsx, .tsx - JavaScript/TypeScript files
 
-SECURITY:
-  - Automatic backup creation
-  - Path traversal protection
-  - System directory blocking
-  - File size limits (10MB max)
+SECURITY FEATURES:
+  - Path Traversal Protection: Prevents ../../../etc/passwd attacks
+  - File Size Limits: 10MB maximum to prevent DoS attacks
+  - Parsing Timeout: 30-second maximum to prevent infinite loops
+  - Depth Limits: 100-level maximum nesting to prevent complexity attacks
+  - Extension Validation: Only valid file extensions accepted
+  - System Directory Blacklist: Blocks access to sensitive system paths
+  - Working Directory Enforcement: All operations within project scope
+
+SECURITY WARNINGS:
+    Run this tool only within your project directories
+    Avoid running in Home directory or system directories
+    Tool has built-in protection but exercise caution
+    Review changes before committing to version control
 
 For more information: https://github.com/chahuadev/chahuadev-fix-comments
 `);
@@ -2901,10 +3055,33 @@ function main() {
         extensions: ['.js', '.ts', '.jsx', '.tsx']
     };
 
-    // ดึง extension ที่กำหนด
+    // ดึง extension ที่กำหนด และตรวจสอบความปลอดภัย
     const extIndex = args.findIndex(arg => arg === '--ext');
     if (extIndex !== -1 && args[extIndex + 1]) {
-        options.extensions = args[extIndex + 1].split(',').map(ext => ext.trim());
+        // SECURITY: Extension Validation - ป้องกันการใส่อินพุตที่ไม่ถูกต้อง
+        const inputExtensions = args[extIndex + 1]
+            .split(',')
+            .map(ext => ext.trim().toLowerCase())
+            // กรองเอาเฉพาะ extension ที่มีรูปแบบถูกต้อง (ขึ้นต้นด้วย . และตามด้วยตัวอักษร/ตัวเลข)
+            .filter(ext => {
+                // ตรวจสอบว่าเป็นรูปแบบ extension ที่ถูกต้อง
+                if (!/^\.[a-z0-9]+$/.test(ext)) {
+                    console.warn(`Warning: Invalid extension format '${ext}' ignored. Extensions must start with '.' followed by alphanumeric characters.`);
+                    return false;
+                }
+                // ตรวจสอบความยาวที่สมเหตุสมผล
+                if (ext.length > 10) {
+                    console.warn(`Warning: Extension '${ext}' too long (max 10 chars), ignored.`);
+                    return false;
+                }
+                return true;
+            });
+
+        if (inputExtensions.length > 0) {
+            options.extensions = inputExtensions;
+        } else {
+            console.warn(`Warning: No valid extensions provided, using defaults: ${options.extensions.join(', ')}`);
+        }
     }
 
     // หา target (ไฟล์หรือไดเรกทอรี)
