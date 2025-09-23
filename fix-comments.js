@@ -410,6 +410,10 @@ class FunctionPatternMatcher {
             this.matchFunctionDeclaration() ||
             this.matchArrowFunction() ||
             this.matchAsyncFunction() ||
+            this.matchAsyncClassMethod() ||
+            this.matchGetter() ||
+            this.matchSetter() ||
+            this.matchStaticMethod() ||
             this.matchClassMethod();
     }
 
@@ -649,18 +653,14 @@ class FunctionPatternMatcher {
         if (currentToken?.type === TOKEN_TYPES.IDENTIFIER &&
             this.peekToken(1)?.type === TOKEN_TYPES.PAREN_OPEN) {
 
-            // ตรวจสอบว่าอยู่ในคลาสจริงๆ
-            if (!currentToken.inClass) {
-                return null;
-            }
-
             const nameToken = currentToken;
 
             // กรองคำที่ไม่ใช่ method
             const excludedNames = [
                 'constructor', 'super', 'this', 'new', 'Map', 'Set', 'Array', 'Object', 'Promise',
                 'console', 'Math', 'JSON', 'Date', 'String', 'Number', 'Boolean', 'Error',
-                'require', 'module', 'exports', 'process', 'Buffer', 'setTimeout', 'setInterval'
+                'require', 'module', 'exports', 'process', 'Buffer', 'setTimeout', 'setInterval',
+                'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue'
             ];
 
             if (excludedNames.includes(nameToken.value)) {
@@ -675,6 +675,11 @@ class FunctionPatternMatcher {
             // ตรวจสอบว่าไม่ใช่การเรียกใช้ฟังก์ชัน (function call)
             const prevToken = this.peekToken(-1);
             if (prevToken && (prevToken.value === '.' || prevToken.value === 'new' || prevToken.type === TOKEN_TYPES.PAREN_CLOSE)) {
+                return null;
+            }
+
+            // ตรวจสอบว่าอยู่ในคลาสหรือไม่โดยดูบริบทรอบข้าง
+            if (!this.isInClassContext()) {
                 return null;
             }
 
@@ -697,6 +702,144 @@ class FunctionPatternMatcher {
                 name: nameToken.value,
                 line: nameToken.line,
                 column: nameToken.column,
+                parameters: params,
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: async methodName() {} (ในคลาส) - Async class method pattern
+    matchAsyncClassMethod() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'async' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const asyncToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // ตรวจสอบว่าอยู่ในคลาสหรือไม่
+            if (!this.isInClassContext()) {
+                return null;
+            }
+
+            // กรองคำที่ไม่ใช่ method
+            const excludedNames = [
+                'constructor', 'super', 'this', 'new', 'Map', 'Set', 'Array', 'Object', 'Promise',
+                'console', 'Math', 'JSON', 'Date', 'String', 'Number', 'Boolean', 'Error',
+                'require', 'module', 'exports', 'process', 'Buffer', 'setTimeout', 'setInterval',
+                'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue'
+            ];
+
+            if (excludedNames.includes(nameToken.value)) {
+                return null;
+            }
+
+            // ตรวจสอบว่าต่อด้วย { (method body) หรือไม่
+            const nextTokenAfterParen = this.findTokenAfterParentheses();
+            if (!nextTokenAfterParen || nextTokenAfterParen.type !== TOKEN_TYPES.BRACE_OPEN) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 2);
+            this.cursor += 3; // ข้าม 'async', name, '('
+
+            return {
+                type: 'async_class_method',
+                name: nameToken.value,
+                line: asyncToken.line,
+                column: asyncToken.column,
+                parameters: params,
+                isAsync: true
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: get propertyName() {} - Getter pattern
+    matchGetter() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'get' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const getToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // ตรวจสอบว่าอยู่ในคลาสหรือไม่
+            if (!this.isInClassContext()) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 2);
+            this.cursor += 3; // ข้าม 'get', name, '('
+
+            return {
+                type: 'getter',
+                name: nameToken.value,
+                line: getToken.line,
+                column: getToken.column,
+                parameters: params,
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: set propertyName(value) {} - Setter pattern
+    matchSetter() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'set' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const setToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // ตรวจสอบว่าอยู่ในคลาสหรือไม่
+            if (!this.isInClassContext()) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 2);
+            this.cursor += 3; // ข้าม 'set', name, '('
+
+            return {
+                type: 'setter',
+                name: nameToken.value,
+                line: setToken.line,
+                column: setToken.column,
+                parameters: params,
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: static methodName() {} - Static method pattern
+    matchStaticMethod() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'static' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const staticToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // ตรวจสอบว่าอยู่ในคลาสหรือไม่
+            if (!this.isInClassContext()) {
+                return null;
+            }
+
+            const params = this.extractParameters(this.cursor + 2);
+            this.cursor += 3; // ข้าม 'static', name, '('
+
+            return {
+                type: 'static_method',
+                name: nameToken.value,
+                line: staticToken.line,
+                column: staticToken.column,
                 parameters: params,
                 isAsync: false
             };
@@ -850,14 +993,36 @@ class FunctionPatternMatcher {
     }
 
     isInClassContext() {
-        // Simple heuristic: look for 'class' keyword in recent tokens
-        for (let i = Math.max(0, this.cursor - 20); i < this.cursor; i++) {
-            if (this.tokens[i]?.type === TOKEN_TYPES.KEYWORD &&
-                this.tokens[i]?.value === 'class') {
-                return true;
+        // ตรวจสอบด้วยการนับ braces และหา class keyword
+        let braceDepth = 0;
+        let foundClass = false;
+        let classStart = -1;
+
+        // ตรวจสอบย้อนหลังเพื่อหา class declaration
+        for (let i = Math.max(0, this.cursor - 100); i < this.cursor; i++) {
+            const token = this.tokens[i];
+            if (!token) continue;
+
+            if (token.type === TOKEN_TYPES.KEYWORD && token.value === 'class') {
+                foundClass = true;
+                classStart = i;
+                braceDepth = 0; // รีเซ็ต
+            }
+
+            if (foundClass && i > classStart) {
+                if (token.type === TOKEN_TYPES.BRACE_OPEN) {
+                    braceDepth++;
+                } else if (token.type === TOKEN_TYPES.BRACE_CLOSE) {
+                    braceDepth--;
+                    if (braceDepth <= 0) {
+                        foundClass = false; // ออกจาก class แล้ว
+                    }
+                }
             }
         }
-        return false;
+
+        // ตรวจสอบว่าปัจจุบันอยู่ใน class body หรือไม่
+        return foundClass && braceDepth > 0;
     }
 }
 
@@ -1314,7 +1479,15 @@ class CommentGenerator {
             'order': ['Order data', 'จัดเรียงข้อมูล'],
             'create': ['Create data', 'สร้างข้อมูล'],
             'insert': ['Insert data', 'เพิ่มข้อมูล'],
-            'add': ['Add item', 'เพิ่มรายการ'],
+            'addinterceptor': ['Add interceptor', 'เพิ่มตัวสกัดกั้น'],
+            'addrequestinterceptor': ['Add request interceptor', 'เพิ่มตัวสกัดกั้นคำขอ'],
+            'addresponseinterceptor': ['Add response interceptor', 'เพิ่มตัวสกัดกั้นการตอบกลับ'],
+            'tojson': ['Convert to JSON', 'แปลงเป็น JSON'],
+            'fromjson': ['Create from JSON', 'สร้างจาก JSON'],
+            'isretryable': ['Check if retryable', 'ตรวจสอบว่าลองใหม่ได้หรือไม่'],
+            'performrequest': ['Perform request', 'ดำเนินการขอ'],
+            'retryrequest': ['Retry request', 'ลองคำขอใหม่'],
+            'withretry': ['With retry logic', 'พร้อมตรรกะลองใหม่'],
             'post': ['Post data', 'โพสต์ข้อมูล'],
             'put': ['Put data', 'ใส่ข้อมูล'],
             'update': ['Update data', 'อัพเดทข้อมูล'],
@@ -2031,7 +2204,11 @@ class CommentGenerator {
             /^\w+\s*:/,               // object methods
             /^\w+\s*\(/,              // function calls (methods)
             /^export/,                // exports
-            /^module\.exports/        // module exports
+            /^module\.exports/,       // module exports
+            /^static\s+\w+\s*\(/,     // static methods
+            /^get\s+\w+\s*\(/,        // getters
+            /^set\s+\w+\s*\(/,        // setters
+            /^async\s+\w+\s*\(/       // async methods
         ];
 
         // ตรวจสอบว่าตรงกับรูปแบบใดรูปแบบหนึ่งหรือไม่
@@ -2279,6 +2456,16 @@ function addMissingComments(content, options = {}) {
             }
         });
 
+        // เพิ่มการค้นหา methods โดยใช้ regex เป็นการสำรอง
+        const regexMethods = findMethodsWithRegex(content);
+        regexMethods.forEach(method => {
+            const key = `${method.name}-${method.line}`;
+            if (!addedItems.has(key) && method.name !== 'constructor') {
+                allItems.push(method);
+                addedItems.set(key, method.type);
+            }
+        });
+
         if (allItems.length === 0) {
             return content;
         }
@@ -2384,6 +2571,80 @@ function addMissingComments(content, options = {}) {
         console.error(`Error in addMissingComments: ${error.message}`);
         return content;
     }
+}
+
+// ฟังก์ชันช่วยเหลือสำหรับหา methods ที่ tokenizer อาจพลาด
+function findMethodsWithRegex(content) {
+    const methods = [];
+    const lines = content.split('\n');
+
+    lines.forEach((line, index) => {
+        const trimmed = line.trim();
+
+        // รูปแบบ method ต่างๆ ที่อาจถูกพลาด
+        const patterns = [
+            /^\s*(\w+)\s*\(\s*[^)]*\)\s*\{/,           // methodName() {
+            /^\s*async\s+(\w+)\s*\(\s*[^)]*\)\s*\{/,   // async methodName() {
+            /^\s*static\s+(\w+)\s*\(\s*[^)]*\)\s*\{/,  // static methodName() {
+            /^\s*get\s+(\w+)\s*\(\s*[^)]*\)\s*\{/,     // get propertyName() {
+            /^\s*set\s+(\w+)\s*\(\s*[^)]*\)\s*\{/,     // set propertyName() {
+        ];
+
+        for (const pattern of patterns) {
+            const match = trimmed.match(pattern);
+            if (match && match[1]) {
+                const methodName = match[1];
+
+                // กรอง keywords และ built-in functions
+                const excludedNames = [
+                    'constructor', 'super', 'this', 'new', 'Map', 'Set', 'Array', 'Object', 'Promise',
+                    'console', 'Math', 'JSON', 'Date', 'String', 'Number', 'Boolean', 'Error',
+                    'require', 'module', 'exports', 'process', 'Buffer', 'setTimeout', 'setInterval',
+                    'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue'
+                ];
+
+                if (!excludedNames.includes(methodName)) {
+                    // ตรวจสอบว่าอยู่ในคลาสหรือไม่โดยดูบริบทรอบข้าง
+                    let inClass = false;
+                    for (let i = Math.max(0, index - 20); i < index; i++) {
+                        if (lines[i] && lines[i].includes('class ')) {
+                            let braceCount = 0;
+                            for (let j = i; j <= index; j++) {
+                                const testLine = lines[j] || '';
+                                braceCount += (testLine.match(/\{/g) || []).length;
+                                braceCount -= (testLine.match(/\}/g) || []).length;
+                            }
+                            if (braceCount > 0) {
+                                inClass = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (inClass) {
+                        // กำหนดประเภท
+                        let type = 'class_method';
+                        if (trimmed.includes('async ')) type = 'async_class_method';
+                        else if (trimmed.includes('static ')) type = 'static_method';
+                        else if (trimmed.includes('get ')) type = 'getter';
+                        else if (trimmed.includes('set ')) type = 'setter';
+
+                        methods.push({
+                            type: type,
+                            name: methodName,
+                            line: index + 1,
+                            column: trimmed.indexOf(methodName),
+                            parameters: [],
+                            isAsync: trimmed.includes('async '),
+                            fromRegex: true
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    return methods;
 }
 
 // ======================================================================
