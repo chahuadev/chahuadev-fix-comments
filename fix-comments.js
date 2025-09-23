@@ -3299,10 +3299,11 @@ class CommentGenerator {
             description = this.getFunctionDescription(func.name, func.type);
         }
 
-        // สร้าง comment ในรูปแบบเดียวกันทั้งหมด
+        // สร้าง comment ในรูปแบบ zone header เหมือนกันทั้งหมด
         let comment = '';
         comment += '// ======================================================================\n';
-        comment += `// ${description.english}/${description.thai}\n`;
+        comment += `// EN: ${description.english}\n`;
+        comment += `// TH: ${description.thai}\n`;
         comment += '// ======================================================================\n';
 
         // สำหรับ object ที่มี properties เยอะ ให้เพิ่มคอมเมนต์แยกหมวดหมู่
@@ -3669,17 +3670,11 @@ class CommentGenerator {
             return this.generateFunctionComment({ name: 'Unknown', type: type });
         }
 
-        const isClass = type.includes('class') || type === 'class_declaration';
-
-        if (isClass) {
-            return `// ======================================================================\n` +
-                `// EN: ${smartComment.english}\n` +
-                `// TH: ${smartComment.thai}\n` +
-                `// ======================================================================`;
-        } else {
-            return `// EN: ${smartComment.english}\n` +
-                `// TH: ${smartComment.thai}`;
-        }
+        // ใช้ zone header format สำหรับทุกประเภทคอมเมนต์
+        return `// ======================================================================\n` +
+            `// EN: ${smartComment.english}\n` +
+            `// TH: ${smartComment.thai}\n` +
+            `// ======================================================================`;
     }
 }
 
@@ -3947,28 +3942,62 @@ function generateSmartFunctionComment(functionName, blueprint, structureInfo) {
             break;
 
         case 'setter':
-            englishComment = `Set ${functionName.replace(/^set/, '').toLowerCase()}`;
-            thaiComment = `กำหนด ${functionName.replace(/^set/, '').toLowerCase()}`;
+            let setterName = functionName
+                .replace(/^set([A-Z])/, '$1') // ลบ "set" และรักษาตัวพิมพ์ใหญ่
+                .replace(/([A-Z])/g, ' $1') // เพิ่ม space ก่อนตัวพิมพ์ใหญ่
+                .toLowerCase()
+                .trim();
+            englishComment = `Set ${setterName}`;
+            thaiComment = `กำหนด ${setterName}`;
             break;
 
         case 'creator':
-            englishComment = `Create new ${functionName.replace(/^create/, '').toLowerCase()}`;
-            thaiComment = `สร้าง ${functionName.replace(/^create/, '').toLowerCase()} ใหม่`;
+            let creatorName = functionName
+                .replace(/^create([A-Z])/, '$1') // ลบ "create" และรักษาตัวพิมพ์ใหญ่
+                .replace(/([A-Z])/g, ' $1') // เพิ่ม space ก่อนตัวพิมพ์ใหญ่
+                .toLowerCase()
+                .trim();
+            englishComment = `Create new ${creatorName}`;
+            thaiComment = `สร้าง ${creatorName} ใหม่`;
             break;
 
         case 'validator':
-            englishComment = `Validate ${functionName.replace(/^(validate|check|verify)/, '').toLowerCase()}`;
-            thaiComment = `ตรวจสอบ ${functionName.replace(/^(validate|check|verify)/, '').toLowerCase()}`;
+            let validatorName = functionName
+                .replace(/^(validate|check|verify)([A-Z])/, '$2') // ลบ prefix และรักษาตัวพิมพ์ใหญ่
+                .replace(/([A-Z])/g, ' $1') // เพิ่ม space ก่อนตัวพิมพ์ใหญ่
+                .toLowerCase()
+                .trim();
+            englishComment = `Validate ${validatorName}`;
+            thaiComment = `ตรวจสอบ ${validatorName}`;
             break;
 
         case 'processor':
-            englishComment = `Process ${functionName.replace(/^(process|handle|execute)/, '').toLowerCase()}`;
-            thaiComment = `ประมวลผล ${functionName.replace(/^(process|handle|execute)/, '').toLowerCase()}`;
+            let processorName = functionName
+                .replace(/^(process|handle|execute)([A-Z])/, '$2') // ลบ prefix และรักษาตัวพิมพ์ใหญ่
+                .replace(/([A-Z])/g, ' $1') // เพิ่ม space ก่อนตัวพิมพ์ใหญ่
+                .toLowerCase()
+                .trim();
+            englishComment = `Process ${processorName}`;
+            thaiComment = `ประมวลผล ${processorName}`;
             break;
 
         case 'demo':
-            englishComment = `Demonstration of ${functionName.replace(/^(demo|test|example)/, '').toLowerCase()}`;
-            thaiComment = `การสาธิต ${functionName.replace(/^(demo|test|example)/, '').toLowerCase()}`;
+            // แก้ไข regex ให้จัดการคำพิเศษก่อน
+            let cleanedName = functionName;
+            if (functionName === 'demonstrateAlgorithms') {
+                cleanedName = 'advanced algorithms and data structures';
+            } else if (functionName === 'demonstrateFeatures') {
+                cleanedName = 'system features';
+            } else {
+                // สำหรับชื่อทั่วไป ลบ prefix แล้วเพิ่ม space ก่อนตัวพิมพ์ใหญ่
+                cleanedName = functionName
+                    .replace(/^(demo|test|example)([A-Z])/, '$2') // ลบ prefix และรักษาตัวพิมพ์ใหญ่
+                    .replace(/([A-Z])/g, ' $1') // เพิ่ม space ก่อนตัวพิมพ์ใหญ่
+                    .toLowerCase()
+                    .trim();
+            }
+            englishComment = `Demonstration of ${cleanedName}`;
+            thaiComment = `การสาธิต ${cleanedName}`;
             break;
 
         default:
