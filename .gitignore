@@ -112,3 +112,9 @@ docker-compose.override.yml
 # =================================================================
 .monitoring/
 analytics/
+
+# =================================================================
+#  TEST FOLDERS - IGNORE NUMBERED TEST FOLDERS
+# =================================================================
+# Keep main test folder but ignore numbered variants
+test-chahuadev-comment-fixer - *

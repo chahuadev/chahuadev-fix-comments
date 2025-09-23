@@ -18,3 +18,6 @@ Thumbs.db
 .Spotlight-V100
 .Trashes
 scripts
+
+# Ignore numbered test folders (keep main test folder for users)
+test-chahuadev-comment-fixer - *
