@@ -1589,8 +1589,356 @@ class StructureParser {
 }
 
 // ======================================================================
-// Structure Analyzer Engine/เครื่องมือวิเคราะห์โครงสร้าง
+// Smart File Analyzer Engine/เครื่องมือวิเคราะห์ไฟล์อัจฉริยะ
 // ======================================================================
+
+// Smart File Analyzer: ตัวเรียนรู้และวิเคราะห์ไฟล์ทั้งหมดก่อนสร้างคอมเมนต์
+class SmartFileAnalyzer {
+    constructor(content, securityOptions = {}) {
+        this.content = content;
+        this.lines = content.split('\n');
+        this.security = new TokenizerSecurityManager(securityOptions);
+
+        // ข้อมูลที่เรียนรู้ได้จากไฟล์
+        this.fileBlueprint = {
+            classes: new Map(),           // Map<className, classInfo>
+            functions: new Map(),         // Map<functionName, functionInfo>
+            patterns: new Set(),          // Set ของ patterns ที่พบ
+            keywords: new Set(),          // Set ของ keywords ที่ควรเพิ่ม
+            relationships: new Map(),     // Map ของความสัมพันธ์ระหว่าง classes/functions
+            context: {                    // บริบทของไฟล์
+                type: 'unknown',          // 'api', 'database', 'ui', 'algorithm', etc.
+                domain: 'unknown',        // 'web', 'crypto', 'data', etc.
+                complexity: 'simple'      // 'simple', 'moderate', 'complex'
+            }
+        };
+    }
+
+    // วิเคราะห์ไฟล์ทั้งหมดและสร้าง blueprint
+    analyzeFile() {
+        try {
+            this.security.startParsing();
+
+            // Phase 1: Tokenize และ Parse โครงสร้าง
+            const tokenizer = new JavaScriptTokenizer(this.content, this.security);
+            const tokens = tokenizer.tokenize();
+            const parser = new StructureParser(tokens, this.security);
+            const structures = parser.parse();
+
+            // Phase 2: วิเคราะห์โครงสร้างลึก
+            this.analyzeStructures(structures);
+
+            // Phase 3: ค้นหาลวดลายและความสัมพันธ์
+            this.findPatternsAndRelationships();
+
+            // Phase 4: สร้าง dynamic keywords
+            this.generateDynamicKeywords();
+
+            // Phase 5: กำหนดบริบทของไฟล์
+            this.determineFileContext();
+
+            console.log(` Smart Analysis Complete: Found ${this.fileBlueprint.classes.size} classes, ${this.fileBlueprint.functions.size} functions, ${this.fileBlueprint.keywords.size} keywords`);
+
+            return this.fileBlueprint;
+
+        } catch (error) {
+            console.error(' Smart Analysis Error:', error.message);
+            return null;
+        }
+    }
+
+    // วิเคราะห์โครงสร้างที่ได้จาก parser
+    analyzeStructures(structures) {
+        structures.forEach(structure => {
+            if (structure.type === 'class_declaration') {
+                this.analyzeClass(structure);
+            } else {
+                this.analyzeFunction(structure);
+            }
+        });
+    }
+
+    // วิเคราะห์คลาสอย่างละเอียด
+    analyzeClass(classStructure) {
+        const className = classStructure.name;
+        const classInfo = {
+            name: className,
+            line: classStructure.line,
+            methods: new Map(),
+            properties: new Set(),
+            extends: null,
+            implements: [],
+            purpose: this.inferClassPurpose(className),
+            complexity: this.calculateClassComplexity(classStructure)
+        };
+
+        // วิเคราะห์ methods ในคลาส
+        if (classStructure.methods) {
+            classStructure.methods.forEach(method => {
+                const methodInfo = {
+                    name: method.name,
+                    type: method.type,
+                    line: method.line,
+                    isAsync: method.isAsync || false,
+                    isStatic: method.isStatic || false,
+                    kind: method.kind || 'method',
+                    parameters: method.parameters || [],
+                    purpose: this.inferMethodPurpose(method.name, className),
+                    accessibility: this.inferAccessibility(method.name)
+                };
+                classInfo.methods.set(method.name, methodInfo);
+            });
+        }
+
+        this.fileBlueprint.classes.set(className, classInfo);
+        this.addPattern(className, 'class');
+    }
+
+    // วิเคราะห์ฟังก์ชันอย่างละเอียด
+    analyzeFunction(funcStructure) {
+        const functionName = funcStructure.name;
+        const functionInfo = {
+            name: functionName,
+            type: funcStructure.type,
+            line: funcStructure.line,
+            parameters: funcStructure.parameters || [],
+            isAsync: funcStructure.isAsync || false,
+            isGenerator: funcStructure.isGenerator || false,
+            purpose: this.inferFunctionPurpose(functionName),
+            scope: 'global',
+            complexity: this.calculateFunctionComplexity(funcStructure)
+        };
+
+        this.fileBlueprint.functions.set(functionName, functionInfo);
+        this.addPattern(functionName, 'function');
+    }
+
+    // ค้นหาลวดลายและความสัมพันธ์
+    findPatternsAndRelationships() {
+        // หาความสัมพันธ์ระหว่าง classes
+        for (const [className, classInfo] of this.fileBlueprint.classes) {
+            // ค้นหา inheritance และ composition patterns
+            this.findClassRelationships(className, classInfo);
+
+            // ค้นหา design patterns
+            this.detectDesignPatterns(className, classInfo);
+        }
+
+        // หาความสัมพันธ์ระหว่าง functions
+        for (const [funcName, funcInfo] of this.fileBlueprint.functions) {
+            this.findFunctionRelationships(funcName, funcInfo);
+        }
+    }
+
+    // สร้าง dynamic keywords จากสิ่งที่พบในไฟล์
+    generateDynamicKeywords() {
+        // สร้าง keywords จากชื่อ classes
+        for (const className of this.fileBlueprint.classes.keys()) {
+            this.addDynamicKeyword(className.toLowerCase(), `${className} class`, `คลาส ${className}`);
+
+            // เพิ่ม variations
+            if (className.endsWith('Manager')) {
+                this.addDynamicKeyword(className.toLowerCase(), `${className} manager`, `ตัวจัดการ ${className.replace('Manager', '')}`);
+            }
+            if (className.endsWith('Controller')) {
+                this.addDynamicKeyword(className.toLowerCase(), `${className} controller`, `ตัวควบคุม ${className.replace('Controller', '')}`);
+            }
+            if (className.endsWith('Service')) {
+                this.addDynamicKeyword(className.toLowerCase(), `${className} service`, `บริการ ${className.replace('Service', '')}`);
+            }
+        }
+
+        // สร้าง keywords จากชื่อ methods และ functions
+        const allMethods = new Set();
+        for (const classInfo of this.fileBlueprint.classes.values()) {
+            for (const methodName of classInfo.methods.keys()) {
+                allMethods.add(methodName);
+            }
+        }
+        for (const funcName of this.fileBlueprint.functions.keys()) {
+            allMethods.add(funcName);
+        }
+
+        // เพิ่ม method-specific keywords
+        for (const methodName of allMethods) {
+            this.addMethodSpecificKeywords(methodName);
+        }
+    }
+
+    // เพิ่ม keywords เฉพาะสำหรับ methods
+    addMethodSpecificKeywords(methodName) {
+        const name = methodName.toLowerCase();
+
+        // CRUD operations
+        if (name.includes('create') || name.includes('add') || name.includes('insert')) {
+            this.addDynamicKeyword(name, `Create ${methodName}`, `สร้าง ${methodName}`);
+        }
+        if (name.includes('get') || name.includes('fetch') || name.includes('find') || name.includes('retrieve')) {
+            this.addDynamicKeyword(name, `Get ${methodName}`, `ดึง ${methodName}`);
+        }
+        if (name.includes('update') || name.includes('modify') || name.includes('edit') || name.includes('change')) {
+            this.addDynamicKeyword(name, `Update ${methodName}`, `อัปเดต ${methodName}`);
+        }
+        if (name.includes('delete') || name.includes('remove') || name.includes('destroy')) {
+            this.addDynamicKeyword(name, `Delete ${methodName}`, `ลบ ${methodName}`);
+        }
+
+        // Validation and processing
+        if (name.includes('validate') || name.includes('check') || name.includes('verify')) {
+            this.addDynamicKeyword(name, `Validate ${methodName}`, `ตรวจสอบ ${methodName}`);
+        }
+        if (name.includes('process') || name.includes('handle') || name.includes('execute')) {
+            this.addDynamicKeyword(name, `Process ${methodName}`, `ประมวลผล ${methodName}`);
+        }
+
+        // Specific method patterns
+        if (name.includes('generate') && name.includes('key')) {
+            this.addDynamicKeyword(name, 'Generate encryption key', 'สร้างคีย์การเข้ารหัส');
+        }
+        if (name.includes('encrypt')) {
+            this.addDynamicKeyword(name, 'Encrypt data', 'เข้ารหัสข้อมูล');
+        }
+        if (name.includes('decrypt')) {
+            this.addDynamicKeyword(name, 'Decrypt data', 'ถอดรหัสข้อมูล');
+        }
+        if (name.includes('cache') && name.includes('size')) {
+            this.addDynamicKeyword(name, 'Get cache size', 'ดึงขนาดแคช');
+        }
+        if (name.includes('max') && name.includes('cache')) {
+            this.addDynamicKeyword(name, 'Set maximum cache size', 'กำหนดขนาดแคชสูงสุด');
+        }
+    }
+
+    // กำหนดบริบทของไฟล์
+    determineFileContext() {
+        const classNames = Array.from(this.fileBlueprint.classes.keys()).map(name => name.toLowerCase());
+        const functionNames = Array.from(this.fileBlueprint.functions.keys()).map(name => name.toLowerCase());
+        const allNames = [...classNames, ...functionNames];
+
+        // ตรวจจับประเภทของไฟล์
+        if (allNames.some(name => name.includes('crypto') || name.includes('encrypt') || name.includes('hash'))) {
+            this.fileBlueprint.context.type = 'security';
+            this.fileBlueprint.context.domain = 'crypto';
+        } else if (allNames.some(name => name.includes('database') || name.includes('db') || name.includes('sql'))) {
+            this.fileBlueprint.context.type = 'database';
+            this.fileBlueprint.context.domain = 'data';
+        } else if (allNames.some(name => name.includes('api') || name.includes('client') || name.includes('request'))) {
+            this.fileBlueprint.context.type = 'api';
+            this.fileBlueprint.context.domain = 'web';
+        } else if (allNames.some(name => name.includes('algorithm') || name.includes('sort') || name.includes('search'))) {
+            this.fileBlueprint.context.type = 'algorithm';
+            this.fileBlueprint.context.domain = 'computation';
+        } else if (allNames.some(name => name.includes('component') || name.includes('render') || name.includes('ui'))) {
+            this.fileBlueprint.context.type = 'ui';
+            this.fileBlueprint.context.domain = 'frontend';
+        }
+
+        // ตรวจจับความซับซ้อน
+        const totalStructures = this.fileBlueprint.classes.size + this.fileBlueprint.functions.size;
+        if (totalStructures > 20) {
+            this.fileBlueprint.context.complexity = 'complex';
+        } else if (totalStructures > 10) {
+            this.fileBlueprint.context.complexity = 'moderate';
+        }
+    }
+
+    // Helper methods
+    addPattern(name, type) {
+        this.fileBlueprint.patterns.add(`${type}:${name.toLowerCase()}`);
+    }
+
+    addDynamicKeyword(key, english, thai) {
+        this.fileBlueprint.keywords.add(JSON.stringify({ key, english, thai }));
+    }
+
+    inferClassPurpose(className) {
+        const name = className.toLowerCase();
+        if (name.includes('manager')) return 'manager';
+        if (name.includes('controller')) return 'controller';
+        if (name.includes('service')) return 'service';
+        if (name.includes('model')) return 'model';
+        if (name.includes('view')) return 'view';
+        if (name.includes('component')) return 'component';
+        if (name.includes('error')) return 'error';
+        if (name.includes('validator')) return 'validator';
+        if (name.includes('parser')) return 'parser';
+        if (name.includes('tokenizer')) return 'tokenizer';
+        return 'class';
+    }
+
+    inferMethodPurpose(methodName, className) {
+        const method = methodName.toLowerCase();
+        const cls = className.toLowerCase();
+
+        // Context-aware purpose inference
+        if (cls.includes('crypto') || cls.includes('security')) {
+            if (method.includes('generate')) return 'generate_crypto';
+            if (method.includes('encrypt')) return 'encrypt_data';
+            if (method.includes('decrypt')) return 'decrypt_data';
+        }
+
+        if (cls.includes('cache') || cls.includes('memory')) {
+            if (method.includes('size')) return 'get_size';
+            if (method.includes('clear')) return 'clear_cache';
+            if (method.includes('max')) return 'set_limit';
+        }
+
+        // General purpose inference
+        if (method.includes('get') || method.includes('fetch')) return 'getter';
+        if (method.includes('set') || method.includes('assign')) return 'setter';
+        if (method.includes('create') || method.includes('add')) return 'creator';
+        if (method.includes('delete') || method.includes('remove')) return 'destroyer';
+        if (method.includes('update') || method.includes('modify')) return 'updater';
+        if (method.includes('validate') || method.includes('check')) return 'validator';
+        if (method.includes('process') || method.includes('handle')) return 'processor';
+
+        return 'method';
+    }
+
+    inferFunctionPurpose(functionName) {
+        const name = functionName.toLowerCase();
+        if (name.includes('demo') || name.includes('test') || name.includes('example')) return 'demo';
+        if (name.includes('init') || name.includes('setup')) return 'initializer';
+        if (name.includes('main') || name.includes('run')) return 'main';
+        if (name.includes('helper') || name.includes('util')) return 'utility';
+        return 'function';
+    }
+
+    inferAccessibility(methodName) {
+        if (methodName.startsWith('_')) return 'private';
+        if (methodName.startsWith('#')) return 'private';
+        return 'public';
+    }
+
+    calculateClassComplexity(classStructure) {
+        const methodCount = classStructure.methods ? classStructure.methods.length : 0;
+        if (methodCount > 15) return 'high';
+        if (methodCount > 8) return 'medium';
+        return 'low';
+    }
+
+    calculateFunctionComplexity(funcStructure) {
+        const paramCount = funcStructure.parameters ? funcStructure.parameters.length : 0;
+        if (paramCount > 5) return 'high';
+        if (paramCount > 2) return 'medium';
+        return 'low';
+    }
+
+    findClassRelationships(className, classInfo) {
+        // Implementation for finding class relationships
+        // This would analyze inheritance, composition, etc.
+    }
+
+    detectDesignPatterns(className, classInfo) {
+        // Implementation for detecting design patterns
+        // Singleton, Factory, Observer, etc.
+    }
+
+    findFunctionRelationships(funcName, funcInfo) {
+        // Implementation for finding function relationships
+        // Helper functions, utility functions, etc.
+    }
+}
 
 // Structure Analyzer:ตัววิเคราะห์โครงสร้างโค้ด
 class StructureAnalyzer {
@@ -2843,6 +3191,318 @@ class CommentGenerator {
             `// ${title}/${description}\n` +
             '// ======================================================================\n';
     }
+
+    // สร้างคอมเมนต์ที่จัดรูปแบบแล้วจาก smart comment
+    generateFormattedComment(smartComment, type) {
+        if (!smartComment || !smartComment.english || !smartComment.thai) {
+            return this.generateFunctionComment({ name: 'Unknown', type: type });
+        }
+
+        const isClass = type.includes('class') || type === 'class_declaration';
+
+        if (isClass) {
+            return `// ======================================================================\n` +
+                `// EN: ${smartComment.english}\n` +
+                `// TH: ${smartComment.thai}\n` +
+                `// ======================================================================`;
+        } else {
+            return `// EN: ${smartComment.english}\n` +
+                `// TH: ${smartComment.thai}`;
+        }
+    }
+}
+
+// ======================================================================
+// Smart Learning Functions/ฟังก์ชันเรียนรู้อัจฉริยะ
+// ======================================================================
+
+/**
+ * วิเคราะห์ไฟล์ด้วยระบบ Smart Learning
+ * Analyze file with Smart Learning system
+ * @param {string} content - เนื้อหาไฟล์
+ * @param {Object} options - ตัวเลือกการวิเคราะห์
+ * @returns {Object} ผลการวิเคราะห์และ blueprint ของไฟล์
+ */
+function analyzeFileWithSmartLearning(content, options = {}) {
+    try {
+        console.log(' Starting Smart Learning Analysis...');
+
+        // สร้าง SmartFileAnalyzer instance
+        const analyzer = new SmartFileAnalyzer(content, options.security || {});
+
+        // วิเคราะห์ไฟล์และสร้าง blueprint
+        const blueprint = analyzer.analyzeFile();
+
+        if (!blueprint) {
+            console.log(' Smart Learning Analysis failed, falling back to traditional method');
+            return null;
+        }
+
+        // แสดงผลสรุปการวิเคราะห์
+        console.log(' Smart Learning Results:');
+        console.log(`   - Classes: ${blueprint.classes.size}`);
+        console.log(`   - Functions: ${blueprint.functions.size}`);
+        console.log(`   - Patterns: ${blueprint.patterns.size}`);
+        console.log(`   - Keywords: ${blueprint.keywords.size}`);
+        console.log(`   - File Type: ${blueprint.context.type}`);
+        console.log(`   - Domain: ${blueprint.context.domain}`);
+        console.log(`   - Complexity: ${blueprint.context.complexity}`);
+
+        return {
+            success: true,
+            blueprint: blueprint,
+            analyzer: analyzer
+        };
+
+    } catch (error) {
+        console.error(' Smart Learning Analysis Error:', error.message);
+        return null;
+    }
+}
+
+/**
+ * สร้างคอมเมนต์อัจฉริยะจากข้อมูล blueprint
+ * Generate smart comment from blueprint data
+ * @param {string} functionName - ชื่อฟังก์ชันหรือคลาส
+ * @param {string} type - ประเภท (function, class, method)
+ * @param {Object} blueprint - ข้อมูล blueprint จาก SmartFileAnalyzer
+ * @param {Object} structureInfo - ข้อมูลโครงสร้างเพิ่มเติม
+ * @returns {Object} คอมเมนต์ที่สร้างขึ้น
+ */
+function generateSmartComment(functionName, type, blueprint, structureInfo = {}) {
+    try {
+        // ถ้าไม่มี blueprint ใช้วิธีเดิม
+        if (!blueprint) {
+            const generator = new CommentGenerator();
+            return generator.getFunctionDescription(functionName, type);
+        }
+
+        let comment = null;
+
+        // ค้นหาข้อมูลจาก blueprint ตามประเภท
+        if (type.includes('class') || type === 'class_declaration') {
+            comment = generateSmartClassComment(functionName, blueprint, structureInfo);
+        } else {
+            comment = generateSmartFunctionComment(functionName, blueprint, structureInfo);
+        }
+
+        // ถ้าไม่สามารถสร้างคอมเมนต์อัจฉริยะได้ ใช้วิธีเดิม
+        if (!comment) {
+            console.log(` Falling back to traditional method for: ${functionName}`);
+            const generator = new CommentGenerator();
+            return generator.getFunctionDescription(functionName, type);
+        }
+
+        return comment;
+
+    } catch (error) {
+        console.error(` Smart Comment Generation Error for ${functionName}:`, error.message);
+
+        // ใช้วิธีเดิมเป็น fallback
+        const generator = new CommentGenerator();
+        return generator.getFunctionDescription(functionName, type);
+    }
+}
+
+/**
+ * สร้างคอมเมนต์อัจฉริยะสำหรับคลาส
+ * Generate smart comment for class
+ */
+function generateSmartClassComment(className, blueprint, structureInfo) {
+    const classInfo = blueprint.classes.get(className);
+
+    if (!classInfo) {
+        return null;
+    }
+
+    const context = blueprint.context;
+    let englishComment = '';
+    let thaiComment = '';
+
+    // สร้างคอมเมนต์ตามบริบทและวัตถุประสงค์ของคลาส
+    switch (classInfo.purpose) {
+        case 'manager':
+            if (context.domain === 'crypto') {
+                englishComment = `${className} - Security and cryptographic operations manager`;
+                thaiComment = `${className} - ตัวจัดการงานด้านความปลอดภัยและการเข้ารหัส`;
+            } else if (context.domain === 'data') {
+                englishComment = `${className} - Data management and processing manager`;
+                thaiComment = `${className} - ตัวจัดการข้อมูลและการประมวลผล`;
+            } else {
+                englishComment = `${className} - System operations manager`;
+                thaiComment = `${className} - ตัวจัดการการดำเนินงานระบบ`;
+            }
+            break;
+
+        case 'controller':
+            englishComment = `${className} - Application flow controller`;
+            thaiComment = `${className} - ตัวควบคุมการทำงานของแอปพลิเคชัน`;
+            break;
+
+        case 'service':
+            englishComment = `${className} - Business logic service provider`;
+            thaiComment = `${className} - ผู้ให้บริการตรรกะทางธุรกิจ`;
+            break;
+
+        case 'error':
+            englishComment = `${className} - Custom error handling class`;
+            thaiComment = `${className} - คลาสจัดการข้อผิดพลาดแบบกำหนดเอง`;
+            break;
+
+        case 'validator':
+            englishComment = `${className} - Data validation and verification`;
+            thaiComment = `${className} - การตรวจสอบและยืนยันข้อมูล`;
+            break;
+
+        default:
+            // ใช้บริบทไฟล์ในการสร้างคอมเมนต์
+            if (context.type === 'security') {
+                englishComment = `${className} - Security-related class`;
+                thaiComment = `${className} - คลาสที่เกี่ยวข้องกับความปลอดภัย`;
+            } else if (context.type === 'api') {
+                englishComment = `${className} - API-related class`;
+                thaiComment = `${className} - คลาสที่เกี่ยวข้องกับ API`;
+            } else if (context.type === 'database') {
+                englishComment = `${className} - Database-related class`;
+                thaiComment = `${className} - คลาสที่เกี่ยวข้องกับฐานข้อมูล`;
+            } else {
+                englishComment = `${className} class`;
+                thaiComment = `คลาส ${className}`;
+            }
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
+}
+
+/**
+ * สร้างคอมเมนต์อัจฉริยะสำหรับฟังก์ชัน
+ * Generate smart comment for function
+ */
+function generateSmartFunctionComment(functionName, blueprint, structureInfo) {
+    // ค้นหาฟังก์ชันใน blueprint
+    let functionInfo = blueprint.functions.get(functionName);
+
+    // ถ้าไม่พบในฟังก์ชันระดับ global ลองหาใน class methods
+    if (!functionInfo) {
+        for (const classInfo of blueprint.classes.values()) {
+            const methodInfo = classInfo.methods.get(functionName);
+            if (methodInfo) {
+                functionInfo = {
+                    ...methodInfo,
+                    parentClass: classInfo.name,
+                    isMethod: true
+                };
+                break;
+            }
+        }
+    }
+
+    if (!functionInfo) {
+        return null;
+    }
+
+    const context = blueprint.context;
+    let englishComment = '';
+    let thaiComment = '';
+
+    // สร้างคอมเมนต์ตามวัตถุประสงค์และบริบท
+    switch (functionInfo.purpose) {
+        case 'generate_crypto':
+            englishComment = `Generate cryptographic ${functionName.toLowerCase().includes('key') ? 'key' : 'data'}`;
+            thaiComment = `สร้าง${functionName.toLowerCase().includes('key') ? 'คีย์' : 'ข้อมูล'}เข้ารหัส`;
+            break;
+
+        case 'encrypt_data':
+            englishComment = 'Encrypt sensitive data';
+            thaiComment = 'เข้ารหัสข้อมูลที่สำคัญ';
+            break;
+
+        case 'decrypt_data':
+            englishComment = 'Decrypt encrypted data';
+            thaiComment = 'ถอดรหัสข้อมูลที่เข้ารหัส';
+            break;
+
+        case 'get_size':
+            if (functionName.toLowerCase().includes('cache')) {
+                englishComment = 'Get current cache size';
+                thaiComment = 'ดึงขนาดแคชปัจจุบัน';
+            } else {
+                englishComment = 'Get size information';
+                thaiComment = 'ดึงข้อมูลขนาด';
+            }
+            break;
+
+        case 'set_limit':
+            if (functionName.toLowerCase().includes('cache')) {
+                englishComment = 'Set maximum cache limit';
+                thaiComment = 'กำหนดขีดจำกัดแคชสูงสุด';
+            } else {
+                englishComment = 'Set operational limit';
+                thaiComment = 'กำหนดขีดจำกัดการทำงาน';
+            }
+            break;
+
+        case 'clear_cache':
+            englishComment = 'Clear cache data';
+            thaiComment = 'ล้างข้อมูลแคช';
+            break;
+
+        case 'getter':
+            if (context.domain === 'crypto') {
+                englishComment = `Get ${functionName.replace(/^get/, '').toLowerCase()} value`;
+                thaiComment = `ดึงค่า ${functionName.replace(/^get/, '').toLowerCase()}`;
+            } else {
+                englishComment = `Get ${functionName.replace(/^get/, '').toLowerCase()}`;
+                thaiComment = `ดึง ${functionName.replace(/^get/, '').toLowerCase()}`;
+            }
+            break;
+
+        case 'setter':
+            englishComment = `Set ${functionName.replace(/^set/, '').toLowerCase()}`;
+            thaiComment = `กำหนด ${functionName.replace(/^set/, '').toLowerCase()}`;
+            break;
+
+        case 'creator':
+            englishComment = `Create new ${functionName.replace(/^create/, '').toLowerCase()}`;
+            thaiComment = `สร้าง ${functionName.replace(/^create/, '').toLowerCase()} ใหม่`;
+            break;
+
+        case 'validator':
+            englishComment = `Validate ${functionName.replace(/^(validate|check|verify)/, '').toLowerCase()}`;
+            thaiComment = `ตรวจสอบ ${functionName.replace(/^(validate|check|verify)/, '').toLowerCase()}`;
+            break;
+
+        case 'processor':
+            englishComment = `Process ${functionName.replace(/^(process|handle|execute)/, '').toLowerCase()}`;
+            thaiComment = `ประมวลผล ${functionName.replace(/^(process|handle|execute)/, '').toLowerCase()}`;
+            break;
+
+        case 'demo':
+            englishComment = `Demonstration of ${functionName.replace(/^(demo|test|example)/, '').toLowerCase()}`;
+            thaiComment = `การสาธิต ${functionName.replace(/^(demo|test|example)/, '').toLowerCase()}`;
+            break;
+
+        default:
+            // ใช้บริบทไฟล์และชื่อฟังก์ชันในการสร้างคอมเมนต์
+            if (context.type === 'security' && functionName.toLowerCase().includes('key')) {
+                englishComment = 'Security key operation';
+                thaiComment = 'การดำเนินการด้านคีย์ความปลอดภัย';
+            } else if (context.type === 'api' && functionName.toLowerCase().includes('request')) {
+                englishComment = 'API request operation';
+                thaiComment = 'การดำเนินการคำขอ API';
+            } else {
+                // Fallback ไปที่วิธีเดิม
+                return null;
+            }
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
 }
 
 // ======================================================================
@@ -2965,6 +3625,14 @@ function addMissingComments(content, options = {}) {
             maxTokens: 100000,      // จำกัด tokens สำหรับไฟล์ปกติ
             maxParsingTime: 15000   // จำกัดเวลา 15 วินาที
         };
+
+        // ===================================================================
+        // PHASE 1: Smart Learning Analysis/การวิเคราะห์แบบเรียนรู้อัจฉริยะ
+        // ===================================================================
+        let smartAnalysis = null;
+        if (options.enableSmartLearning !== false) {
+            smartAnalysis = analyzeFileWithSmartLearning(content, { security: securityOptions });
+        }
 
         // ใช้ tokenizer และ StructureParser ใหม่เพื่อวิเคราะห์โค้ด
         const tokenizer = new JavaScriptTokenizer(content, securityOptions);
@@ -3092,11 +3760,37 @@ function addMissingComments(content, options = {}) {
                     s.line === item.line && s.name === item.name
                 );
 
-                // สร้างคอมเมนต์โดยใช้ข้อมูลจาก structure analysis
-                const comment = generator.generateFunctionComment(item, {
-                    ...options,
-                    structure: matchingStructure
-                });
+                // ===================================================================
+                // PHASE 2: Smart Comment Generation/การสร้างคอมเมนต์อัจฉริยะ
+                // ===================================================================
+                let comment;
+
+                if (smartAnalysis && smartAnalysis.success) {
+                    // ใช้ระบบ Smart Learning เพื่อสร้างคอมเมนต์
+                    const smartComment = generateSmartComment(
+                        item.name,
+                        item.type,
+                        smartAnalysis.blueprint,
+                        matchingStructure
+                    );
+
+                    // สร้าง formatted comment จาก smart comment
+                    comment = generator.generateFormattedComment(smartComment, item.type);
+
+                    if (options.verbose) {
+                        console.log(`  Using Smart Learning for ${item.name}: ${smartComment.english}`);
+                    }
+                } else {
+                    // ใช้วิธีเดิมเมื่อ Smart Learning ไม่พร้อมใช้งาน
+                    comment = generator.generateFunctionComment(item, {
+                        ...options,
+                        structure: matchingStructure
+                    });
+
+                    if (options.verbose) {
+                        console.log(`  Using traditional method for ${item.name}`);
+                    }
+                }
 
                 // เพิ่มคอมเมนต์
                 const commentLines = comment.split('\n').filter(line => line.trim());
