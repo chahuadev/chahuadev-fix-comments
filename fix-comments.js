@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 
-// ╔══════════════════════════════════════════════════════════════════════════════════╗
-// ║                       Universal Comment Fixer v1.2.0                          ║
-// ║                Professional Comment Standardization Tool                        ║
-// ║           Transform /** */ comments to // format with bilingual support        ║
-// ║                    [Production] Ready for Enterprise Use                       ║
-// ║                       Security Hardened Against Attacks                     ║
-// ╚══════════════════════════════════════════════════════════════════════════════════╝
+// ======================================================================
+// Universal Comment Fixer v1.2.0/เครื่องมือแก้ไขคอมเมนต์สากล v1.2.0
+// ======================================================================
 
 // @author บริษัท ชาหัว ดีเวลลอปเมนต์ จำกัด (Chahua Development Co., Ltd.)
 // @version 1.2.0
@@ -26,11 +22,9 @@
 const fs = require('fs');
 const path = require('path');
 
-// ╔══════════════════════════════════════════════════════════════════════════════════╗
-// ║                         JavaScript Tokenizer Engine                           ║
-// ║                  Advanced Function Detection without Dependencies               ║
-// ║              [Core] 100% accurate function detection using tokenizer           ║
-// ╚══════════════════════════════════════════════════════════════════════════════════╝
+// ======================================================================
+// JavaScript Tokenizer Engine/เครื่องมือ Tokenizer ของ JavaScript
+// ======================================================================
 
 // Token types:ประเภทของโทเค็น
 const TOKEN_TYPES = {
@@ -71,7 +65,7 @@ const TOKEN_TYPES = {
 // คำหลักของ JavaScript - JavaScript keywords
 const KEYWORDS = new Set([
     'function', 'const', 'let', 'var', 'async', 'await',
-    'class', 'constructor', 'static', 'get', 'set',
+    'class', 'constructor', 'static', 'get', 'set', 'abstract',
     'if', 'else', 'for', 'while', 'do', 'switch', 'case',
     'return', 'break', 'continue', 'throw', 'try', 'catch',
     'import', 'export', 'default', 'from', 'as'
@@ -847,8 +841,40 @@ class FunctionPatternMatcher {
         return null;
     }
 
-    // รูปแบบ: class ClassName {} - Class declaration pattern
+    // รูปแบบ: class ClassName {} หรือ abstract class ClassName {} - Class declaration pattern
     matchClassDeclaration() {
+        // ตรวจสอบ abstract class pattern
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'abstract' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(1)?.value === 'class' &&
+            this.peekToken(2)?.type === TOKEN_TYPES.IDENTIFIER) {
+
+            const abstractToken = this.currentToken();
+            const classToken = this.peekToken(1);
+            const nameToken = this.peekToken(2);
+
+            // ตรวจสอบว่าเป็นคลาสที่ top-level หรือไม่ (ไม่ใช่ nested class)
+            const currentDepth = abstractToken.braceDepth || 0;
+            // อนุญาติให้ class อยู่ในระดับที่ลึกกว่าได้บ้าง สำหรับไฟล์ที่ซับซ้อน
+            if (currentDepth > 3) {
+                return null; // ข้าม deeply nested class
+            }
+
+            this.cursor += 3; // ข้าม 'abstract', 'class', name
+
+            return {
+                type: 'class_declaration',
+                name: nameToken.value,
+                line: abstractToken.line,
+                column: abstractToken.column,
+                parameters: [],
+                isAsync: false,
+                isAbstract: true
+            };
+        }
+
+        // ตรวจสอบ regular class pattern
         if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
             this.currentToken()?.value === 'class' &&
             this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER) {
@@ -858,11 +884,10 @@ class FunctionPatternMatcher {
 
             // ตรวจสอบว่าเป็นคลาสที่ top-level หรือไม่ (ไม่ใช่ nested class)
             const currentDepth = classToken.braceDepth || 0;
-            if (currentDepth > 0) {
-                return null; // ข้าม nested class
-            }
-
-            this.cursor += 2; // ข้าม 'class', name
+            // อนุญาติให้ class อยู่ในระดับที่ลึกกว่าได้บ้าง สำหรับไฟล์ที่ซับซ้อน
+            if (currentDepth > 3) {
+                return null; // ข้าม deeply nested class
+            } this.cursor += 2; // ข้าม 'class', name
 
             return {
                 type: 'class_declaration',
@@ -1026,11 +1051,9 @@ class FunctionPatternMatcher {
     }
 }
 
-// ╔══════════════════════════════════════════════════════════════════════════════════╗
-// ║                         Structure Analyzer Engine                             ║
-// ║                  Advanced Code Structure Understanding System                  ║
-// ║         [Core] Deep analysis of classes and functions for accurate comments    ║
-// ╚══════════════════════════════════════════════════════════════════════════════════╝
+// ======================================================================
+// Structure Analyzer Engine/เครื่องมือวิเคราะห์โครงสร้าง
+// ======================================================================
 
 // Structure Analyzer:ตัววิเคราะห์โครงสร้างโค้ด
 class StructureAnalyzer {
@@ -1452,11 +1475,9 @@ class StructureAnalyzer {
     }
 }
 
-// ╔══════════════════════════════════════════════════════════════════════════════════╗
-// ║                         Comment Generation Engine                              ║
-// ║                     Auto-generate bilingual comments for functions             ║
-// ║              [Core] Smart comment generation with AI-friendly format           ║
-// ╚══════════════════════════════════════════════════════════════════════════════════╝
+// ======================================================================
+// Comment Generation Engine/เครื่องมือสร้างคอมเมนต์
+// ======================================================================
 
 // Comment Generator:ตัวสร้างคอมเมนต์
 class CommentGenerator {
@@ -1949,27 +1970,16 @@ class CommentGenerator {
             description = this.getFunctionDescription(func.name, func.type);
         }
 
-        // สร้าง comment ตามประเภท
+        // สร้าง comment ในรูปแบบเดียวกันทั้งหมด
         let comment = '';
+        comment += '// ======================================================================\n';
+        comment += `// ${description.english}/${description.thai}\n`;
+        comment += '// ======================================================================\n';
 
-        if (func.type === 'class_declaration' || (structure && structure.type === 'class')) {
-            // คอมเมนต์แบบคลาส
-            comment += `// ${description.english}:${description.thai}\n`;
-        } else if (structure && structure.type === 'object') {
-            // คอมเมนต์แบบ object (เช่น TOKEN_TYPES)
-            comment += `// ${description.english}:${description.thai}\n`;
-
-            // เพิ่มคอมเมนต์สำหรับ properties ของ object
-            if (structure.properties && structure.properties.length > 0) {
-                // สำหรับ object ที่มี properties เยอะ ให้เพิ่มคอมเมนต์แยกหมวดหมู่
-                const categorizedProps = this.categorizeObjectProperties(structure.properties, structure.name);
-                return this.generateObjectComments(comment, categorizedProps, structure);
-            }
-        } else {
-            // คอมเมนต์แบบฟังก์ชันทั่วไป
-            comment += '// ======================================================================\n';
-            comment += `// ${description.english}/${description.thai}\n`;
-            comment += '// ======================================================================\n';
+        // สำหรับ object ที่มี properties เยอะ ให้เพิ่มคอมเมนต์แยกหมวดหมู่
+        if (structure && structure.type === 'object' && structure.properties && structure.properties.length > 0) {
+            const categorizedProps = this.categorizeObjectProperties(structure.properties, structure.name);
+            return this.generateObjectComments(comment, categorizedProps, structure);
         }
 
         return comment;
@@ -2145,14 +2155,16 @@ class CommentGenerator {
         if (currentTrimmed === '}' ||
             currentTrimmed === '});' ||
             currentTrimmed === ');' ||
-            currentTrimmed.startsWith('}') ||
-            currentTrimmed.includes('return ') ||
-            currentTrimmed.includes('yield ') ||
+            currentTrimmed.match(/^}\s*[,;]?\s*$/) ||
             !this.isValidStartLine(currentTrimmed)) {
-            return -1; // ไม่เหมาะสมที่จะใส่คอมเมนต์
-        }
 
-        // ตรวจสอบย้อนหลังเพื่อหา decorators, exports, หรือ annotations
+            // แต่ถ้าเป็น function declaration ที่ถูกต้อง ให้ผ่าน
+            if (this.isValidStartLine(currentTrimmed)) {
+                return startLine;
+            }
+
+            return -1; // ไม่เหมาะสมที่จะใส่คอมเมนต์
+        }        // ตรวจสอบย้อนหลังเพื่อหา decorators, exports, หรือ annotations
         for (let i = functionLine - 1; i >= Math.max(0, functionLine - 10); i--) {
             const line = lines[i];
             if (!line) continue;
@@ -2224,20 +2236,18 @@ class CommentGenerator {
 
         // ไม่ควรใส่คอมเมนต์ที่ตำแหน่งเหล่านี้
         const inappropriatePatterns = [
-            /^}/,                     // closing braces
-            /^}\);/,                  // closing function calls
-            /^\);/,                   // closing parentheses
-            /^,/,                     // comma
-            /^;/,                     // semicolon
-            /^return\s/,              // return statements
-            /^yield\s/,               // yield statements
-            /^break;?$/,              // break statements
-            /^continue;?$/,           // continue statements
+            /^}\s*$/,                 // closing braces only
+            /^}\);?\s*$/,             // closing function calls
+            /^\);\s*$/,               // closing parentheses
+            /^,\s*$/,                 // comma only
+            /^;\s*$/,                 // semicolon only
+            /^break;?\s*$/,           // break statements
+            /^continue;?\s*$/,        // continue statements
             /^case\s/,                // case statements
-            /^default:/,              // default case
-            /^else/,                  // else statements
-            /^catch/,                 // catch blocks
-            /^finally/,               // finally blocks
+            /^default:\s*$/,          // default case
+            /^else\s*{?\s*$/,         // else statements
+            /^catch\s*\(/,            // catch blocks
+            /^finally\s*{?\s*$/,      // finally blocks
             /^\s*$|^$/                // empty lines
         ];
 
@@ -2273,8 +2283,9 @@ class CommentGenerator {
             }
         }
 
-        // ถ้าอยู่ลึกในบล็อค (openBraces > 1) ไม่ควรใส่คอมเมนต์
-        if (openBraces > 1) {
+        // ถ้าอยู่ลึกในบล็อค (openBraces > 2) ไม่ควรใส่คอมเมนต์ 
+        // ยกเว้นถ้าเป็น top-level function/class ในไฟล์
+        if (openBraces > 2) {
             return false;
         }
 
@@ -2291,19 +2302,15 @@ class CommentGenerator {
 
     // สร้าง zone header - Generate zone header
     generateZoneHeader(title, description) {
-        const line = '═'.repeat(78);
-        return `// ╔${line}╗\n` +
-            `// ║${title.padStart(Math.floor((78 + title.length) / 2)).padEnd(78)}║\n` +
-            `// ║${description.padStart(Math.floor((78 + description.length) / 2)).padEnd(78)}║\n` +
-            `// ╚${line}╝\n`;
+        return '// ======================================================================\n' +
+            `// ${title}/${description}\n` +
+            '// ======================================================================\n';
     }
 }
 
-// ╔══════════════════════════════════════════════════════════════════════════════════╗
-// ║                         Main Comment Processing Engine                         ║
-// ║                     Core logic for comment transformation                      ║
-// ║              [Production] Battle-tested comment conversion system              ║
-// ╚══════════════════════════════════════════════════════════════════════════════════╝
+// ======================================================================
+// Main Comment Processing Engine/เครื่องมือประมวลผลคอมเมนต์หลัก
+// ======================================================================
 
 // ======================================================================
 // Process file/ประมวลผลไฟล์
@@ -2603,7 +2610,7 @@ function findMethodsWithRegex(content) {
                     'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue'
                 ];
 
-                if (!excludedNames.includes(methodName)) {
+                if (!excludedNames.includes(methodName) && methodName !== '*') {
                     // ตรวจสอบว่าอยู่ในคลาสหรือไม่โดยดูบริบทรอบข้าง
                     let inClass = false;
                     for (let i = Math.max(0, index - 20); i < index; i++) {
@@ -2714,11 +2721,9 @@ function organizeCodeByZones(content) {
     return organized;
 }
 
-// ╔══════════════════════════════════════════════════════════════════════════════════╗
-// ║                         CLI Interface & Options                               ║
-// ║                     Command line interface with full options                   ║
-// ║              [Interface] User-friendly command line interface                  ║
-// ╚══════════════════════════════════════════════════════════════════════════════════╝
+// ======================================================================
+// CLI Interface & Options/อินเตอร์เฟซบรรทัดคำสั่งและตัวเลือก
+// ======================================================================
 
 // ======================================================================
 // Show help message/แสดงข้อความช่วยเหลือ
