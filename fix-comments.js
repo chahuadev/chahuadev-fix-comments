@@ -1619,6 +1619,9 @@ class SmartFileAnalyzer {
         try {
             this.security.startParsing();
 
+            // Phase 0: TypeScript Pre-analysis/การวิเคราะห์ TypeScript เบื้องต้น
+            this.analyzeTypeScriptStructures();
+
             // Phase 1: Tokenize และ Parse โครงสร้าง
             const tokenizer = new JavaScriptTokenizer(this.content, this.security);
             const tokens = tokenizer.tokenize();
@@ -1647,7 +1650,292 @@ class SmartFileAnalyzer {
         }
     }
 
-    // วิเคราะห์โครงสร้างที่ได้จาก parser
+    // วิเคราะห์โครงสร้าง TypeScript เฉพาะ
+    analyzeTypeScriptStructures() {
+        // วิเคราะห์ interfaces
+        this.analyzeInterfaces();
+
+        // วิเคราะห์ type aliases
+        this.analyzeTypeAliases();
+
+        // วิเคราะห์ enums
+        this.analyzeEnums();
+
+        // วิเคราะห์ abstract classes
+        this.analyzeAbstractClasses();
+
+        // วิเคราะห์ generics
+        this.analyzeGenerics();
+
+        // วิเคราะห์ const declarations (JavaScript/Node.js เฉพาะ)
+        this.analyzeConstDeclarations();
+    }
+
+    // วิเคราะห์ const declarations
+    analyzeConstDeclarations() {
+        const constRegex = /const\s+(\w+)\s*=\s*([^;]+);?/g;
+        let match;
+
+        while ((match = constRegex.exec(this.content)) !== null) {
+            const constName = match[1];
+            const constValue = match[2].trim();
+            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+
+            const constType = this.inferConstType(constName, constValue);
+
+            // ข้ามถ้าเป็น require statements หรือ imports
+            if (constType === 'require' || constType === 'import') {
+                continue;
+            }
+
+            const constInfo = {
+                name: constName,
+                line: lineNumber,
+                type: constType,
+                value: constValue,
+                purpose: this.inferConstPurpose(constName, constValue, constType),
+                complexity: constValue.length > 200 ? 'high' : constValue.length > 50 ? 'moderate' : 'simple'
+            };
+
+            // เพิ่มเข้า functions หรือ classes ตามประเภท
+            if (constType === 'function' || constType === 'arrow_function' || constType === 'middleware') {
+                this.fileBlueprint.functions.set(constName, constInfo);
+                this.addPattern(constName, 'const_function');
+            } else {
+                this.fileBlueprint.classes.set(constName, constInfo);
+                this.addPattern(constName, constType);
+            }
+
+            this.addDynamicKeyword(constName.toLowerCase(), `${constName} ${constType}`, this.getThaiConstType(constType, constName));
+        }
+    }
+
+    // อนุมานประเภทของ const
+    inferConstType(constName, constValue) {
+        const name = constName.toLowerCase();
+        const value = constValue.toLowerCase();
+
+        // ตรวจสอบ require/import
+        if (value.includes('require(') || value.includes('import(')) {
+            return 'require';
+        }
+
+        // ตรวจสอบ functions
+        if (value.includes('=>') || value.includes('function(')) {
+            if (name.includes('middleware') || name.includes('auth') || name.includes('limit') || value.includes('(req, res')) {
+                return 'middleware';
+            }
+            return 'arrow_function';
+        }
+
+        // ตรวจสอบ Express app
+        if (value.includes('express()')) {
+            return 'express_app';
+        }
+
+        // ตรวจสอบ configuration objects
+        if (name.includes('config') || name.includes('setting') || name.includes('option')) {
+            return 'configuration';
+        }
+
+        // ตรวจสอบ database/data objects
+        if (name.includes('database') || name.includes('db') || name.includes('data') || value.includes('users:') || value.includes('posts:')) {
+            return 'data_store';
+        }
+
+        // ตรวจสอบ storage/upload objects
+        if (name.includes('storage') || name.includes('upload') || value.includes('multer.') || value.includes('diskStorage')) {
+            return 'storage_config';
+        }
+
+        // ตรวจสอบ rate limiters
+        if (name.includes('limit') || value.includes('rateLimit(')) {
+            return 'rate_limiter';
+        }
+
+        // ตรวจสอบ objects ทั่วไป
+        if (value.startsWith('{') || value.includes('{')) {
+            return 'object';
+        }
+
+        // ตรวจสอบ arrays
+        if (value.startsWith('[')) {
+            return 'array';
+        }
+
+        return 'constant';
+    }
+
+    // อนุมานวัตถุประสงค์ของ const
+    inferConstPurpose(constName, constValue, constType) {
+        const name = constName.toLowerCase();
+
+        switch (constType) {
+            case 'configuration':
+                return 'app_config';
+            case 'data_store':
+                return 'in_memory_database';
+            case 'storage_config':
+                return 'file_upload_config';
+            case 'rate_limiter':
+                return 'api_rate_limiter';
+            case 'middleware':
+                if (name.includes('auth')) return 'auth_middleware';
+                if (name.includes('validate')) return 'validation_middleware';
+                if (name.includes('async')) return 'async_wrapper';
+                return 'express_middleware';
+            case 'arrow_function':
+                if (name.includes('find')) return 'finder_function';
+                if (name.includes('generate')) return 'generator_function';
+                return 'utility_function';
+            case 'express_app':
+                return 'express_application';
+            default:
+                return constType;
+        }
+    }
+
+    // แปลประเภท const เป็นภาษาไทย
+    getThaiConstType(constType, constName) {
+        const name = constName.toLowerCase();
+
+        switch (constType) {
+            case 'configuration':
+                return `การกำหนดค่า ${constName}`;
+            case 'data_store':
+                return `ที่เก็บข้อมูล ${constName}`;
+            case 'storage_config':
+                return `การกำหนดค่าการจัดเก็บไฟล์ ${constName}`;
+            case 'rate_limiter':
+                return `ตัวจำกัดอัตรา ${constName}`;
+            case 'middleware':
+                return `มิดเดิลแวร์ ${constName}`;
+            case 'arrow_function':
+                return `ฟังก์ชัน ${constName}`;
+            case 'express_app':
+                return `แอปพลิเคชัน Express ${constName}`;
+            case 'object':
+                return `ออบเจ็กต์ ${constName}`;
+            case 'array':
+                return `อาร์เรย์ ${constName}`;
+            default:
+                return `ค่าคงที่ ${constName}`;
+        }
+    }    // วิเคราะห์ interfaces
+    analyzeInterfaces() {
+        const interfaceRegex = /interface\s+(\w+)(?:<[^>]*>)?\s*(?:extends\s+[^{]+)?\s*{/g;
+        let match;
+
+        while ((match = interfaceRegex.exec(this.content)) !== null) {
+            const interfaceName = match[1];
+            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+
+            const interfaceInfo = {
+                name: interfaceName,
+                line: lineNumber,
+                type: 'interface',
+                properties: this.extractInterfaceProperties(match.index),
+                purpose: this.inferInterfacePurpose(interfaceName),
+                complexity: 'simple'
+            };
+
+            this.fileBlueprint.classes.set(interfaceName, interfaceInfo);
+            this.addPattern(interfaceName, 'interface');
+            this.addDynamicKeyword(interfaceName.toLowerCase(), `${interfaceName} interface`, `อินเทอร์เฟซ ${interfaceName}`);
+        }
+    }
+
+    // วิเคราะห์ type aliases
+    analyzeTypeAliases() {
+        const typeRegex = /type\s+(\w+)(?:<[^>]*>)?\s*=\s*([^;]+);?/g;
+        let match;
+
+        while ((match = typeRegex.exec(this.content)) !== null) {
+            const typeName = match[1];
+            const typeDefinition = match[2].trim();
+            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+
+            const typeInfo = {
+                name: typeName,
+                line: lineNumber,
+                type: 'type_alias',
+                definition: typeDefinition,
+                purpose: this.inferTypePurpose(typeName, typeDefinition),
+                complexity: typeDefinition.length > 100 ? 'high' : 'simple'
+            };
+
+            this.fileBlueprint.functions.set(typeName, typeInfo);
+            this.addPattern(typeName, 'type');
+            this.addDynamicKeyword(typeName.toLowerCase(), `${typeName} type definition`, `นิยามประเภท ${typeName}`);
+        }
+    }
+
+    // วิเคราะห์ enums
+    analyzeEnums() {
+        const enumRegex = /enum\s+(\w+)\s*{([^}]+)}/g;
+        let match;
+
+        while ((match = enumRegex.exec(this.content)) !== null) {
+            const enumName = match[1];
+            const enumBody = match[2];
+            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+
+            const enumInfo = {
+                name: enumName,
+                line: lineNumber,
+                type: 'enum',
+                values: this.extractEnumValues(enumBody),
+                purpose: this.inferEnumPurpose(enumName),
+                complexity: 'simple'
+            };
+
+            this.fileBlueprint.classes.set(enumName, enumInfo);
+            this.addPattern(enumName, 'enum');
+            this.addDynamicKeyword(enumName.toLowerCase(), `${enumName} enumeration`, `การนับ ${enumName}`);
+        }
+    }
+
+    // วิเคราะห์ abstract classes
+    analyzeAbstractClasses() {
+        const abstractRegex = /abstract\s+class\s+(\w+)(?:<[^>]*>)?(?:\s+extends\s+\w+)?(?:\s+implements\s+[^{]+)?\s*{/g;
+        let match;
+
+        while ((match = abstractRegex.exec(this.content)) !== null) {
+            const className = match[1];
+            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+
+            const classInfo = {
+                name: className,
+                line: lineNumber,
+                type: 'abstract_class',
+                isAbstract: true,
+                methods: new Map(),
+                properties: new Set(),
+                purpose: this.inferAbstractClassPurpose(className),
+                complexity: 'moderate'
+            };
+
+            this.fileBlueprint.classes.set(className, classInfo);
+            this.addPattern(className, 'abstract_class');
+            this.addDynamicKeyword(className.toLowerCase(), `${className} abstract class`, `คลาสนามธรรม ${className}`);
+        }
+    }
+
+    // วิเคราะห์ generics
+    analyzeGenerics() {
+        const genericRegex = /<([^>]+)>/g;
+        let match;
+
+        while ((match = genericRegex.exec(this.content)) !== null) {
+            const genericParams = match[1].split(',').map(param => param.trim());
+
+            genericParams.forEach(param => {
+                if (param.length === 1 && /[A-Z]/.test(param)) {
+                    this.addDynamicKeyword(`generic_${param.toLowerCase()}`, `Generic type ${param}`, `ประเภททั่วไป ${param}`);
+                }
+            });
+        }
+    }    // วิเคราะห์โครงสร้างที่ได้จาก parser
     analyzeStructures(structures) {
         structures.forEach(structure => {
             if (structure.type === 'class_declaration') {
@@ -1732,36 +2020,49 @@ class SmartFileAnalyzer {
 
     // สร้าง dynamic keywords จากสิ่งที่พบในไฟล์
     generateDynamicKeywords() {
-        // สร้าง keywords จากชื่อ classes
-        for (const className of this.fileBlueprint.classes.keys()) {
-            this.addDynamicKeyword(className.toLowerCase(), `${className} class`, `คลาส ${className}`);
-
-            // เพิ่ม variations
-            if (className.endsWith('Manager')) {
-                this.addDynamicKeyword(className.toLowerCase(), `${className} manager`, `ตัวจัดการ ${className.replace('Manager', '')}`);
-            }
-            if (className.endsWith('Controller')) {
-                this.addDynamicKeyword(className.toLowerCase(), `${className} controller`, `ตัวควบคุม ${className.replace('Controller', '')}`);
-            }
-            if (className.endsWith('Service')) {
-                this.addDynamicKeyword(className.toLowerCase(), `${className} service`, `บริการ ${className.replace('Service', '')}`);
-            }
+        // ตรวจสอบว่า fileBlueprint มีข้อมูลหรือไม่
+        if (!this.fileBlueprint || !this.fileBlueprint.classes || !this.fileBlueprint.functions) {
+            console.log(' Warning: fileBlueprint not properly initialized, skipping keyword generation');
+            return;
         }
 
-        // สร้าง keywords จากชื่อ methods และ functions
-        const allMethods = new Set();
-        for (const classInfo of this.fileBlueprint.classes.values()) {
-            for (const methodName of classInfo.methods.keys()) {
-                allMethods.add(methodName);
-            }
-        }
-        for (const funcName of this.fileBlueprint.functions.keys()) {
-            allMethods.add(funcName);
-        }
+        try {
+            // สร้าง keywords จากชื่อ classes
+            for (const className of this.fileBlueprint.classes.keys()) {
+                this.addDynamicKeyword(className.toLowerCase(), `${className} class`, `คลาส ${className}`);
 
-        // เพิ่ม method-specific keywords
-        for (const methodName of allMethods) {
-            this.addMethodSpecificKeywords(methodName);
+                // เพิ่ม variations
+                if (className.endsWith('Manager')) {
+                    this.addDynamicKeyword(className.toLowerCase(), `${className} manager`, `ตัวจัดการ ${className.replace('Manager', '')}`);
+                }
+                if (className.endsWith('Controller')) {
+                    this.addDynamicKeyword(className.toLowerCase(), `${className} controller`, `ตัวควบคุม ${className.replace('Controller', '')}`);
+                }
+                if (className.endsWith('Service')) {
+                    this.addDynamicKeyword(className.toLowerCase(), `${className} service`, `บริการ ${className.replace('Service', '')}`);
+                }
+            }
+
+            // สร้าง keywords จากชื่อ methods และ functions
+            const allMethods = new Set();
+            for (const classInfo of this.fileBlueprint.classes.values()) {
+                if (classInfo.methods) {
+                    for (const methodName of classInfo.methods.keys()) {
+                        allMethods.add(methodName);
+                    }
+                }
+            }
+            for (const funcName of this.fileBlueprint.functions.keys()) {
+                allMethods.add(funcName);
+            }
+
+            // เพิ่ม method-specific keywords
+            for (const methodName of allMethods) {
+                this.addMethodSpecificKeywords(methodName);
+            }
+
+        } catch (error) {
+            console.log(' Warning: Error generating dynamic keywords:', error.message);
         }
     }
 
@@ -1811,15 +2112,34 @@ class SmartFileAnalyzer {
 
     // กำหนดบริบทของไฟล์
     determineFileContext() {
+        // ตรวจสอบว่า fileBlueprint มีข้อมูลหรือไม่
+        if (!this.fileBlueprint || !this.fileBlueprint.classes || !this.fileBlueprint.functions) {
+            this.fileBlueprint.context = {
+                type: 'unknown',
+                domain: 'unknown',
+                complexity: 'simple'
+            };
+            return;
+        }
+
         const classNames = Array.from(this.fileBlueprint.classes.keys()).map(name => name.toLowerCase());
         const functionNames = Array.from(this.fileBlueprint.functions.keys()).map(name => name.toLowerCase());
         const allNames = [...classNames, ...functionNames];
 
+        // ตรวจสอบเนื้อหาไฟล์เพื่อจับบริบทได้แม่นยำขึ้น
+        const content = this.content.toLowerCase();
+
         // ตรวจจับประเภทของไฟล์
-        if (allNames.some(name => name.includes('crypto') || name.includes('encrypt') || name.includes('hash'))) {
+        if (content.includes('express') || content.includes('app.get') || content.includes('app.post') ||
+            content.includes('req, res') || allNames.some(name => name.includes('app') || name.includes('server') || name.includes('router'))) {
+            this.fileBlueprint.context.type = 'api';
+            this.fileBlueprint.context.domain = 'web';
+        } else if (allNames.some(name => name.includes('crypto') || name.includes('encrypt') || name.includes('hash')) ||
+            content.includes('bcrypt') || content.includes('jwt') || content.includes('crypto')) {
             this.fileBlueprint.context.type = 'security';
             this.fileBlueprint.context.domain = 'crypto';
-        } else if (allNames.some(name => name.includes('database') || name.includes('db') || name.includes('sql'))) {
+        } else if (allNames.some(name => name.includes('database') || name.includes('db') || name.includes('sql')) ||
+            content.includes('database') || content.includes('mongodb') || content.includes('mysql')) {
             this.fileBlueprint.context.type = 'database';
             this.fileBlueprint.context.domain = 'data';
         } else if (allNames.some(name => name.includes('api') || name.includes('client') || name.includes('request'))) {
@@ -1831,9 +2151,7 @@ class SmartFileAnalyzer {
         } else if (allNames.some(name => name.includes('component') || name.includes('render') || name.includes('ui'))) {
             this.fileBlueprint.context.type = 'ui';
             this.fileBlueprint.context.domain = 'frontend';
-        }
-
-        // ตรวจจับความซับซ้อน
+        }        // ตรวจจับความซับซ้อน
         const totalStructures = this.fileBlueprint.classes.size + this.fileBlueprint.functions.size;
         if (totalStructures > 20) {
             this.fileBlueprint.context.complexity = 'complex';
@@ -1937,6 +2255,132 @@ class SmartFileAnalyzer {
     findFunctionRelationships(funcName, funcInfo) {
         // Implementation for finding function relationships
         // Helper functions, utility functions, etc.
+    }
+
+    // ===================================================================
+    // TypeScript Helper Methods/เมธอดช่วยเหลือสำหรับ TypeScript
+    // ===================================================================
+
+    // แยกคุณสมบัติของ interface
+    extractInterfaceProperties(startIndex) {
+        const properties = [];
+        const startPos = this.content.indexOf('{', startIndex);
+        const endPos = this.findMatchingBrace(startPos);
+
+        if (startPos === -1 || endPos === -1) return properties;
+
+        const interfaceBody = this.content.substring(startPos + 1, endPos);
+        const lines = interfaceBody.split('\n');
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('//') && !trimmed.startsWith('/*')) {
+                const propertyMatch = trimmed.match(/(\w+)(\?)?:\s*([^;]+);?/);
+                if (propertyMatch) {
+                    properties.push({
+                        name: propertyMatch[1],
+                        optional: !!propertyMatch[2],
+                        type: propertyMatch[3].trim()
+                    });
+                }
+            }
+        });
+
+        return properties;
+    }
+
+    // แยกค่าของ enum
+    extractEnumValues(enumBody) {
+        const values = [];
+        const lines = enumBody.split('\n');
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('//')) {
+                const valueMatch = trimmed.match(/(\w+)(?:\s*=\s*([^,]+))?/);
+                if (valueMatch) {
+                    values.push({
+                        name: valueMatch[1],
+                        value: valueMatch[2] ? valueMatch[2].trim() : null
+                    });
+                }
+            }
+        });
+
+        return values;
+    }
+
+    // หา matching brace
+    findMatchingBrace(startPos) {
+        let depth = 1;
+        let pos = startPos + 1;
+
+        while (pos < this.content.length && depth > 0) {
+            const char = this.content[pos];
+            if (char === '{') depth++;
+            else if (char === '}') depth--;
+            pos++;
+        }
+
+        return depth === 0 ? pos - 1 : -1;
+    }
+
+    // อนุมานวัตถุประสงค์ของ interface
+    inferInterfacePurpose(interfaceName) {
+        const name = interfaceName.toLowerCase();
+
+        if (name.includes('config') || name.includes('options')) return 'configuration';
+        if (name.includes('result') || name.includes('response')) return 'result_type';
+        if (name.includes('request') || name.includes('params')) return 'input_type';
+        if (name.includes('error') || name.includes('exception')) return 'error_type';
+        if (name.includes('event') || name.includes('listener')) return 'event_type';
+        if (name.includes('data') || name.includes('model')) return 'data_type';
+        if (name.includes('service') || name.includes('client')) return 'service_interface';
+        if (name.includes('repository') || name.includes('dao')) return 'repository_interface';
+
+        return 'interface';
+    }
+
+    // อนุมานวัตถุประสงค์ของ type alias
+    inferTypePurpose(typeName, typeDefinition) {
+        const name = typeName.toLowerCase();
+        const definition = typeDefinition.toLowerCase();
+
+        if (name.includes('listener') || name.includes('callback') || name.includes('handler')) return 'callback_type';
+        if (name.includes('rule') || name.includes('schema') || name.includes('validation')) return 'validation_type';
+        if (name.includes('strategy') || name.includes('policy')) return 'strategy_type';
+        if (definition.includes('string') && definition.includes('|')) return 'string_union';
+        if (definition.includes('number') && definition.includes('|')) return 'number_union';
+        if (definition.includes('=>')) return 'function_type';
+        if (definition.includes('{') && definition.includes('}')) return 'object_type';
+
+        return 'type_alias';
+    }
+
+    // อนุมานวัตถุประสงค์ของ enum
+    inferEnumPurpose(enumName) {
+        const name = enumName.toLowerCase();
+
+        if (name.includes('status') || name.includes('state')) return 'status_enum';
+        if (name.includes('type') || name.includes('kind')) return 'type_enum';
+        if (name.includes('level') || name.includes('priority')) return 'level_enum';
+        if (name.includes('direction') || name.includes('order')) return 'direction_enum';
+        if (name.includes('mode') || name.includes('strategy')) return 'mode_enum';
+
+        return 'enumeration';
+    }
+
+    // อนุมานวัตถุประสงค์ของ abstract class
+    inferAbstractClassPurpose(className) {
+        const name = className.toLowerCase();
+
+        if (name.includes('base') || name.includes('abstract')) return 'base_class';
+        if (name.includes('repository') || name.includes('dao')) return 'repository_base';
+        if (name.includes('service') || name.includes('provider')) return 'service_base';
+        if (name.includes('controller') || name.includes('handler')) return 'controller_base';
+        if (name.includes('component') || name.includes('widget')) return 'component_base';
+
+        return 'abstract_class';
     }
 }
 
@@ -3090,7 +3534,12 @@ class CommentGenerator {
     isValidStartLine(trimmedLine) {
         // รูปแบบที่เหมาะสมสำหรับการเริ่มต้น
         const validPatterns = [
+            // JavaScript/TypeScript basic patterns
             /^class\s+\w+/,           // class declarations
+            /^abstract\s+class\s+\w+/, // abstract class declarations
+            /^interface\s+\w+/,       // interface declarations
+            /^type\s+\w+\s*=/,        // type alias declarations
+            /^enum\s+\w+/,            // enum declarations
             /^function\s+\w+/,        // function declarations
             /^async\s+function/,      // async functions
             /^function\*/,            // generator functions
@@ -3100,12 +3549,29 @@ class CommentGenerator {
             /^var\s+\w+\s*=/,         // var declarations
             /^\w+\s*:/,               // object methods
             /^\w+\s*\(/,              // function calls (methods)
+
+            // Export patterns
             /^export/,                // exports
             /^module\.exports/,       // module exports
+
+            // Method patterns
             /^static\s+\w+\s*\(/,     // static methods
+            /^abstract\s+\w+\s*\(/,   // abstract methods
+            /^public\s+\w+\s*\(/,     // public methods
+            /^private\s+\w+\s*\(/,    // private methods
+            /^protected\s+\w+\s*\(/,  // protected methods
+            /^readonly\s+\w+\s*:/,    // readonly properties
             /^get\s+\w+\s*\(/,        // getters
             /^set\s+\w+\s*\(/,        // setters
-            /^async\s+\w+\s*\(/       // async methods
+            /^async\s+\w+\s*\(/,      // async methods
+
+            // Generic patterns
+            /^class\s+\w+<[^>]+>/,    // generic classes
+            /^interface\s+\w+<[^>]+>/, // generic interfaces
+            /^function\s+\w+<[^>]+>/, // generic functions
+
+            // Decorator patterns
+            /^@\w+/                   // decorators
         ];
 
         // ตรวจสอบว่าตรงกับรูปแบบใดรูปแบบหนึ่งหรือไม่
@@ -3169,7 +3635,7 @@ class CommentGenerator {
         }
 
         // ถ้าอยู่ลึกในบล็อค (openBraces > 2) ไม่ควรใส่คอมเมนต์ 
-        // ยกเว้นถ้าเป็น top-level function/class ในไฟล์
+        // ยกเว้นถ้าเป็น top-level function/class ในไฟล์ หรือ const declarations
         if (openBraces > 2) {
             return false;
         }
@@ -3180,6 +3646,11 @@ class CommentGenerator {
             if (!this.isValidStartLine(trimmed)) {
                 return false;
             }
+        }
+
+        // พิเศษ: ยอมรับ top-level const declarations (openBraces === 0)
+        if (openBraces === 0 && trimmed.startsWith('const ')) {
+            return true;
         }
 
         return true;
@@ -3279,14 +3750,31 @@ function generateSmartComment(functionName, type, blueprint, structureInfo = {})
 
         let comment = null;
 
-        // ค้นหาข้อมูลจาก blueprint ตามประเภท
-        if (type.includes('class') || type === 'class_declaration') {
+        // ===================================================================
+        // TypeScript Structures Support/รองรับโครงสร้าง TypeScript
+        // ===================================================================
+
+        // ตรวจสอบประเภท TypeScript เฉพาะ
+        if (type === 'interface') {
+            comment = generateInterfaceComment(functionName, blueprint, structureInfo);
+        } else if (type === 'type_alias') {
+            comment = generateTypeAliasComment(functionName, blueprint, structureInfo);
+        } else if (type === 'enum') {
+            comment = generateEnumComment(functionName, blueprint, structureInfo);
+        } else if (type === 'abstract_class') {
+            comment = generateAbstractClassComment(functionName, blueprint, structureInfo);
+        }
+        // ===================================================================
+        // Const Declarations Support/รองรับ const declarations
+        // ===================================================================
+        else if (['configuration', 'data_store', 'storage_config', 'rate_limiter', 'middleware', 'arrow_function', 'express_app', 'object', 'array', 'constant'].includes(type)) {
+            comment = generateConstComment(functionName, blueprint, structureInfo, type);
+        }
+        else if (type.includes('class') || type === 'class_declaration') {
             comment = generateSmartClassComment(functionName, blueprint, structureInfo);
         } else {
             comment = generateSmartFunctionComment(functionName, blueprint, structureInfo);
-        }
-
-        // ถ้าไม่สามารถสร้างคอมเมนต์อัจฉริยะได้ ใช้วิธีเดิม
+        }        // ถ้าไม่สามารถสร้างคอมเมนต์อัจฉริยะได้ ใช้วิธีเดิม
         if (!comment) {
             console.log(` Falling back to traditional method for: ${functionName}`);
             const generator = new CommentGenerator();
@@ -3302,9 +3790,7 @@ function generateSmartComment(functionName, type, blueprint, structureInfo = {})
         const generator = new CommentGenerator();
         return generator.getFunctionDescription(functionName, type);
     }
-}
-
-/**
+}/**
  * สร้างคอมเมนต์อัจฉริยะสำหรับคลาส
  * Generate smart comment for class
  */
@@ -3505,6 +3991,305 @@ function generateSmartFunctionComment(functionName, blueprint, structureInfo) {
     };
 }
 
+// ===================================================================
+// TypeScript Comment Generators/ตัวสร้างคอมเมนต์ TypeScript
+// ===================================================================
+
+/**
+ * สร้างคอมเมนต์สำหรับ Interface
+ */
+function generateInterfaceComment(interfaceName, blueprint, structureInfo) {
+    const interfaceInfo = blueprint.classes.get(interfaceName);
+
+    if (!interfaceInfo) {
+        return null;
+    }
+
+    let englishComment = '';
+    let thaiComment = '';
+
+    switch (interfaceInfo.purpose) {
+        case 'configuration':
+            englishComment = `${interfaceName} - Configuration interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซการกำหนดค่า`;
+            break;
+        case 'result_type':
+            englishComment = `${interfaceName} - Result data structure`;
+            thaiComment = `${interfaceName} - โครงสร้างข้อมูลผลลัพธ์`;
+            break;
+        case 'input_type':
+            englishComment = `${interfaceName} - Input parameters interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซพารามิเตอร์นำเข้า`;
+            break;
+        case 'error_type':
+            englishComment = `${interfaceName} - Error information interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซข้อมูลข้อผิดพลาด`;
+            break;
+        case 'event_type':
+            englishComment = `${interfaceName} - Event data interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซข้อมูลเหตุการณ์`;
+            break;
+        case 'data_type':
+            englishComment = `${interfaceName} - Data model interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซโมเดลข้อมูล`;
+            break;
+        case 'service_interface':
+            englishComment = `${interfaceName} - Service contract interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซสัญญาการให้บริการ`;
+            break;
+        case 'repository_interface':
+            englishComment = `${interfaceName} - Repository pattern interface`;
+            thaiComment = `${interfaceName} - อินเทอร์เฟซรูปแบบพื้นที่เก็บข้อมูล`;
+            break;
+        default:
+            englishComment = `${interfaceName} - Interface definition`;
+            thaiComment = `${interfaceName} - นิยามอินเทอร์เฟซ`;
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
+}
+
+/**
+ * สร้างคอมเมนต์สำหรับ Type Alias
+ */
+function generateTypeAliasComment(typeName, blueprint, structureInfo) {
+    const typeInfo = blueprint.functions.get(typeName);
+
+    if (!typeInfo) {
+        return null;
+    }
+
+    let englishComment = '';
+    let thaiComment = '';
+
+    switch (typeInfo.purpose) {
+        case 'callback_type':
+            englishComment = `${typeName} - Callback function type`;
+            thaiComment = `${typeName} - ประเภทฟังก์ชันเรียกกลับ`;
+            break;
+        case 'validation_type':
+            englishComment = `${typeName} - Validation rule type`;
+            thaiComment = `${typeName} - ประเภทกฎการตรวจสอบ`;
+            break;
+        case 'strategy_type':
+            englishComment = `${typeName} - Strategy pattern type`;
+            thaiComment = `${typeName} - ประเภทรูปแบบกลยุทธ์`;
+            break;
+        case 'string_union':
+            englishComment = `${typeName} - String union type`;
+            thaiComment = `${typeName} - ประเภทการรวมสตริง`;
+            break;
+        case 'number_union':
+            englishComment = `${typeName} - Number union type`;
+            thaiComment = `${typeName} - ประเภทการรวมตัวเลข`;
+            break;
+        case 'function_type':
+            englishComment = `${typeName} - Function signature type`;
+            thaiComment = `${typeName} - ประเภทลายเซ็นฟังก์ชัน`;
+            break;
+        case 'object_type':
+            englishComment = `${typeName} - Object structure type`;
+            thaiComment = `${typeName} - ประเภทโครงสร้างออบเจ็กต์`;
+            break;
+        default:
+            englishComment = `${typeName} - Type alias definition`;
+            thaiComment = `${typeName} - นิยามนามแฝงประเภท`;
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
+}
+
+/**
+ * สร้างคอมเมนต์สำหรับ Enum
+ */
+function generateEnumComment(enumName, blueprint, structureInfo) {
+    const enumInfo = blueprint.classes.get(enumName);
+
+    if (!enumInfo) {
+        return null;
+    }
+
+    let englishComment = '';
+    let thaiComment = '';
+
+    switch (enumInfo.purpose) {
+        case 'status_enum':
+            englishComment = `${enumName} - Status enumeration`;
+            thaiComment = `${enumName} - การแจงนับสถานะ`;
+            break;
+        case 'type_enum':
+            englishComment = `${enumName} - Type enumeration`;
+            thaiComment = `${enumName} - การแจงนับประเภท`;
+            break;
+        case 'level_enum':
+            englishComment = `${enumName} - Level enumeration`;
+            thaiComment = `${enumName} - การแจงนับระดับ`;
+            break;
+        case 'direction_enum':
+            englishComment = `${enumName} - Direction enumeration`;
+            thaiComment = `${enumName} - การแจงนับทิศทาง`;
+            break;
+        case 'mode_enum':
+            englishComment = `${enumName} - Mode enumeration`;
+            thaiComment = `${enumName} - การแจงนับโหมด`;
+            break;
+        default:
+            englishComment = `${enumName} - Enumeration values`;
+            thaiComment = `${enumName} - ค่าการแจงนับ`;
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
+}
+
+/**
+ * สร้างคอมเมนต์สำหรับ Abstract Class
+ */
+function generateAbstractClassComment(className, blueprint, structureInfo) {
+    const classInfo = blueprint.classes.get(className);
+
+    if (!classInfo) {
+        return null;
+    }
+
+    let englishComment = '';
+    let thaiComment = '';
+
+    switch (classInfo.purpose) {
+        case 'base_class':
+            englishComment = `${className} - Abstract base class`;
+            thaiComment = `${className} - คลาสฐานนามธรรม`;
+            break;
+        case 'repository_base':
+            englishComment = `${className} - Abstract repository base class`;
+            thaiComment = `${className} - คลาสฐานพื้นที่เก็บข้อมูลนามธรรม`;
+            break;
+        case 'service_base':
+            englishComment = `${className} - Abstract service base class`;
+            thaiComment = `${className} - คลาสฐานบริการนามธรรม`;
+            break;
+        case 'controller_base':
+            englishComment = `${className} - Abstract controller base class`;
+            thaiComment = `${className} - คลาสฐานตัวควบคุมนามธรรม`;
+            break;
+        case 'component_base':
+            englishComment = `${className} - Abstract component base class`;
+            thaiComment = `${className} - คลาสฐานส่วนประกอบนามธรรม`;
+            break;
+        default:
+            englishComment = `${className} - Abstract class definition`;
+            thaiComment = `${className} - นิยามคลาสนามธรรม`;
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
+}
+
+/**
+ * สร้างคอมเมนต์สำหรับ Const Declaration
+ */
+function generateConstComment(constName, blueprint, structureInfo, constType) {
+    // หาข้อมูลจาก blueprint
+    let constInfo = blueprint.classes.get(constName) || blueprint.functions.get(constName);
+
+    if (!constInfo) {
+        return null;
+    }
+
+    let englishComment = '';
+    let thaiComment = '';
+
+    switch (constType) {
+        case 'configuration':
+            englishComment = `${constName} - Application configuration settings`;
+            thaiComment = `${constName} - การกำหนดค่าแอปพลิเคชัน`;
+            break;
+
+        case 'data_store':
+            englishComment = `${constName} - In-memory data storage`;
+            thaiComment = `${constName} - ที่เก็บข้อมูลในหน่วยความจำ`;
+            break;
+
+        case 'storage_config':
+            englishComment = `${constName} - File upload storage configuration`;
+            thaiComment = `${constName} - การกำหนดค่าการจัดเก็บไฟล์อัปโหลด`;
+            break;
+
+        case 'rate_limiter':
+            if (constName.toLowerCase().includes('auth')) {
+                englishComment = `${constName} - Authentication rate limiting middleware`;
+                thaiComment = `${constName} - มิดเดิลแวร์จำกัดอัตราการรับรองตัวตน`;
+            } else {
+                englishComment = `${constName} - API rate limiting middleware`;
+                thaiComment = `${constName} - มิดเดิลแวร์จำกัดอัตรา API`;
+            }
+            break;
+
+        case 'middleware':
+            if (constInfo.purpose === 'auth_middleware') {
+                englishComment = `${constName} - Authentication middleware function`;
+                thaiComment = `${constName} - ฟังก์ชันมิดเดิลแวร์การรับรองตัวตน`;
+            } else if (constInfo.purpose === 'validation_middleware') {
+                englishComment = `${constName} - Request validation middleware function`;
+                thaiComment = `${constName} - ฟังก์ชันมิดเดิลแวร์ตรวจสอบคำขอ`;
+            } else if (constInfo.purpose === 'async_wrapper') {
+                englishComment = `${constName} - Async error handling wrapper`;
+                thaiComment = `${constName} - ตัวห่อหุ้มจัดการข้อผิดพลาดแบบ async`;
+            } else {
+                englishComment = `${constName} - Express middleware function`;
+                thaiComment = `${constName} - ฟังก์ชันมิดเดิลแวร์ Express`;
+            }
+            break;
+
+        case 'arrow_function':
+            if (constInfo.purpose === 'finder_function') {
+                englishComment = `${constName} - Data finder utility function`;
+                thaiComment = `${constName} - ฟังก์ชันยูทิลิตี้ค้นหาข้อมูล`;
+            } else if (constInfo.purpose === 'generator_function') {
+                englishComment = `${constName} - ID generator utility function`;
+                thaiComment = `${constName} - ฟังก์ชันยูทิลิตี้สร้าง ID`;
+            } else {
+                englishComment = `${constName} - Utility function`;
+                thaiComment = `${constName} - ฟังก์ชันยูทิลิตี้`;
+            }
+            break;
+
+        case 'express_app':
+            englishComment = `${constName} - Express application instance`;
+            thaiComment = `${constName} - อินสแตนซ์แอปพลิเคชัน Express`;
+            break;
+
+        case 'object':
+            englishComment = `${constName} - Configuration object`;
+            thaiComment = `${constName} - ออบเจ็กต์การกำหนดค่า`;
+            break;
+
+        case 'array':
+            englishComment = `${constName} - Data array`;
+            thaiComment = `${constName} - อาร์เรย์ข้อมูล`;
+            break;
+
+        default:
+            englishComment = `${constName} - Constant definition`;
+            thaiComment = `${constName} - นิยามค่าคงที่`;
+    }
+
+    return {
+        english: englishComment,
+        thai: thaiComment
+    };
+}
+
 // ======================================================================
 // Main Comment Processing Engine/เครื่องมือประมวลผลคอมเมนต์หลัก
 // ======================================================================
@@ -3649,6 +4434,47 @@ function addMissingComments(content, options = {}) {
         // รวม structures และ methods เข้าด้วยกัน
         const allItems = [];
         const addedItems = new Map();
+
+        // ===================================================================
+        // PHASE 2: TypeScript Structures from Smart Learning/โครงสร้าง TypeScript จาก Smart Learning
+        // ===================================================================
+        if (smartAnalysis && smartAnalysis.success && smartAnalysis.blueprint) {
+            const blueprint = smartAnalysis.blueprint;
+
+            // เพิ่ม TypeScript interfaces, types, enums จาก Smart Learning
+            for (const [name, info] of blueprint.classes.entries()) {
+                const key = `${name}-${info.line}`;
+                if (!addedItems.has(key) && name && name.length > 0) {
+                    allItems.push({
+                        type: info.type || 'class_declaration',
+                        name: name,
+                        line: info.line,
+                        column: info.column || 0,
+                        parameters: [],
+                        smartInfo: info  // เพิ่มข้อมูลจาก Smart Learning
+                    });
+                    addedItems.set(key, info.type);
+                }
+            }
+
+            // เพิ่ม TypeScript type aliases จาก Smart Learning
+            for (const [name, info] of blueprint.functions.entries()) {
+                if (info.type === 'type_alias') {
+                    const key = `${name}-${info.line}`;
+                    if (!addedItems.has(key) && name && name.length > 0) {
+                        allItems.push({
+                            type: 'type_alias',
+                            name: name,
+                            line: info.line,
+                            column: info.column || 0,
+                            parameters: [],
+                            smartInfo: info
+                        });
+                        addedItems.set(key, 'type_alias');
+                    }
+                }
+            }
+        }
 
         structures.forEach(s => {
             if (s.type === 'class_declaration') {
