@@ -1190,6 +1190,405 @@ class FunctionPatternMatcher {
 }
 
 // ======================================================================
+// Structure Parser Engine/เครื่องมือ Parser โครงสร้างใหม่
+// ======================================================================
+
+// Structure Parser: ตัววิเคราะห์โครงสร้างโค้ดแบบใหม่ (แทนที่ FunctionPatternMatcher)
+class StructureParser {
+    constructor(tokens, securityOptions = {}) {
+        this.tokens = tokens.filter(t => t.type !== TOKEN_TYPES.WHITESPACE);
+        this.cursor = 0;
+        this.scopeStack = [];
+        this.structures = [];
+        // SECURITY: เพิ่ม Security Manager
+        this.security = new TokenizerSecurityManager(securityOptions);
+    }
+
+    // วิเคราะห์โครงสร้างทั้งหมด
+    parse() {
+        // SECURITY: เริ่มต้นการตรวจสอบ
+        this.security.startParsing();
+
+        try {
+            while (this.cursor < this.tokens.length) {
+                // SECURITY: ตรวจสอบในแต่ละการวนลูป
+                this.security.checkIteration();
+
+                const structure = this.parseDeclaration();
+                if (structure) {
+                    this.structures.push(structure);
+                }
+            }
+
+            // แสดงสถิติความปลอดภัยถ้ามีคำเตือน
+            const stats = this.security.getStats();
+            if (stats.warnings.length > 0) {
+                console.warn('Parser Security Warnings:');
+                stats.warnings.forEach(warning => console.warn(` - ${warning}`));
+            }
+
+            return this.structures;
+        } catch (error) {
+            // รายงานข้อผิดพลาดด้านความปลอดภัย
+            if (error.message.includes('SECURITY:')) {
+                console.error(`SECURITY ALERT: ${error.message}`);
+                console.error('Structure parsing stopped for security reasons.');
+            }
+            throw error;
+        }
+    }
+
+    // วิเคราะห์โครงสร้างหลักในระดับบนสุด (Global Scope)
+    parseDeclaration() {
+        const currentToken = this.currentToken();
+        if (!currentToken) return null;
+
+        // ตรวจสอบว่าอยู่ในคอมเมนต์หรือสตริงหรือไม่
+        if (this.isInCommentOrString()) {
+            this.advance();
+            return null;
+        }
+
+        // ตรวจจับ class declaration: class MyClass { ... }
+        if (currentToken.type === TOKEN_TYPES.KEYWORD && currentToken.value === 'class') {
+            return this.parseClassDeclaration();
+        }
+
+        // ตรวจจับ function declaration: function myFunc() { ... }
+        if (currentToken.type === TOKEN_TYPES.KEYWORD && currentToken.value === 'function') {
+            return this.parseFunctionDeclaration();
+        }
+
+        // ตรวจจับ const/let/var ที่เป็น arrow function หรือ function expression
+        if (currentToken.type === TOKEN_TYPES.KEYWORD && ['const', 'let', 'var'].includes(currentToken.value)) {
+            return this.parseVariableDeclaration();
+        }
+
+        // ถ้าไม่ใช่โครงสร้างที่สนใจ ให้ข้ามไป
+        this.advance();
+        return null;
+    }
+
+    // วิเคราะห์ Class
+    parseClassDeclaration() {
+        const classToken = this.advance(); // consume 'class'
+        if (this.currentToken()?.type !== TOKEN_TYPES.IDENTIFIER) return null;
+
+        const nameToken = this.advance(); // consume class name
+        const classStructure = {
+            type: 'class_declaration',
+            name: nameToken.value,
+            line: classToken.line,
+            column: classToken.column,
+            methods: []
+        };
+
+        // หา body ของ class
+        if (this.currentToken()?.type === TOKEN_TYPES.BRACE_OPEN) {
+            const bodyStartIndex = this.cursor;
+            const bodyEndIndex = this.findMatchingBrace(bodyStartIndex);
+
+            if (bodyEndIndex !== -1) {
+                // SECURITY: ตรวจสอบระดับความลึก
+                this.security.enterDepth();
+
+                // เข้าไปวิเคราะห์ภายใน body ของ class
+                this.parseClassBody(classStructure, bodyEndIndex);
+                this.cursor = bodyEndIndex + 1; // เลื่อน cursor ไปหลัง '}'
+
+                this.security.exitDepth();
+            }
+        }
+
+        return classStructure;
+    }
+
+    // วิเคราะห์ภายใน Class Body
+    parseClassBody(classStructure, bodyEndIndex) {
+        this.advance(); // consume '{'
+
+        while (this.cursor < bodyEndIndex) {
+            const token = this.currentToken();
+            if (!token) break;
+
+            let isAsync = false;
+            let isStatic = false;
+            let kind = 'method'; // 'method', 'get', 'set'
+
+            // ตรวจจับ async / static / get / set
+            if (token.type === TOKEN_TYPES.KEYWORD) {
+                if (token.value === 'async') {
+                    isAsync = true;
+                    this.advance();
+                } else if (token.value === 'static') {
+                    isStatic = true;
+                    this.advance();
+                } else if (token.value === 'get' || token.value === 'set') {
+                    kind = token.value;
+                    this.advance();
+                }
+            }
+
+            // ตรวจจับ Method: methodName(...) { ... }
+            const nameToken = this.currentToken();
+            const parenToken = this.peekToken(1);
+
+            if (nameToken?.type === TOKEN_TYPES.IDENTIFIER && parenToken?.type === TOKEN_TYPES.PAREN_OPEN) {
+                // ไม่จับ constructor เพราะไม่ต้องการคอมเมนต์
+                if (nameToken.value !== 'constructor') {
+                    classStructure.methods.push({
+                        type: 'class_method',
+                        name: nameToken.value,
+                        line: nameToken.line,
+                        column: nameToken.column,
+                        isAsync,
+                        isStatic,
+                        kind,
+                        parameters: this.extractParameters(this.cursor + 1)
+                    });
+                }
+
+                // ข้ามผ่าน method ทั้งหมดไปอย่างรวดเร็ว
+                const methodBodyStart = this.findToken(TOKEN_TYPES.BRACE_OPEN, this.cursor);
+                if (methodBodyStart !== -1) {
+                    const methodBodyEnd = this.findMatchingBrace(methodBodyStart);
+                    if (methodBodyEnd !== -1) {
+                        this.cursor = methodBodyEnd + 1;
+                        continue;
+                    }
+                }
+            }
+            this.advance();
+        }
+    }
+
+    // วิเคราะห์ Function
+    parseFunctionDeclaration() {
+        const funcToken = this.advance(); // consume 'function'
+
+        // ตรวจจับ generator function: function* name()
+        let isGenerator = false;
+        if (this.currentToken()?.value === '*') {
+            isGenerator = true;
+            this.advance(); // consume '*'
+        }
+
+        if (this.currentToken()?.type !== TOKEN_TYPES.IDENTIFIER) {
+            // อาจเป็น function expression ที่ไม่มีชื่อ
+            return null;
+        }
+
+        const nameToken = this.advance();
+        const funcStructure = {
+            type: isGenerator ? 'generator_function' : 'function_declaration',
+            name: nameToken.value,
+            line: funcToken.line,
+            column: funcToken.column,
+            parameters: this.extractParameters(this.cursor),
+            isAsync: false
+        };
+
+        // ข้ามไปจนสุด body ของฟังก์ชัน
+        const bodyStart = this.findToken(TOKEN_TYPES.BRACE_OPEN, this.cursor);
+        if (bodyStart !== -1) {
+            const bodyEnd = this.findMatchingBrace(bodyStart);
+            if (bodyEnd !== -1) {
+                this.cursor = bodyEnd + 1;
+            }
+        }
+
+        return funcStructure;
+    }
+
+    // วิเคราะห์ const/let/var = ...
+    parseVariableDeclaration() {
+        this.advance(); // consume const/let/var
+        const nameToken = this.currentToken();
+        if (nameToken?.type !== TOKEN_TYPES.IDENTIFIER) return null;
+        this.advance(); // consume name
+
+        if (this.currentToken()?.type !== TOKEN_TYPES.EQUALS) return null;
+        this.advance(); // consume '='
+
+        // ตรวจจับ async keyword
+        let isAsync = false;
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD && this.currentToken().value === 'async') {
+            isAsync = true;
+            this.advance();
+        }
+
+        // ตรวจจับ arrow function: () => { ... }
+        const nextToken = this.currentToken();
+
+        let isArrowFunc = false;
+        if (nextToken?.type === TOKEN_TYPES.PAREN_OPEN) {
+            const closingParen = this.findMatchingParen(this.cursor);
+            if (closingParen !== -1 && this.tokens[closingParen + 1]?.type === TOKEN_TYPES.ARROW) {
+                isArrowFunc = true;
+            }
+        } else if (nextToken?.type === TOKEN_TYPES.IDENTIFIER) {
+            // Handle arrow functions without parens: a => ...
+            if (this.peekToken(1)?.type === TOKEN_TYPES.ARROW) {
+                isArrowFunc = true;
+            }
+        }
+
+        if (isArrowFunc) {
+            const funcStructure = {
+                type: 'arrow_function',
+                name: nameToken.value,
+                line: nameToken.line,
+                column: nameToken.column,
+                isAsync,
+                parameters: this.extractArrowParameters(this.cursor)
+            };
+
+            const bodyStart = this.findToken(TOKEN_TYPES.BRACE_OPEN, this.cursor);
+            if (bodyStart !== -1) {
+                const bodyEnd = this.findMatchingBrace(bodyStart);
+                if (bodyEnd !== -1) {
+                    this.cursor = bodyEnd + 1;
+                }
+            } else {
+                // Arrow function แบบไม่มี {} - หา semicolon
+                const semicolon = this.findToken(TOKEN_TYPES.SEMICOLON, this.cursor);
+                if (semicolon !== -1) this.cursor = semicolon + 1;
+            }
+            return funcStructure;
+        }
+
+        return null;
+    }
+
+    // --- Helper Methods ---
+
+    // ฟังก์ชันหัวใจ: ค้นหาวงเล็บปีกกาปิดที่คู่กัน
+    findMatchingBrace(startIndex) {
+        let depth = 1;
+        for (let i = startIndex + 1; i < this.tokens.length; i++) {
+            // SECURITY: ป้องกันการวนลูปไม่สิ้นสุด
+            if (i - startIndex > this.security.MAX_LOOP_ITERATIONS) {
+                this.security.addWarning(`Potential infinite loop detected in findMatchingBrace`);
+                break;
+            }
+
+            if (this.tokens[i].type === TOKEN_TYPES.BRACE_OPEN) {
+                depth++;
+            } else if (this.tokens[i].type === TOKEN_TYPES.BRACE_CLOSE) {
+                depth--;
+                if (depth === 0) {
+                    return i;
+                }
+            }
+        }
+        return -1; // Not found
+    }
+
+    // ค้นหาวงเล็บปิดที่คู่กัน
+    findMatchingParen(startIndex) {
+        let depth = 1;
+        for (let i = startIndex + 1; i < this.tokens.length; i++) {
+            if (this.tokens[i].type === TOKEN_TYPES.PAREN_OPEN) {
+                depth++;
+            } else if (this.tokens[i].type === TOKEN_TYPES.PAREN_CLOSE) {
+                depth--;
+                if (depth === 0) {
+                    return i;
+                }
+            }
+        }
+        return -1; // Not found
+    }
+
+    // ค้นหา token ประเภทที่ต้องการ
+    findToken(type, startIndex) {
+        for (let i = startIndex; i < this.tokens.length; i++) {
+            if (this.tokens[i].type === type) return i;
+        }
+        return -1;
+    }
+
+    // ดึงพารามิเตอร์ของฟังก์ชัน (ปรับปรุงจากเดิม)
+    extractParameters(parenIndex) {
+        if (this.tokens[parenIndex]?.type !== TOKEN_TYPES.PAREN_OPEN) return [];
+
+        const params = [];
+        const closingParen = this.findMatchingParen(parenIndex);
+        if (closingParen === -1) return [];
+
+        // ดึง parameter names ระหว่าง ( และ )
+        for (let i = parenIndex + 1; i < closingParen; i++) {
+            const token = this.tokens[i];
+            if (token.type === TOKEN_TYPES.IDENTIFIER) {
+                params.push(token.value);
+            }
+        }
+
+        return params;
+    }
+
+    // ดึงพารามิเตอร์ของ arrow function
+    extractArrowParameters(startIndex) {
+        const firstToken = this.tokens[startIndex];
+        if (!firstToken) return [];
+
+        if (firstToken.type === TOKEN_TYPES.PAREN_OPEN) {
+            return this.extractParameters(startIndex);
+        } else if (firstToken.type === TOKEN_TYPES.IDENTIFIER) {
+            return [firstToken.value];
+        }
+
+        return [];
+    }
+
+    // ตรวจสอบว่าอยู่ในคอมเมนต์หรือสตริงหรือไม่
+    isInCommentOrString() {
+        const currentToken = this.currentToken();
+        return currentToken && (
+            currentToken.type === TOKEN_TYPES.LINE_COMMENT ||
+            currentToken.type === TOKEN_TYPES.BLOCK_COMMENT ||
+            currentToken.type === TOKEN_TYPES.STRING
+        );
+    }
+
+    currentToken() { return this.tokens[this.cursor]; }
+    peekToken(offset = 1) { return this.tokens[this.cursor + offset]; }
+    advance() {
+        if (!this.isAtEnd()) this.cursor++;
+        return this.tokens[this.cursor - 1];
+    }
+    isAtEnd() { return this.cursor >= this.tokens.length; }
+
+    // Method สำหรับ backward compatibility กับ FunctionPatternMatcher
+    findFunctions() {
+        const structures = this.parse();
+        const allItems = [];
+
+        structures.forEach(s => {
+            if (s.type === 'class_declaration') {
+                // เพิ่มตัวคลาสเอง
+                allItems.push({
+                    type: s.type,
+                    name: s.name,
+                    line: s.line,
+                    column: s.column,
+                    parameters: []
+                });
+
+                // เพิ่มเมธอดทั้งหมดในคลาส
+                if (s.methods) {
+                    s.methods.forEach(m => allItems.push(m));
+                }
+            } else {
+                allItems.push(s);
+            }
+        });
+
+        return allItems;
+    }
+}
+
+// ======================================================================
 // Structure Analyzer Engine/เครื่องมือวิเคราะห์โครงสร้าง
 // ======================================================================
 
@@ -2567,44 +2966,54 @@ function addMissingComments(content, options = {}) {
             maxParsingTime: 15000   // จำกัดเวลา 15 วินาที
         };
 
-        // ใช้ tokenizer และ structure analyzer เพื่อวิเคราะห์โค้ด
+        // ใช้ tokenizer และ StructureParser ใหม่เพื่อวิเคราะห์โค้ด
         const tokenizer = new JavaScriptTokenizer(content, securityOptions);
         const tokens = tokenizer.tokenize();
 
-        // สร้าง Structure Analyzer เพื่อเข้าใจโครงสร้างโค้ด
-        const structureAnalyzer = new StructureAnalyzer(tokens, content);
-        const structures = structureAnalyzer.analyzeAll();
+        // ใช้ StructureParser ตัวใหม่ที่แม่นยำกว่า
+        const parser = new StructureParser(tokens, securityOptions);
+        const structures = parser.parse();
 
-        // ใช้ Function Pattern Matcher สำหรับหาฟังก์ชัน
-        const matcher = new FunctionPatternMatcher(tokens, securityOptions);
-        const functions = matcher.findFunctions();
-
-        if (functions.length === 0 && structures.length === 0) {
+        if (structures.length === 0) {
             return content;
         }
 
-        // รวม functions และ structures เข้าด้วยกัน และกรองรายการซ้ำ
+        // รวม structures และ methods เข้าด้วยกัน
         const allItems = [];
-        const addedItems = new Map(); // ใช้ Map เพื่อเก็บข้อมูลเพิ่มเติม
+        const addedItems = new Map();
 
-        // เพิ่ม structures ก่อน (object, class) - ให้ความสำคัญมากกว่า
-        structures.forEach(structure => {
-            const key = `${structure.name}-${structure.line}`;
-            if (!addedItems.has(key) && structure.name && structure.name.length > 0) {
-                allItems.push(structure);
-                addedItems.set(key, structure.type);
-            }
-        });
+        structures.forEach(s => {
+            if (s.type === 'class_declaration') {
+                // เพิ่มตัวคลาสเอง
+                const classKey = `${s.name}-${s.line}`;
+                if (!addedItems.has(classKey) && s.name && s.name.length > 0) {
+                    allItems.push({
+                        type: s.type,
+                        name: s.name,
+                        line: s.line,
+                        column: s.column,
+                        parameters: []
+                    });
+                    addedItems.set(classKey, s.type);
+                }
 
-        // เพิ่ม functions ที่ไม่ซ้ำกับ structures
-        functions.forEach(func => {
-            const key = `${func.name}-${func.line}`;
-            if (!addedItems.has(key) &&
-                func.name !== 'constructor' &&
-                func.name &&
-                func.name.length > 0) {
-                allItems.push(func);
-                addedItems.set(key, func.type);
+                // เพิ่มเมธอดทั้งหมดในคลาส
+                if (s.methods) {
+                    s.methods.forEach(m => {
+                        const methodKey = `${m.name}-${m.line}`;
+                        if (!addedItems.has(methodKey) && m.name !== 'constructor') {
+                            allItems.push(m);
+                            addedItems.set(methodKey, m.type);
+                        }
+                    });
+                }
+            } else {
+                // functions, arrow functions อื่นๆ
+                const key = `${s.name}-${s.line}`;
+                if (!addedItems.has(key) && s.name && s.name.length > 0) {
+                    allItems.push(s);
+                    addedItems.set(key, s.type);
+                }
             }
         });
 
