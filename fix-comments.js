@@ -4930,12 +4930,19 @@ function processFile(filePath, options = {}) {
         // ประมวลผลเนื้อหา
         let processedContent = content;
 
-        // 1. แปลง /** */ comments เป็น // format
-        processedContent = fixComments(processedContent);
+        // ตรวจสอบโหมดการทำงาน
+        if (options.removeComments) {
+            // โหมดลบคอมเมนต์
+            processedContent = removeComments(processedContent);
+        } else {
+            // โหมดปกติ: เพิ่ม/แก้ไขคอมเมนต์
+            // 1. แปลง /** */ comments เป็น // format
+            processedContent = fixComments(processedContent);
 
-        // 2. ใช้ tokenizer เพื่อหาฟังก์ชันและเพิ่มคอมเมนต์
-        if (options.addMissing || options.aiMode) {
-            processedContent = addMissingComments(processedContent, options);
+            // 2. ใช้ tokenizer เพื่อหาฟังก์ชันและเพิ่มคอมเมนต์
+            if (options.addMissing || options.aiMode) {
+                processedContent = addMissingComments(processedContent, options);
+            }
         }
 
         // 3. จัดระเบียบ zones ถ้าต้องการ
@@ -4961,6 +4968,36 @@ function processFile(filePath, options = {}) {
             success: false,
             error: error.message
         };
+    }
+}
+
+// ======================================================================
+// Remove comments/ลบคอมเมนต์
+// ======================================================================
+function removeComments(content) {
+    try {
+        let result = content;
+        
+        // 1. ลบ single-line comments (// แต่อย่าลบ URLs หรือ file paths)
+        result = result.replace(/(?<!:)\/\/(?!\/).*$/gm, '');
+        
+        // 2. ลบ multi-line comments (/* */ และ /** */)
+        result = result.replace(/\/\*[\s\S]*?\*\//g, '');
+        
+        // 3. ลบบรรทัดว่างที่เหลือจากการลบคอมเมนต์
+        result = result.replace(/^\s*[\r\n]/gm, '');
+        
+        // 4. ลบบรรทัดว่างที่ซ้ำกัน (เหลือแค่ 1 บรรทัดว่าง)
+        result = result.replace(/\n\s*\n\s*\n/g, '\n\n');
+        
+        // 5. ทำความสะอาดช่องว่างท้ายบรรทัด
+        result = result.replace(/[ \t]+$/gm, '');
+        
+        return result;
+        
+    } catch (error) {
+        console.warn('Warning: Error removing comments, returning original content');
+        return content;
     }
 }
 
@@ -6027,6 +6064,7 @@ function main() {
         aiMode: args.includes('--ai-mode'),
         organizeZones: args.includes('--organize-zones'),
         formatOnly: args.includes('--format'),
+        removeComments: args.includes('--remove-comments') || args.includes('--remove'),
         enableSmartLearning: args.includes('--smart-learning') || args.includes('-s'),
         extensions: ['.js', '.ts', '.jsx', '.tsx']
     };
