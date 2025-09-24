@@ -18,6 +18,23 @@
 
 ---
 
+## 🚀 QUICK START - เริ่มใช้งานทันที
+
+**Ready to use in one command! - พร้อมใช้งานใน 1 คำสั่ง!**
+
+```bash
+# 🎯 PRODUCTION-READY COMMAND (Recommended!)
+npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
+
+# 👀 Preview changes first (Safe!)
+npx @chahuadev/fix-comments@beta . --dry-run --verbose
+```
+
+**✅ No installation needed! Works immediately anywhere!**
+**✅ ไม่ต้องติดตั้ง! ใช้งานได้ทันทีทุกที่!**
+
+---
+
 ## BETA RELEASE NOTICE - ประกาศเวอร์ชัน Beta
 
 **Welcome to the Revolutionary AI-Powered Comment Analysis Beta!**
@@ -229,41 +246,47 @@ rm -rf ~/.npm/_npx
 
 ### Basic Usage - การใช้งานพื้นฐาน
 ```bash
+# RECOMMENDED: Add missing comments with backup (Production-Ready Command!)
+npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
+
 # Preview changes (recommended first step)
-npx @chahuadev/fix-comments@latest --dry-run
+npx @chahuadev/fix-comments@beta . --dry-run --verbose
 
 # Fix current directory with backup
-npx @chahuadev/fix-comments@latest --backup
+npx @chahuadev/fix-comments@beta . --backup --verbose
 
 # Fix specific project
-npx @chahuadev/fix-comments@latest /path/to/project --backup
+npx @chahuadev/fix-comments@beta /path/to/project --add-missing --backup --verbose
 
 # Fix single file
-npx @chahuadev/fix-comments@latest myfile.js --dry-run
+npx @chahuadev/fix-comments@beta myfile.js --add-missing --dry-run --verbose
 ```
 
 ### Direct Usage (After Installation)
 ```bash
 # After global or project installation
-fix-comments --dry-run
-fix-comments ./src --backup
-fix-comments myfile.js --verbose
+fix-comments . --add-missing --backup --verbose
+fix-comments ./src --add-missing --backup --verbose
+fix-comments myfile.js --add-missing --verbose --dry-run
 
 # Or call directly with node (in tool folder)
 node fix-comments.js --help
-node fix-comments.js --dry-run
+node fix-comments.js . --add-missing --backup --verbose
 ```
 
 ### Advanced Options
 ```bash
-# Verbose output with backup
-npx @chahuadev/fix-comments@latest --verbose --backup
+# PRODUCTION COMMAND: Complete processing with all features
+npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose --recursive
+
+# Code formatting with comment addition
+npx @chahuadev/fix-comments@beta . --format --add-missing --backup --verbose
 
 # Specific file extensions only
-npx @chahuadev/fix-comments@latest --ext .js,.ts,.jsx
+npx @chahuadev/fix-comments@beta . --ext .js,.ts,.jsx --add-missing --backup
 
-# Custom target with dry-run
-npx @chahuadev/fix-comments@latest ./src --dry-run --verbose
+# Custom target with comprehensive dry-run
+npx @chahuadev/fix-comments@beta ./src --add-missing --dry-run --verbose --recursive
 ```
 
 ## Command Options - ตัวเลือกคำสั่ง (Complete Reference)
@@ -280,7 +303,7 @@ npx @chahuadev/fix-comments@latest ./src --dry-run --verbose
 ### File Processing Options
 | Option | Short | Description | Example |
 |---------|---------|----------|---------|
-| `--recursive` | `-r` | Process all files in subdirectories | `fix-comments ./src -r` |
+| `--recursive` | `-r` | Process all files in subdirectories | `npx @chahuadev/fix-comments@beta ./src --add-missing --backup -r` |
 | `--ext <list>` | | Specify file extensions (comma-separated) | `--ext .js,.ts,.jsx,.tsx` |
 | `--add-missing` | | Add comments to functions without comments | Enhanced detection in Beta |
 | `--remove-comments` | | Remove existing comments from code | |
