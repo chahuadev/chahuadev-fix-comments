@@ -73,12 +73,10 @@ npm run test:basic
 chahuadev-fix-comments/
 ├── .github/
 │   └── workflows/          # GitHub Actions CI/CD
-├── docs/                   # Documentation files
 ├── scripts/                # Build และ automation scripts
 ├── test-chahuadev-comment-fixer/  # Test files
 ├── fix-comments.js         # Main CLI tool
 ├── test-suite.js          # Comprehensive test suite
-├── prototype-tokenizer-v2.js  # Future tokenizer engine
 ├── package.json
 ├── README.md
 ├── CONTRIBUTING.md

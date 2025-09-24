@@ -574,7 +574,7 @@ class AdvancedChatInterface {
     private state: ChatState;
     private websocketManager: WebSocketManager | null = null;
     private messageCache: Map<string, Message> = new Map();
-    private userTypingTimeouts: Map<string, NodeJS.Timeout> = new Map();
+    private userTypingTimeouts: Map<string, number> = new Map();
     private searchIndex: Map<string, string[]> = new Map();
     private unreadCounts: Map<string, number> = new Map();
     private notificationManager: NotificationManager;
@@ -1090,7 +1090,10 @@ class AdvancedChatInterface {
 
 const advancedChatInstance = new AdvancedChatInterface();
 
-if (typeof module !== 'undefined' && module.exports) {
+declare const module: any;
+declare const exports: any;
+
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = {
         AdvancedChatInterface,
         WebSocketManager,

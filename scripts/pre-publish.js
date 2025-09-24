@@ -1,20 +1,39 @@
 #!/usr/bin/env node
 
-// Pre-publish validation script
-// ตรวจสอบก่อน publish ขึ้น NPM
+// Pre-publish validation script for v2.0.0-beta.1
+// ตรวจสอบก่อน publish ขึ้น NPM สำหรับเวอร์ชัน Beta
 
 const fs = require('fs');
 const path = require('path');
 
-console.log(' Pre-publish validation...\n');
+// Import fix-comments.js to test new functions
+let fixComments;
+try {
+    fixComments = require('../fix-comments.js');
+} catch (error) {
+    console.error(' Failed to import fix-comments.js:', error.message);
+    process.exit(1);
+}
 
-// ตรวจสอบไฟล์สำคัญ
+console.log(' Pre-publish validation for Beta v2.0.0-beta.1...\n');
+
+// ตรวจสอบไฟล์สำคัญสำหรับ Beta release
 const requiredFiles = [
     'fix-comments.js',
     'package.json',
     'README.md',
     'LICENSE',
-    'CHANGELOG.md'
+    'CHANGELOG.md',
+    'test-suite.js',
+    'scripts/pre-publish.js'
+];
+
+// ตรวจสอบ directories ที่ควรมี
+const requiredDirs = [
+    '.backups',
+    'logs',
+    'scripts',
+    '.github/workflows'
 ];
 
 let allValid = true;
@@ -39,19 +58,85 @@ console.log(`   Author: ${pkg.author ? '' : ''}`);
 console.log(`   License: ${pkg.license}`);
 console.log(`   Keywords: ${pkg.keywords ? pkg.keywords.length : 0} keywords`);
 
-// ทดสอบการทำงานของ CLI
+// ตรวจสอบ required directories
+console.log('\n Directory validation:');
+requiredDirs.forEach(dir => {
+    if (fs.existsSync(dir)) {
+        console.log(` ${dir} exists`);
+    } else {
+        console.log(` Missing directory: ${dir}`);
+        // Create directories if missing (for Beta)
+        try {
+            fs.mkdirSync(dir, { recursive: true });
+            console.log(`   Created: ${dir}`);
+        } catch (error) {
+            console.log(`   Failed to create: ${dir}`);
+            allValid = false;
+        }
+    }
+});
+
+// ทดสอบการทำงานของ CLI พร้อมฟีเจอร์ Beta
 console.log('\n Testing CLI functionality...');
 try {
     const { execSync } = require('child_process');
-    const helpOutput = execSync('node fix-comments.js --help', { encoding: 'utf8' });
-    if (helpOutput.includes('Chahuadev Comment Fixer')) {
-        console.log(' CLI help works');
+
+    // Test --version command
+    const versionOutput = execSync('node fix-comments.js --version', { encoding: 'utf8' });
+    if (versionOutput.includes('v2.0.0-beta.1')) {
+        console.log(' Version command works (Beta detected)');
     } else {
-        console.log(' CLI help output seems wrong');
+        console.log(' Version output incorrect');
         allValid = false;
     }
+
+    // Test --help command
+    const helpOutput = execSync('node fix-comments.js --help', { encoding: 'utf8' });
+    if (helpOutput.includes('Universal Code Magician') && helpOutput.includes('BETA')) {
+        console.log(' Help command works (Beta features detected)');
+    } else {
+        console.log(' Help output seems wrong or missing Beta info');
+        allValid = false;
+    }
+
 } catch (error) {
     console.log(' CLI test failed:', error.message);
+    allValid = false;
+}
+
+// Test new Beta functions
+console.log('\n Testing Beta v2.0.0-beta.1 functions...');
+try {
+    if (typeof fixComments.EnhancedPatternDetector === 'function') {
+        console.log(' EnhancedPatternDetector class available');
+    } else {
+        console.log(' Missing EnhancedPatternDetector class');
+        allValid = false;
+    }
+
+    if (typeof fixComments.ProfessionalLogger === 'function') {
+        console.log(' ProfessionalLogger class available');
+    } else {
+        console.log(' Missing ProfessionalLogger class');
+        allValid = false;
+    }
+
+    if (typeof fixComments.analyzeFileWithSmartLearning === 'function') {
+        console.log(' Smart Learning function available');
+    } else {
+        console.log(' Missing Smart Learning function');
+        allValid = false;
+    }
+
+    if (typeof fixComments.performCodeHealthCheck === 'function') {
+        console.log(' Code Health Check function available');
+    } else {
+        console.log(' Missing Code Health Check function');
+        allValid = false;
+    }
+
+} catch (error) {
+    console.log(' Function test failed:', error.message);
     allValid = false;
 }
 

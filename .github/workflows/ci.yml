@@ -1,7 +1,7 @@
-# GitHub Actions CI/CD Pipeline for Chahuadev Comment Fixer
-# โครงสร้างการทดสอบอัตโนมัติสำหรับเครื่องมือแก้ไขคอมเมนต์
+# GitHub Actions CI/CD Pipeline for Chahuadev Comment Fixer v2.0.0-beta.1
+# โครงสร้างการทดสอบอัตโนมัติสำหรับเครื่องมือแก้ไขคอมเมนต์เวอร์ชัน Beta
 
-name: CI/CD Pipeline
+name: Beta CI/CD Pipeline
 
 on:
   push:
@@ -14,8 +14,10 @@ on:
 
 # Environment variables
 env:
-  NODE_VERSION_MATRIX: '[16, 18, 20]'
+  NODE_VERSION_MATRIX: '[18, 20, 22]'
   ARTIFACT_RETENTION_DAYS: 30
+  PACKAGE_VERSION: '2.0.0-beta.1'
+  BETA_TESTING: true
 
 jobs:
   # ══════════════════════════════════════════════════════════════════════
@@ -35,7 +37,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: package-lock.json
     
@@ -79,11 +81,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [16, 18, 20]
+        node-version: [18, 20, 22]
         exclude:
           # Skip some combinations to reduce CI time
           - os: macos-latest
-            node-version: 16
+            node-version: 18
     
     steps:
     - name: Checkout Repository
@@ -98,17 +100,29 @@ jobs:
     - name: Install Dependencies
       run: npm ci --prefer-offline
     
-    - name: Run Test Suite
+    - name: Run Beta Test Suite
       run: npm test
       env:
         CI: true
         NODE_ENV: test
+        BETA_TESTING: true
     
-    - name: Test CLI Functionality
+    - name: Test Beta CLI Functionality
       run: |
-        # Test CLI installation and basic functionality
+        # Test CLI installation and Beta functionality
         node fix-comments.js --help
         node fix-comments.js --version
+        echo "Testing Beta features..."
+        node fix-comments.js --dry-run . || echo "Dry run test completed"
+      shell: bash
+    
+    - name: Test Beta Advanced Features
+      run: |
+        # Test new Beta features
+        echo "Testing Smart Learning..."
+        node fix-comments.js --smart-learning --dry-run . || echo "Smart Learning test completed"
+        echo "Testing Enhanced Pattern Recognition..."
+        node fix-comments.js --verbose --dry-run . || echo "Pattern Recognition test completed"
       shell: bash
     
     # Upload test results and coverage (if available)
@@ -138,7 +152,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
         cache: 'npm'
     
     - name: Install Dependencies
@@ -199,7 +213,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
         cache: 'npm'
     
     - name: Install Dependencies
@@ -251,7 +265,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
         cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
     

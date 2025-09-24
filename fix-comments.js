@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 // ======================================================================
-// Universal Comment Fixer v1.2.0/เครื่องมือแก้ไขคอมเมนต์สากล v1.2.0
+// Universal Comment Fixer v2.0.0/เครื่องมือแก้ไขคอมเมนต์สากล v2.0.0
 // ======================================================================
 
 // @author บริษัท ชาหัว ดีเวลลอปเมนต์ จำกัด (Chahua Development Co., Ltd.)
-// @version 1.2.0
+// @version 2.0.0
 // @description Professional comment standardization tool with AI-friendly format
 // @security_features Path Traversal Protection, File Size Limits, Symlink Protection
 
@@ -21,6 +21,1104 @@
 
 const fs = require('fs');
 const path = require('path');
+
+// ======================================================================
+// Professional Logging System/ระบบบันทึกมืออาชีพ
+// ======================================================================
+
+class ProfessionalLogger {
+    constructor() {
+        this.projectName = path.basename(process.cwd());
+        this.logsDir = path.join(process.cwd(), 'logs');
+
+        // สร้างโฟลเดอร์ logs หลักถ้ายังไม่มี
+        if (!fs.existsSync(this.logsDir)) {
+            fs.mkdirSync(this.logsDir, { recursive: true });
+        }
+
+        // สร้างโฟลเดอร์ย่อยสำหรับโปรเจกต์นี้
+        this.projectLogsDir = path.join(this.logsDir, this.projectName);
+        if (!fs.existsSync(this.projectLogsDir)) {
+            fs.mkdirSync(this.projectLogsDir, { recursive: true });
+        }
+
+        // สร้างโฟลเดอร์ session ตามวันเวลา
+        const now = new Date();
+        const dateFolder = now.toISOString().slice(0, 10); // 2025-09-24
+        const timeFolder = now.toTimeString().slice(0, 8).replace(/:/g, '-'); // 03-53-12
+        this.sessionFolder = `${dateFolder}_${timeFolder}`;
+        this.sessionLogsDir = path.join(this.projectLogsDir, this.sessionFolder);
+
+        if (!fs.existsSync(this.sessionLogsDir)) {
+            fs.mkdirSync(this.sessionLogsDir, { recursive: true });
+        }
+
+        this.logFiles = {
+            error: path.join(this.sessionLogsDir, 'error.log'),
+            debug: path.join(this.sessionLogsDir, 'debug.log'),
+            audit: path.join(this.sessionLogsDir, 'audit.log'),
+            performance: path.join(this.sessionLogsDir, 'performance.log'),
+            diagnostic: path.join(this.sessionLogsDir, 'diagnostic.log')
+        };
+
+        // เขียน session header
+        this.writeSessionHeader();
+    }
+
+    writeSessionHeader() {
+        const timestamp = new Date().toISOString();
+        const header = `\n${'='.repeat(80)}\nSESSION START: ${timestamp} | Project: ${this.projectName}\n${'='.repeat(80)}\n`;
+
+        Object.values(this.logFiles).forEach(logFile => {
+            fs.appendFileSync(logFile, header, 'utf8');
+        });
+    }
+
+    formatLogEntry(level, category, message, data = null) {
+        const timestamp = new Date().toISOString();
+        let entry = `[${timestamp}] [${level.toUpperCase()}] [${category}] ${message}`;
+
+        if (data) {
+            entry += `\n  Data: ${JSON.stringify(data, null, 2)}`;
+        }
+
+        entry += '\n';
+        return entry;
+    }
+
+    error(category, message, error = null, data = null) {
+        const logData = { ...data };
+        if (error) {
+            logData.error = {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            };
+        }
+
+        const entry = this.formatLogEntry('ERROR', category, message, logData);
+        fs.appendFileSync(this.logFiles.error, entry, 'utf8');
+
+        // แสดงใน console ด้วย
+        console.error(`[ERROR] ${category}: ${message}`);
+    }
+
+    debug(category, message, data = null) {
+        const entry = this.formatLogEntry('DEBUG', category, message, data);
+        fs.appendFileSync(this.logFiles.debug, entry, 'utf8');
+    }
+
+    audit(action, filePath, details = null) {
+        const entry = this.formatLogEntry('AUDIT', 'FILE_OPERATION',
+            `${action}: ${filePath}`, details);
+        fs.appendFileSync(this.logFiles.audit, entry, 'utf8');
+    }
+
+    performance(operation, duration, details = null) {
+        const entry = this.formatLogEntry('PERFORMANCE', operation,
+            `Duration: ${duration}ms`, details);
+        fs.appendFileSync(this.logFiles.performance, entry, 'utf8');
+    }
+
+    info(category, message, data = null) {
+        const entry = this.formatLogEntry('INFO', category, message, data);
+        fs.appendFileSync(this.logFiles.debug, entry, 'utf8');
+    }
+
+    // สร้าง diagnostic report แยกต่างหาก
+    diagnostic(category, message, data = null) {
+        const entry = this.formatLogEntry('DIAGNOSTIC', category, message, data);
+
+        // เขียนลงทั้ง audit และ debug ในโฟลเดอร์ session
+        fs.appendFileSync(this.logFiles.audit, entry, 'utf8');
+        fs.appendFileSync(this.logFiles.debug, `\n=== DIAGNOSTIC REPORT ===\n${entry}=== END DIAGNOSTIC ===\n`, 'utf8');
+
+        // เขียนลงไฟล์ diagnostic ใน session folder
+        if (!fs.existsSync(this.logFiles.diagnostic)) {
+            const header = `DIAGNOSTIC REPORTS LOG - ${new Date().toISOString()}\nProject: ${this.projectName} | Session: ${this.sessionFolder}\n${'='.repeat(80)}\n\n`;
+            fs.writeFileSync(this.logFiles.diagnostic, header, 'utf8');
+        }
+        fs.appendFileSync(this.logFiles.diagnostic, entry, 'utf8');
+    }
+}
+
+// สร้าง logger instance
+const logger = new ProfessionalLogger();
+
+// ======================================================================
+// Organized Backup System/ระบบสำรองข้อมูลที่เป็นระบบ
+// ======================================================================
+
+class OrganizedBackupManager {
+    constructor() {
+        this.projectName = path.basename(process.cwd());
+        this.backupsDir = path.join(process.cwd(), '.backups');
+        this.projectBackupDir = path.join(this.backupsDir, this.projectName);
+
+        // สร้างโฟลเดอร์ backup ถ้ายังไม่มี
+        this.ensureBackupDirectories();
+    }
+
+    ensureBackupDirectories() {
+        if (!fs.existsSync(this.backupsDir)) {
+            fs.mkdirSync(this.backupsDir, { recursive: true });
+            logger.audit('CREATE_BACKUP_DIR', this.backupsDir);
+        }
+
+        if (!fs.existsSync(this.projectBackupDir)) {
+            fs.mkdirSync(this.projectBackupDir, { recursive: true });
+            logger.audit('CREATE_PROJECT_BACKUP_DIR', this.projectBackupDir);
+        }
+    }
+
+    createBackup(originalFilePath) {
+        try {
+            // ตรวจสอบว่าไฟล์ต้นฉบับมีอยู่จริง
+            if (!fs.existsSync(originalFilePath)) {
+                throw new Error(`Original file does not exist: ${originalFilePath}`);
+            }
+
+            // สร้างโฟลเดอร์ตามวันที่-เวลา
+            const now = new Date();
+            const dateFolder = now.toISOString().slice(0, 10); // 2025-09-24
+            const timeFolder = now.toTimeString().slice(0, 8).replace(/:/g, '-'); // 03-40-40
+            const sessionFolder = `${dateFolder}_${timeFolder}`;
+
+            // สร้างโฟลเดอร์ backup session
+            const sessionBackupDir = path.join(this.projectBackupDir, sessionFolder);
+            if (!fs.existsSync(sessionBackupDir)) {
+                fs.mkdirSync(sessionBackupDir, { recursive: true });
+                logger.audit('CREATE_SESSION_BACKUP_DIR', sessionBackupDir);
+            }
+
+            // ใช้ชื่อไฟล์ต้นฉบับธรรมดา
+            const originalFileName = path.basename(originalFilePath);
+            const backupFilePath = path.join(sessionBackupDir, originalFileName);
+
+            // คัดลอกไฟล์ต้นฉบับไป backup (เก็บไฟล์ต้นฉบับ)
+            const originalContent = fs.readFileSync(originalFilePath, 'utf8');
+            fs.writeFileSync(backupFilePath, originalContent, 'utf8');
+
+            // บันทึก audit log
+            logger.audit('BACKUP_CREATED', originalFilePath, {
+                backupPath: backupFilePath,
+                sessionFolder: sessionFolder,
+                originalSize: originalContent.length,
+                originalFileName: originalFileName
+            });
+
+            logger.info('BACKUP', `Original file backed up to: ${sessionFolder}/${originalFileName}`);
+
+            return backupFilePath;
+
+        } catch (error) {
+            logger.error('BACKUP', `Failed to create backup for ${originalFilePath}`, error);
+            throw error;
+        }
+    }
+
+    cleanupOldBackups(maxAge = 7) {
+        try {
+            const sessionFolders = fs.readdirSync(this.projectBackupDir);
+            const cutoffTime = Date.now() - (maxAge * 24 * 60 * 60 * 1000);
+
+            let cleanedCount = 0;
+
+            sessionFolders.forEach(sessionFolder => {
+                const sessionPath = path.join(this.projectBackupDir, sessionFolder);
+                const stats = fs.statSync(sessionPath);
+
+                // ถ้าเป็นโฟลเดอร์และเก่าเกินกำหนด
+                if (stats.isDirectory() && stats.mtime.getTime() < cutoffTime) {
+                    // ลบทั้งโฟลเดอร์
+                    fs.rmSync(sessionPath, { recursive: true, force: true });
+                    cleanedCount++;
+                    logger.audit('BACKUP_SESSION_CLEANED', sessionPath, {
+                        sessionFolder: sessionFolder,
+                        age: maxAge
+                    });
+                }
+            });
+
+            if (cleanedCount > 0) {
+                logger.info('BACKUP', `Cleaned up ${cleanedCount} old backup sessions`);
+            }
+
+        } catch (error) {
+            logger.error('BACKUP', 'Failed to cleanup old backups', error);
+        }
+    }
+}
+
+// ======================================================================
+// File Comparison & Analysis System - ระบบเปรียบเทียบและวิเคราะห์ไฟล์
+// ======================================================================
+class FileComparisonAnalyzer {
+    constructor() {
+        this.comparisonResults = [];
+    }
+
+    // เปรียบเทียบไฟล์ก่อนและหลัง แล้วสร้าง detailed report
+    compareAndAnalyze(originalContent, modifiedContent, filePath) {
+        try {
+            const comparisonId = Date.now();
+            logger.debug('FILE_COMPARISON', `Starting comparison analysis for: ${filePath}`, { comparisonId });
+
+            // วิเคราะห์ไฟล์ก่อน (Original)
+            const originalAnalysis = this.analyzeFileStructures(originalContent, 'ORIGINAL');
+            logger.debug('FILE_ANALYSIS', `Original file analysis completed`, {
+                filePath,
+                structures: originalAnalysis.summary
+            });
+
+            // วิเคราะห์ไฟล์หลัง (Modified)
+            const modifiedAnalysis = this.analyzeFileStructures(modifiedContent, 'MODIFIED');
+            logger.debug('FILE_ANALYSIS', `Modified file analysis completed`, {
+                filePath,
+                structures: modifiedAnalysis.summary
+            });
+
+            // เปรียบเทียบและสร้าง report
+            const comparisonReport = this.generateComparisonReport(
+                originalAnalysis,
+                modifiedAnalysis,
+                filePath
+            );
+
+            // บันทึก detailed report ลง audit log
+            this.logDetailedReport(comparisonReport, filePath);
+
+            // บันทึก error และ skip report
+            this.logErrorAndSkipReport(comparisonReport, filePath);
+
+            this.comparisonResults.push(comparisonReport);
+
+            return comparisonReport;
+
+        } catch (error) {
+            logger.error('FILE_COMPARISON', `Failed to compare files: ${filePath}`, error);
+            return null;
+        }
+    }
+
+    // วิเคราะห์โครงสร้างไฟล์โดยใช้ระบบที่มีอยู่
+    analyzeFileStructures(content, type) {
+        try {
+            // ใช้ SmartFileAnalyzer ที่มีอยู่แล้ว
+            const analyzer = new SmartFileAnalyzer(content, {
+                maxDepth: 50,
+                maxTokens: 100000,
+                maxParsingTime: 15000
+            });
+
+            const analysis = analyzer.analyzeFile();
+
+            // นับจำนวน structures แต่ละประเภท
+            const summary = {
+                totalFunctions: analysis.functions ? analysis.functions.length : 0,
+                totalClasses: analysis.classes ? analysis.classes.length : 0,
+                totalMethods: analysis.methods ? analysis.methods.length : 0,
+                totalVariables: analysis.variables ? analysis.variables.length : 0,
+                totalInterfaces: 0,
+                totalTypeAliases: 0,
+                totalAbstractClasses: 0,
+                totalStaticMethods: 0,
+                totalArrowFunctions: 0
+            };
+
+            // นับ TypeScript structures
+            if (analysis.interfaces) summary.totalInterfaces = analysis.interfaces.length;
+            if (analysis.typeAliases) summary.totalTypeAliases = analysis.typeAliases.length;
+            if (analysis.abstractClasses) summary.totalAbstractClasses = analysis.abstractClasses.length;
+            if (analysis.staticMethods) summary.totalStaticMethods = analysis.staticMethods.length;
+            if (analysis.arrowFunctions) summary.totalArrowFunctions = analysis.arrowFunctions.length;
+
+            // ตรวจสอบ functions ที่ไม่มี comment
+            const functionsWithoutComments = this.findFunctionsWithoutComments(content, analysis.functions || []);
+            const classesWithoutComments = this.findClassesWithoutComments(content, analysis.classes || []);
+
+            return {
+                type,
+                analysis,
+                summary,
+                functionsWithoutComments,
+                classesWithoutComments,
+                totalStructures: Object.values(summary).reduce((a, b) => a + b, 0)
+            };
+
+        } catch (error) {
+            logger.error('STRUCTURE_ANALYSIS', `Failed to analyze ${type} content`, error);
+            return { type, error: error.message, summary: {}, totalStructures: 0 };
+        }
+    }
+
+    // หา functions ที่ไม่มี comment
+    findFunctionsWithoutComments(content, functions) {
+        const withoutComments = [];
+        const lines = content.split('\n');
+
+        functions.forEach(func => {
+            const funcLine = func.line - 1; // 0-based index
+
+            // Smart Function Detection - กรองตัวแปรและ patterns พิเศษออก
+            if (this.isLikelyVariable(func.name, content, funcLine)) {
+                return; // ข้ามตัวแปรที่ถูก misidentify เป็น function
+            }
+
+            // กรอง React Components ที่เป็น const assignments ออก
+            if (this.isReactComponent(func.name, content, funcLine)) {
+                return; // ข้าม React Components - อันนี้ควรเป็น component จริงๆ
+            }
+
+            let hasComment = false;
+
+            // ตรวจสอบ 3 บรรทัดก่อนหน้า
+            for (let i = 1; i <= 3; i++) {
+                const checkLine = funcLine - i;
+                if (checkLine >= 0 && lines[checkLine]) {
+                    const line = lines[checkLine].trim();
+                    if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
+                        hasComment = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasComment) {
+                withoutComments.push({
+                    name: func.name,
+                    line: func.line,
+                    type: func.type || 'function'
+                });
+            }
+        });
+
+        return withoutComments;
+    }
+
+    // หา classes ที่ไม่มี comment (พร้อม Smart Detection)
+    findClassesWithoutComments(content, classes) {
+        const withoutComments = [];
+        const lines = content.split('\n');
+
+        classes.forEach(cls => {
+            const classLine = cls.line - 1; // 0-based index
+
+            // Smart Class Detection - กรองตัวแปรออก
+            if (this.isLikelyVariable(cls.name, content, classLine)) {
+                return; // ข้ามตัวแปรที่ถูก misidentify
+            }
+
+            // กรอง React Components ที่เป็น const assignments ออก
+            if (this.isReactComponent(cls.name, content, classLine)) {
+                return; // ข้าม React Components ที่ควรเป็น functions
+            }
+
+            let hasComment = false;            // ตรวจสอบ 3 บรรทัดก่อนหน้า
+            for (let i = 1; i <= 3; i++) {
+                const checkLine = classLine - i;
+                if (checkLine >= 0 && lines[checkLine]) {
+                    const line = lines[checkLine].trim();
+                    if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
+                        hasComment = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasComment) {
+                withoutComments.push({
+                    name: cls.name,
+                    line: cls.line,
+                    type: cls.type || 'class'
+                });
+            }
+        });
+
+        return withoutComments;
+    }
+
+    // Smart Detection - ตรวจสอบว่าชื่อนั้นเป็นตัวแปรหรือไม่
+    isLikelyVariable(name, content, lineIndex) {
+        const lines = content.split('\n');
+        if (lineIndex < 0 || lineIndex >= lines.length) return false;
+
+        const currentLine = lines[lineIndex].trim();
+        const lowerName = name.toLowerCase();
+
+        // Escape ตัวอักษรพิเศษใน name ก่อนใช้ใน RegExp
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        // ตรวจสอบ patterns ที่เป็นตัวแปร
+        const variablePatterns = [
+            // Variable declarations
+            new RegExp(`\\b(const|let|var)\\s+${escapedName}\\s*=`),
+            new RegExp(`\\b${escapedName}\\s*=\\s*`),
+
+            // Function parameters
+            new RegExp(`function\\s*\\([^)]*\\b${escapedName}\\b[^)]*\\)`),
+            new RegExp(`\\([^)]*\\b${escapedName}\\b[^)]*\\)\\s*=>`),
+
+            // Destructuring
+            new RegExp(`{[^}]*\\b${escapedName}\\b[^}]*}`),
+            new RegExp(`\\[[^\\]]*\\b${escapedName}\\b[^\\]]*\\]`),
+
+            // Loop variables
+            new RegExp(`for\\s*\\([^;]*\\b${escapedName}\\b`),
+
+            // React Context patterns
+            new RegExp(`\\b${escapedName}\\s*=\\s*createContext`),
+            new RegExp(`\\bconst\\s+${escapedName}\\s*=\\s*createContext`),
+
+            // React Hook patterns
+            new RegExp(`\\b${escapedName}\\s*=\\s*use[A-Z]`),
+            new RegExp(`\\bconst\\s+\\[.*${escapedName}.*\\]\\s*=\\s*useState`),
+
+            // Arrow function assignments
+            new RegExp(`\\bconst\\s+${escapedName}\\s*=\\s*\\(`),
+            new RegExp(`\\bconst\\s+${escapedName}\\s*=\\s*\\w+\\s*=>`),
+        ];
+
+        // ตรวจสอบบรรทัดปัจจุบันและใกล้เคียง (เพิ่มช่วงการตรวจสอบ)
+        for (let i = Math.max(0, lineIndex - 3); i <= Math.min(lines.length - 1, lineIndex + 3); i++) {
+            const line = lines[i];
+            if (variablePatterns.some(pattern => pattern.test(line))) {
+                return true;
+            }
+        }
+
+        // ตรวจสอบ common variable names
+        const commonVariableNames = [
+            'result', 'data', 'item', 'value', 'temp', 'node', 'element',
+            'current', 'next', 'prev', 'parent', 'child', 'left', 'right',
+            'count', 'index', 'length', 'size', 'max', 'min', 'sum',
+            'start', 'end', 'pos', 'queue', 'stack', 'list', 'array',
+            'map', 'set', 'key', 'val', 'obj', 'target', 'source',
+            'input', 'output', 'buffer', 'cache', 'config', 'options',
+            // Algorithm-specific variables
+            'dp', 'memo', 'visited', 'distances', 'graph', 'matrix',
+            'heap', 'buckets', 'intervals', 'points', 'edges', 'vertices',
+            // React-specific variable names
+            'user', 'users', 'state', 'props', 'context', 'ref', 'refs',
+            'handler', 'handlers', 'callback', 'callbacks', 'event', 'events',
+            'timeout', 'interval', 'timer', 'loading', 'error', 'success'
+        ];
+
+        if (commonVariableNames.includes(lowerName)) {
+            return true;
+        }
+
+        // ตรวจสอบ React Context patterns (ขึ้นต้นด้วยตัวพิมพ์ใหญ่ แต่ลงท้ายด้วย Context)
+        if (name.endsWith('Context') && /^[A-Z][a-zA-Z]*Context$/.test(name)) {
+            return true;
+        }
+
+        // ตรวจสอบ React Component patterns ที่เป็น const assignment
+        if (/^[A-Z][a-zA-Z0-9]*$/.test(name)) {
+            // ตรวจสอบว่าเป็น const component assignment หรือไม่
+            const componentPattern = new RegExp(`const\\s+${name}\\s*=`);
+            for (let i = Math.max(0, lineIndex - 2); i <= Math.min(lines.length - 1, lineIndex + 2); i++) {
+                if (componentPattern.test(lines[i])) {
+                    return true;
+                }
+            }
+        }
+
+        // ตรวจสอบ short variable names (มักเป็น loop counters)
+        if (name.length <= 2 && /^[a-zA-Z][0-9]?$/.test(name)) {
+            return true;
+        }
+
+        // ตรวจสอบ camelCase variables (ขึ้นต้นด้วยตัวพิมพ์เล็ก)
+        if (/^[a-z][a-zA-Z0-9]*$/.test(name)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // ตรวจสอบว่าเป็น React Component หรือไม่
+    isReactComponent(name, content, lineIndex) {
+        const lines = content.split('\n');
+        if (lineIndex < 0 || lineIndex >= lines.length) return false;
+
+        // React Component ต้องขึ้นต้นด้วยตัวพิมพ์ใหญ่
+        if (!/^[A-Z][a-zA-Z0-9]*$/.test(name)) return false;
+
+        // ตรวจสอบ patterns ของ React Components
+        const reactComponentPatterns = [
+            // const Component = () => {}
+            new RegExp(`const\\s+${name}\\s*=\\s*\\([^)]*\\)\\s*=>`),
+            // const Component = function() {}
+            new RegExp(`const\\s+${name}\\s*=\\s*function`),
+            // const Component = React.memo()
+            new RegExp(`const\\s+${name}\\s*=\\s*React\\.memo`),
+            // const Component = forwardRef()
+            new RegExp(`const\\s+${name}\\s*=\\s*forwardRef`),
+            // export const Component = 
+            new RegExp(`export\\s+const\\s+${name}\\s*=`),
+        ];
+
+        // ตรวจสอบบรรทัดใกล้เคียง
+        for (let i = Math.max(0, lineIndex - 2); i <= Math.min(lines.length - 1, lineIndex + 2); i++) {
+            const line = lines[i];
+            if (reactComponentPatterns.some(pattern => pattern.test(line))) {
+                return true;
+            }
+        }
+
+        // ตรวจสอบ JSX return patterns
+        const jsxPatterns = [
+            /return\s*\(/,
+            /return\s*</,
+            />\s*$/,
+            /<\/[a-zA-Z]/
+        ];
+
+        // ตรวจสอบใน function body ว่ามี JSX หรือไม่
+        for (let i = lineIndex; i < Math.min(lines.length, lineIndex + 20); i++) {
+            const line = lines[i].trim();
+            if (jsxPatterns.some(pattern => pattern.test(line))) {
+                return true;
+            }
+            // หยุดตรวจสอบถ้าเจอปิด function
+            if (line.includes('}') && !line.includes('{')) {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    // สร้าง comparison report
+    generateComparisonReport(originalAnalysis, modifiedAnalysis, filePath) {
+        const report = {
+            filePath,
+            timestamp: new Date().toISOString(),
+            original: originalAnalysis,
+            modified: modifiedAnalysis,
+            changes: {
+                functionsAdded: modifiedAnalysis.summary.totalFunctions - originalAnalysis.summary.totalFunctions,
+                classesAdded: modifiedAnalysis.summary.totalClasses - originalAnalysis.summary.totalClasses,
+                commentsAdded: 0, // จะคำนวณจากการเปรียบเทียบ
+                structuresSkipped: (modifiedAnalysis.functionsWithoutComments?.length || 0) + (modifiedAnalysis.classesWithoutComments?.length || 0),
+                errors: []
+            },
+            skippedStructures: {
+                functions: modifiedAnalysis.functionsWithoutComments || [],
+                classes: modifiedAnalysis.classesWithoutComments || []
+            }
+        };
+
+        // คำนวณจำนวน comments ที่เพิ่ม
+        report.changes.commentsAdded = this.calculateCommentsAdded(originalAnalysis, modifiedAnalysis);
+
+        return report;
+    }
+
+    // คำนวณจำนวน comments ที่เพิ่มขึ้น
+    calculateCommentsAdded(original, modified) {
+        const originalCommentLines = this.countCommentLines(original.analysis?.content || '');
+        const modifiedCommentLines = this.countCommentLines(modified.analysis?.content || '');
+        return Math.max(0, modifiedCommentLines - originalCommentLines);
+    }
+
+    // นับจำนวนบรรทัดที่มี comment
+    countCommentLines(content) {
+        const lines = content.split('\n');
+        return lines.filter(line => {
+            const trimmed = line.trim();
+            return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*');
+        }).length;
+    }
+
+    // บันทึก detailed report ลง audit log
+    logDetailedReport(report, filePath) {
+        logger.audit('FILE_COMPARISON_REPORT', filePath, {
+            summary: {
+                totalStructuresOriginal: report.original.totalStructures,
+                totalStructuresModified: report.modified.totalStructures,
+                functionsAdded: report.changes.functionsAdded,
+                classesAdded: report.changes.classesAdded,
+                commentsAdded: report.changes.commentsAdded,
+                structuresSkipped: report.changes.structuresSkipped
+            },
+            originalStructures: report.original.summary,
+            modifiedStructures: report.modified.summary
+        });
+    }
+
+    // บันทึก error และ skip report แยกต่างหาก พร้อมวิเคราะห์ละเอียดและแนะนำวิธีแก้ไข
+    logErrorAndSkipReport(report, filePath) {
+        if (report.changes.structuresSkipped > 0) {
+            // วิเคราะห์รูปแบบที่ skip
+            const analysisResult = this.analyzeSkippedPatterns(report, filePath);
+
+            logger.error('STRUCTURES_SKIPPED',
+                `${report.changes.structuresSkipped} structures were skipped in ${filePath}`,
+                null,
+                {
+                    skippedFunctions: report.skippedStructures.functions.map(f => `${f.name} (line ${f.line})`),
+                    skippedClasses: report.skippedStructures.classes.map(c => `${c.name} (line ${c.line})`),
+                    totalSkipped: report.changes.structuresSkipped,
+                    reasons: 'Functions/Classes without comments detected',
+                    patternAnalysis: analysisResult.patterns,
+                    suggestedSolutions: analysisResult.solutions,
+                    codeExamples: analysisResult.examples
+                }
+            );
+
+            // สร้าง detailed diagnostic report
+            this.generateDetailedDiagnosticReport(report, filePath, analysisResult);
+        }
+
+        // สร้าง summary report
+        logger.performance('FILE_PROCESSING_SUMMARY', 0, {
+            filePath,
+            success: true,
+            totalStructures: report.modified.totalStructures,
+            commentsAdded: report.changes.commentsAdded,
+            functionsSkipped: report.skippedStructures.functions.length,
+            classesSkipped: report.skippedStructures.classes.length,
+            errorCount: report.changes.errors.length
+        });
+    }
+
+    // วิเคราะห์รูปแบบของ structures ที่ถูก skip
+    analyzeSkippedPatterns(report, filePath) {
+        const analysis = {
+            patterns: {
+                variableDeclarations: 0,
+                shortVariableNames: 0,
+                nestedStructures: 0,
+                generatedCode: 0,
+                utilityVariables: 0
+            },
+            solutions: [],
+            examples: []
+        };
+
+        // วิเคราะห์ functions ที่ skip
+        report.skippedStructures.functions.forEach(func => {
+            if (func.name.length <= 2) {
+                analysis.patterns.shortVariableNames++;
+                analysis.solutions.push(`Short variable name detected: "${func.name}" - Consider using descriptive names`);
+            }
+
+            if (['i', 'j', 'k', 'x', 'y', 'z', 'n', 'm'].includes(func.name)) {
+                analysis.patterns.utilityVariables++;
+                analysis.solutions.push(`Loop/utility variable detected: "${func.name}" - This is likely a loop counter or temporary variable`);
+            }
+        });
+
+        // วิเคราะห์ classes ที่ skip
+        report.skippedStructures.classes.forEach(cls => {
+            if (cls.name.length <= 2) {
+                analysis.patterns.shortVariableNames++;
+                analysis.solutions.push(`Short variable name detected: "${cls.name}" - This appears to be a variable, not a class`);
+            }
+
+            if (['temp', 'result', 'data', 'item', 'node', 'value'].includes(cls.name.toLowerCase())) {
+                analysis.patterns.variableDeclarations++;
+                analysis.solutions.push(`Variable declaration detected: "${cls.name}" - This is likely a variable assignment`);
+            }
+
+            if (cls.name.match(/^[a-z][a-zA-Z]*$/)) {
+                analysis.patterns.variableDeclarations++;
+                analysis.solutions.push(`Camel case variable detected: "${cls.name}" - This follows variable naming convention`);
+            }
+        });
+
+        // สร้าง code examples สำหรับการแก้ไข
+        if (analysis.patterns.variableDeclarations > 0) {
+            analysis.examples.push({
+                type: 'Variable Declaration Fix',
+                problem: 'const result = someFunction();',
+                solution: '// Calculate processing result\nconst result = someFunction();'
+            });
+        }
+
+        if (analysis.patterns.shortVariableNames > 0) {
+            analysis.examples.push({
+                type: 'Short Variable Name Fix',
+                problem: 'let i = 0;',
+                solution: '// Loop counter for iteration\nlet i = 0;'
+            });
+        }
+
+        return analysis;
+    }
+
+    // สร้าง detailed diagnostic report
+    generateDetailedDiagnosticReport(report, filePath, analysisResult) {
+        const diagnosticData = {
+            filePath: filePath,
+            timestamp: new Date().toISOString(),
+            issuesSummary: {
+                totalIssues: report.changes.structuresSkipped,
+                functionIssues: report.skippedStructures.functions.length,
+                classIssues: report.skippedStructures.classes.length,
+                mainCauses: this.identifyMainCauses(analysisResult.patterns, report)
+            },
+            detailedAnalysis: {
+                likelyVariableDeclarations: analysisResult.patterns.variableDeclarations,
+                shortVariableNames: analysisResult.patterns.shortVariableNames,
+                utilityVariables: analysisResult.patterns.utilityVariables,
+                suggestedFixes: analysisResult.solutions.length
+            },
+            actionableRecommendations: this.generateActionableRecommendations(report, analysisResult),
+            codeImprovementSuggestions: analysisResult.examples
+        };
+
+        logger.diagnostic('STRUCTURE_ANALYSIS',
+            `Detailed diagnostic for ${path.basename(filePath)}`,
+            diagnosticData);
+    }
+
+    // ระบุสาเหตุหลักของปัญหา
+    identifyMainCauses(patterns, report) {
+        const causes = [];
+
+        if (patterns.variableDeclarations > 0) {
+            causes.push('Variable declarations misidentified as classes');
+        }
+
+        if (patterns.shortVariableNames > 0) {
+            causes.push('Short variable names detected');
+        }
+
+        if (patterns.utilityVariables > 0) {
+            causes.push('Loop counters and utility variables present');
+        }
+
+        // เพิ่ม Advanced Pattern Analysis
+        const advancedPatterns = this.analyzeAdvancedPatterns(report.skippedStructures);
+
+
+
+        if (advancedPatterns.typeScriptPatterns > 0) {
+            causes.push('TypeScript advanced constructs (interfaces, types, generics)');
+        }
+
+        if (advancedPatterns.reactPatterns > 0) {
+            causes.push('React patterns (hooks, components, context)');
+        }
+
+        if (advancedPatterns.modernJsPatterns > 0) {
+            causes.push('Modern JavaScript patterns (destructuring, async/await)');
+        }
+
+        if (advancedPatterns.classMethodPatterns > 0) {
+            causes.push('Advanced class methods and decorators');
+        }
+
+        return causes.length > 0 ? causes : ['Unknown pattern - requires manual review'];
+    }
+
+    // วิเคราะห์ Advanced Patterns ที่ Parser ยังไม่รู้จัก
+    analyzeAdvancedPatterns(skippedStructures) {
+        const patterns = {
+            typeScriptPatterns: 0,
+            reactPatterns: 0,
+            modernJsPatterns: 0,
+            classMethodPatterns: 0,
+            algorithmPatterns: 0
+        };
+
+        const allStructures = [
+            ...(skippedStructures.functions || []),
+            ...(skippedStructures.classes || [])
+        ];
+
+        allStructures.forEach(structure => {
+            const name = structure.name;
+            const lowerName = name.toLowerCase();
+
+            // TypeScript Patterns
+            if (this.isTypeScriptPattern(name)) {
+                patterns.typeScriptPatterns++;
+            }
+
+            // React Patterns
+            if (this.isReactPattern(name)) {
+                patterns.reactPatterns++;
+            }
+
+            // Modern JavaScript Patterns
+            if (this.isModernJsPattern(name)) {
+                patterns.modernJsPatterns++;
+            }
+
+            // Class Method Patterns
+            if (this.isClassMethodPattern(name)) {
+                patterns.classMethodPatterns++;
+            }
+
+            // Algorithm Patterns
+            if (this.isAlgorithmPattern(name)) {
+                patterns.algorithmPatterns++;
+            }
+        });
+
+        return patterns;
+    }
+
+    // ตรวจสอบ TypeScript Patterns
+    isTypeScriptPattern(name) {
+        const tsPatterns = [
+            /^[A-Z][a-zA-Z]*Options$/,       // ConnectionOptions, QueryOptions
+            /^[A-Z][a-zA-Z]*Config$/,        // DatabaseConfig, ApiConfig
+            /^[A-Z][a-zA-Z]*Handler$/,       // EventHandler, ErrorHandler
+            /^[A-Z][a-zA-Z]*Listener$/,      // EventListener, ChangeListener
+            /^[A-Z][a-zA-Z]*Result$/,        // QueryResult, ValidationResult
+            /^[A-Z][a-zA-Z]*Error$/,         // ValidationError, ConnectionError
+            /^[A-Z][a-zA-Z]*Stats$/,         // ConnectionStats, PerformanceStats
+            /^[A-Z][a-zA-Z]*Schema$/,        // ValidationSchema, DatabaseSchema
+            /^I[A-Z][a-zA-Z]*$/,             // Interface naming (IUser, IDatabase)
+            /^T[A-Z][a-zA-Z]*$/,             // Type parameter naming
+        ];
+
+        return tsPatterns.some(pattern => pattern.test(name));
+    }
+
+    // ตรวจสอบ React Patterns
+    isReactPattern(name) {
+        const reactPatterns = [
+            /^use[A-Z][a-zA-Z]*$/,           // Custom hooks (useApi, useLocalStorage)
+            /^[A-Z][a-zA-Z]*Context$/,       // React Context (ThemeContext, UserContext)
+            /^[A-Z][a-zA-Z]*Provider$/,      // Context Provider (NotificationProvider)
+            /^handle[A-Z][a-zA-Z]*$/,        // Event handlers (handleClick, handleSubmit)
+            /^on[A-Z][a-zA-Z]*$/,            // Event callbacks (onClick, onSubmit)
+            /^render[A-Z][a-zA-Z]*$/,        // Render methods (renderItem, renderField)
+            /^[a-z]+Ref$/,                   // React refs (inputRef, containerRef)
+            /^[A-Z][a-zA-Z]*Table$/,         // React Table components (DataTable, UserTable)
+            /^[A-Z][a-zA-Z]*Form$/,          // React Form components (LoginForm, ContactForm)
+            /^[A-Z][a-zA-Z]*Modal$/,         // React Modal components (ConfirmModal, EditModal)
+            /^[A-Z][a-zA-Z]*Button$/,        // React Button components (SubmitButton, CancelButton)
+            /^[A-Z][a-zA-Z]*Input$/,         // React Input components (TextInput, DateInput)
+            /^[A-Z][a-zA-Z]*List$/,          // React List components (ItemList, UserList)
+            /^[A-Z][a-zA-Z]*Card$/,          // React Card components (ProfileCard, NewsCard)
+            /^[A-Z][a-zA-Z]*Builder$/,       // React Builder components (FormBuilder, LayoutBuilder)
+            /^[A-Z][a-zA-Z]*Dashboard$/,     // React Dashboard components
+            /^[A-Z][a-zA-Z]*Panel$/,         // React Panel components
+            /^[A-Z][a-zA-Z]*Widget$/,        // React Widget components
+        ];
+
+        return reactPatterns.some(pattern => pattern.test(name));
+    }
+
+    // ตรวจสอบ Modern JavaScript Patterns
+    isModernJsPattern(name) {
+        const modernPatterns = [
+            /^[a-z]+Async$/,                 // Async functions (fetchAsync, loadAsync)
+            /^[a-z]+Promise$/,               // Promise-based functions
+            /^[a-z]+Generator$/,             // Generator functions
+            /^[a-z]+Iterator$/,              // Iterator functions
+            /^create[A-Z][a-zA-Z]*$/,        // Factory functions (createConnection, createUser)
+            /^build[A-Z][a-zA-Z]*$/,         // Builder functions
+            /^process[A-Z][a-zA-Z]*$/,       // Processing functions
+        ];
+
+        return modernPatterns.some(pattern => pattern.test(name));
+    }
+
+    // ตรวจสอบ Class Method Patterns
+    isClassMethodPattern(name) {
+        const classPatterns = [
+            /^[a-z]+Connection$/,            // Database connections
+            /^[a-z]+Manager$/,               // Manager classes
+            /^[a-z]+Builder$/,               // Builder classes  
+            /^[a-z]+Factory$/,               // Factory classes
+            /^[a-z]+Repository$/,            // Repository pattern
+            /^[a-z]+Service$/,               // Service classes
+            /^[a-z]+Controller$/,            // Controller classes
+        ];
+
+        return classPatterns.some(pattern => pattern.test(name));
+    }
+
+    // ตรวจสอบ Algorithm Patterns
+    isAlgorithmPattern(name) {
+        const algoPatterns = [
+            /^[a-z]{1,3}$/,                  // Short algorithm variables (dp, bfs, dfs)
+            /^[a-z]+Tree$/,                  // Tree structures
+            /^[a-z]+Node$/,                  // Node structures  
+            /^[a-z]+Graph$/,                 // Graph structures
+            /^[a-z]+Queue$/,                 // Queue structures
+            /^[a-z]+Stack$/,                 // Stack structures
+        ];
+
+        return algoPatterns.some(pattern => pattern.test(name));
+    }
+
+    // สร้างคำแนะนำที่สามารถทำได้จริง
+    generateActionableRecommendations(report, analysisResult) {
+        const recommendations = [];
+
+        if (analysisResult.patterns.variableDeclarations > 5) {
+            recommendations.push({
+                priority: 'HIGH',
+                action: 'Review variable declarations',
+                description: 'Many variables were misidentified as classes. Consider adding comments above variable declarations.',
+                example: '// Store calculation result\nconst result = calculate();'
+            });
+        }
+
+        if (analysisResult.patterns.shortVariableNames > 3) {
+            recommendations.push({
+                priority: 'MEDIUM',
+                action: 'Use descriptive variable names',
+                description: 'Short variable names (i, j, x, y) are common and may not need comments.',
+                example: 'for (let index = 0; index < items.length; index++)'
+            });
+        }
+
+        if (report.changes.structuresSkipped > 20) {
+            recommendations.push({
+                priority: 'LOW',
+                action: 'Consider code refactoring',
+                description: 'High number of skipped structures suggests complex code that may benefit from refactoring.',
+                example: 'Break down large functions into smaller, well-documented functions'
+            });
+        }
+
+        // Advanced Pattern Recommendations
+        const advancedPatterns = this.analyzeAdvancedPatterns(report.skippedStructures);
+
+        if (advancedPatterns.typeScriptPatterns > 0) {
+            recommendations.push({
+                priority: 'HIGH',
+                action: 'Add TypeScript interface/type documentation',
+                description: 'TypeScript constructs detected. These need proper documentation for better code understanding.',
+                example: '// Interface defining database connection options\ninterface ConnectionOptions { ... }'
+            });
+        }
+
+        if (advancedPatterns.reactPatterns > 0) {
+            recommendations.push({
+                priority: 'HIGH',
+                action: 'Document React components and hooks',
+                description: 'React patterns detected. Components and custom hooks should have clear documentation.',
+                example: '// Custom hook for managing API calls with loading state\nconst useApi = () => { ... }'
+            });
+        }
+
+        if (advancedPatterns.modernJsPatterns > 0) {
+            recommendations.push({
+                priority: 'MEDIUM',
+                action: 'Document async/await and modern patterns',
+                description: 'Modern JavaScript patterns detected. Async operations need clear documentation.',
+                example: '// Asynchronously processes user data with error handling\nasync function processUserData() { ... }'
+            });
+        }
+
+        if (advancedPatterns.classMethodPatterns > 0) {
+            recommendations.push({
+                priority: 'MEDIUM',
+                action: 'Add class method documentation',
+                description: 'Advanced class methods detected. Repository/Service patterns need clear documentation.',
+                example: '// Repository class for managing user database operations\nclass UserRepository { ... }'
+            });
+        }
+
+        return recommendations;
+    }
+}
+
+// สร้าง file comparison analyzer instance
+const fileComparisonAnalyzer = new FileComparisonAnalyzer();
+
+// สร้าง backup manager instance
+const backupManager = new OrganizedBackupManager();
+
+// ======================================================================
+// Helper Functions - ฟังก์ชันช่วยเหลือสำหรับการประมวลผล
+// ======================================================================
+
+// ฟังก์ชันคำนวณหมายเลขบรรทัดที่จัดการ line endings ได้ถูกต้อง
+// @param {string} content - เนื้อหาของไฟล์
+// @param {number} index - ตำแหน่งที่ต้องการหาหมายเลขบรรทัด
+// @returns {number} หมายเลขบรรทัด (เริ่มต้นที่ 1)
+function calculateLineNumber(content, index) {
+    const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    return normalizedContent.substring(0, index).split('\n').length;
+}
+
+// ฟังก์ชันสำหรับ normalize line endings
+// @param {string} content - เนื้อหาของไฟล์
+// @returns {string} เนื้อหาที่ normalize แล้ว
+function normalizeLineEndings(content) {
+    return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+// ฟังก์ชันตรวจสอบว่าแต่ละ structure มี comment เฉพาะตัวหรือไม่
+// @param {string} content - เนื้อหาของไฟล์
+// @param {Array} structures - รายการ structures ที่ตรวจพบ
+// @returns {Map} Map ที่เก็บข้อมูล comment status ของแต่ละ structure
+function analyzeCommentStatus(content, structures) {
+    const commentStatusMap = new Map();
+    const normalizedContent = normalizeLineEndings(content);
+    const lines = normalizedContent.split('\n');
+
+    structures.forEach(structure => {
+        const structureLine = structure.line - 1; // แปลงเป็น 0-based index
+        let hasComment = false;
+        let commentLines = [];
+
+        // ตรวจสอบ 3-5 บรรทัดก่อนหน้าเฉพาะ structure นี้
+        for (let i = 1; i <= 5; i++) {
+            const checkIndex = structureLine - i;
+            if (checkIndex >= 0 && checkIndex < lines.length) {
+                const line = lines[checkIndex];
+                const trimmed = line.trim();
+
+                // เจอ comment line
+                if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.includes('*/')) {
+                    const commentContent = trimmed.toLowerCase();
+                    const structureName = structure.name.toLowerCase();
+
+                    // ตรวจสอบว่า comment นี้เกี่ยวข้องกับ structure นี้หรือไม่
+                    // หลัก: ชื่อ structure ต้องตรงกัน หรือ comment ต้องเฉพาะเจาะจง
+                    if (commentContent.includes(structureName) ||
+                        (commentContent.includes('en:') &&
+                            (commentContent.includes(structureName) ||
+                                (commentContent.includes('interface') && structure.type === 'interface_declaration') ||
+                                (commentContent.includes('type') && structure.type === 'type_alias' && commentContent.includes('alias')) ||
+                                (commentContent.includes('static') && structure.type === 'static_method') ||
+                                (commentContent.includes('abstract') && structure.type === 'abstract_class'))) ||
+                        (commentContent.includes('th:') &&
+                            (commentContent.includes(structureName) ||
+                                (commentContent.includes('interface') && structure.type === 'interface_declaration') ||
+                                (commentContent.includes('type') && structure.type === 'type_alias' && commentContent.includes('alias')) ||
+                                (commentContent.includes('static') && structure.type === 'static_method') ||
+                                (commentContent.includes('abstract') && structure.type === 'abstract_class'))) ||
+                        commentContent.includes('======')) {
+                        hasComment = true;
+                        commentLines.push(checkIndex + 1); // แปลงกลับเป็น 1-based
+                        break;
+                    }
+                }
+
+                // เจอ code line อื่นที่ไม่เกี่ยวข้อง ให้หยุดค้นหา
+                else if (trimmed &&
+                    !trimmed.startsWith('export') &&
+                    !trimmed.startsWith('@') &&
+                    !trimmed.startsWith('{') &&
+                    !trimmed.startsWith('}')) {
+                    break;
+                }
+            }
+        }
+
+        commentStatusMap.set(structure.name, {
+            hasComment,
+            commentLines,
+            structure: structure
+        });
+    });
+
+    return commentStatusMap;
+}
 
 // ======================================================================
 // JavaScript Tokenizer Engine/เครื่องมือ Tokenizer ของ JavaScript
@@ -41,6 +1139,8 @@ const TOKEN_TYPES = {
     PAREN_CLOSE: 'PAREN_CLOSE', // )
     BRACE_OPEN: 'BRACE_OPEN',   // {
     BRACE_CLOSE: 'BRACE_CLOSE', // }
+    BRACKET_OPEN: 'BRACKET_OPEN',   // [
+    BRACKET_CLOSE: 'BRACKET_CLOSE', // ]
     SEMICOLON: 'SEMICOLON',     // ;
     COMMA: 'COMMA',             // ,
 
@@ -62,15 +1162,129 @@ const TOKEN_TYPES = {
     EOF: 'EOF'
 };
 
-// คำหลักของ JavaScript - JavaScript keywords
+// คำหลักของ JavaScript, TypeScript, JSX, TSX ครบถ้วน - Complete keywords for JS/TS/JSX/TSX
 const KEYWORDS = new Set([
+    // ═══════════════════════════════════════════════════════════════
+    // JavaScript Core Keywords
+    // ═══════════════════════════════════════════════════════════════
     'function', 'const', 'let', 'var', 'async', 'await',
     'class', 'constructor', 'static', 'get', 'set', 'abstract',
     'if', 'else', 'for', 'while', 'do', 'switch', 'case',
     'return', 'break', 'continue', 'throw', 'try', 'catch',
-    'import', 'export', 'default', 'from', 'as'
-]);
+    'import', 'export', 'default', 'from', 'as', 'finally',
+    'with', 'delete', 'new', 'this', 'super', 'instanceof',
+    'of', 'in', 'null', 'undefined', 'true', 'false',
+    'yield', 'debugger', 'arguments', 'eval',
 
+    // ═══════════════════════════════════════════════════════════════
+    // TypeScript Specific Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'interface', 'type', 'enum', 'namespace', 'module',
+    'declare', 'readonly', 'public', 'private', 'protected',
+    'implements', 'extends', 'keyof', 'typeof', 'infer',
+    'never', 'unknown', 'any', 'void', 'string', 'number', 'boolean',
+    'object', 'symbol', 'bigint', 'unique', 'is', 'asserts',
+    'override', 'satisfies', 'out', 'in', 'const',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Advanced TypeScript Utility Types & Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'Partial', 'Required', 'Pick', 'Omit', 'Exclude', 'Extract',
+    'NonNullable', 'Parameters', 'ReturnType', 'InstanceType',
+    'ThisType', 'Record', 'Readonly', 'Array', 'Promise',
+    'Awaited', 'ConstructorParameters', 'ThisParameterType',
+    'OmitThisParameter', 'Uppercase', 'Lowercase', 'Capitalize', 'Uncapitalize',
+
+    // ═══════════════════════════════════════════════════════════════
+    // React Core Components & Hooks
+    // ═══════════════════════════════════════════════════════════════
+    'React', 'Component', 'PureComponent', 'memo', 'forwardRef',
+    'createContext', 'useContext', 'createRef', 'useRef',
+    'useState', 'useEffect', 'useReducer', 'useCallback', 'useMemo',
+    'useLayoutEffect', 'useImperativeHandle', 'useDebugValue',
+    'useDeferredValue', 'useTransition', 'useId', 'useSyncExternalStore',
+    'useInsertionEffect', 'startTransition', 'flushSync',
+
+    // ═══════════════════════════════════════════════════════════════
+    // React Advanced Components & APIs  
+    // ═══════════════════════════════════════════════════════════════
+    'Fragment', 'StrictMode', 'Suspense', 'SuspenseList', 'Profiler',
+    'createElement', 'createFactory', 'cloneElement', 'isValidElement',
+    'Children', 'lazy', 'ErrorBoundary', 'Portal', 'createPortal',
+
+    // ═══════════════════════════════════════════════════════════════
+    // React Router & State Management
+    // ═══════════════════════════════════════════════════════════════
+    'Router', 'Route', 'Routes', 'Link', 'NavLink', 'Navigate',
+    'useNavigate', 'useLocation', 'useParams', 'useSearchParams',
+    'Outlet', 'BrowserRouter', 'HashRouter', 'MemoryRouter',
+    'Provider', 'Consumer', 'connect', 'useSelector', 'useDispatch',
+
+    // ═══════════════════════════════════════════════════════════════
+    // JSX Specific Elements & Attributes
+    // ═══════════════════════════════════════════════════════════════
+    'JSX', 'IntrinsicElements', 'ElementType', 'ComponentProps',
+    'PropsWithChildren', 'PropsWithRef', 'RefAttributes',
+    'ClassAttributes', 'HTMLAttributes', 'DOMAttributes',
+    'CSSProperties', 'MouseEvent', 'KeyboardEvent', 'FormEvent',
+    'ChangeEvent', 'FocusEvent', 'TouchEvent', 'WheelEvent',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Next.js Specific Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'GetServerSideProps', 'GetStaticProps', 'GetStaticPaths',
+    'NextPage', 'NextApiRequest', 'NextApiResponse', 'NextApiHandler',
+    'AppProps', 'Document', 'Head', 'Image', 'Link',
+    'useRouter', 'withRouter', 'getServerSideProps', 'getStaticProps',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Node.js & Server-side Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'require', 'module', 'exports', '__dirname', '__filename',
+    'process', 'global', 'Buffer', 'console', 'setTimeout', 'setInterval',
+    'clearTimeout', 'clearInterval', 'setImmediate', 'clearImmediate',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Testing Framework Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'describe', 'it', 'test', 'expect', 'beforeEach', 'afterEach',
+    'beforeAll', 'afterAll', 'jest', 'mock', 'spy', 'stub',
+    'render', 'screen', 'fireEvent', 'waitFor', 'act',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Build Tools & Bundlers Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'webpack', 'vite', 'rollup', 'parcel', 'babel', 'tsc',
+    'eslint', 'prettier', 'tsconfig', 'package', 'dependencies',
+
+    // ═══════════════════════════════════════════════════════════════
+    // CSS-in-JS & Styling Libraries
+    // ═══════════════════════════════════════════════════════════════
+    'styled', 'css', 'keyframes', 'createGlobalStyle', 'ThemeProvider',
+    'makeStyles', 'useStyles', 'withStyles', 'createStyles',
+    'Box', 'Stack', 'Grid', 'Container', 'Paper', 'Card',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Database & API Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'fetch', 'axios', 'query', 'mutation', 'subscription',
+    'GraphQL', 'REST', 'API', 'endpoint', 'middleware',
+    'mongoose', 'prisma', 'sequelize', 'typeorm', 'knex',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Common Library & Framework Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'lodash', 'moment', 'dayjs', 'date-fns', 'ramda',
+    'rxjs', 'observable', 'subject', 'subscription',
+    'express', 'koa', 'fastify', 'nest', 'apollo',
+
+    // ═══════════════════════════════════════════════════════════════
+    // Development & Debugging Keywords
+    // ═══════════════════════════════════════════════════════════════
+    'development', 'production', 'staging', 'test',
+    'debug', 'trace', 'warn', 'error', 'info', 'log',
+    'performance', 'profiler', 'benchmark', 'optimization'
+]);
 // ======================================================================
 // Security Manager สำหรับ Parser/ระบบจัดการความปลอดภัยสำหรับ Parser
 // ======================================================================
@@ -157,6 +1371,9 @@ class JavaScriptTokenizer {
         this.line = 1;
         this.column = 1;
         this.tokens = [];
+        this.braceDepth = 0; // ติดตาม depth ของ {}
+        this.parenDepth = 0; // ติดตาม depth ของ ()
+        this.bracketDepth = 0; // ติดตาม depth ของ []
         // SECURITY: เพิ่ม Security Manager
         this.security = new TokenizerSecurityManager(securityOptions);
     }
@@ -383,9 +1600,19 @@ class JavaScriptTokenizer {
             ')': TOKEN_TYPES.PAREN_CLOSE,
             '{': TOKEN_TYPES.BRACE_OPEN,
             '}': TOKEN_TYPES.BRACE_CLOSE,
+            '[': TOKEN_TYPES.BRACKET_OPEN,
+            ']': TOKEN_TYPES.BRACKET_CLOSE,
             ';': TOKEN_TYPES.SEMICOLON,
             ',': TOKEN_TYPES.COMMA
         };
+
+        // อัพเดท depth counters
+        if (char === '{') this.braceDepth++;
+        else if (char === '}') this.braceDepth--;
+        else if (char === '(') this.parenDepth++;
+        else if (char === ')') this.parenDepth--;
+        else if (char === '[') this.bracketDepth++;
+        else if (char === ']') this.bracketDepth--;
 
         const type = tokenMap[char] || TOKEN_TYPES.IDENTIFIER;
         this.addToken(type, char, this.line, this.column);
@@ -415,7 +1642,10 @@ class JavaScriptTokenizer {
             value,
             line,
             column,
-            position: this.cursor - value.length
+            position: this.cursor - value.length,
+            braceDepth: this.braceDepth,
+            parenDepth: this.parenDepth,
+            bracketDepth: this.bracketDepth
         });
     }
 
@@ -537,16 +1767,65 @@ class FunctionPatternMatcher {
             return null;
         }
 
-        // เรียงลำดับการตรวจสอบให้ถูกต้อง
-        return this.matchClassDeclaration() ||
+        // ===================================================================
+        // ENHANCED PATTERN DETECTION v2.0 - The Next Frontier
+        // การตรวจจับรูปแบบขั้นสูง v2.0 - มิติใหม่ของการพัฒนา
+        // ===================================================================
+
+        // Priority 1: TypeScript Advanced Constructs
+        return this.matchInterfaceDeclaration() ||
+            this.matchTypeAlias() ||
+            this.matchEnumDeclaration() ||
+            this.matchNamespaceDeclaration() ||
+            this.matchModuleDeclaration() ||
+            this.matchDeclareStatement() ||
+
+            // Priority 2: Class and Object Patterns
+            this.matchClassDeclaration() ||
+            this.matchAbstractClass() ||
+            this.matchGenericClass() ||
+
+            // Priority 3: React/JSX Advanced Patterns
+            this.matchReactComponent() ||
+            this.matchExportedComponent() ||
+            this.matchReactHooks() ||
+            this.matchReactForwardRef() ||
+            this.matchReactMemo() ||
+            this.matchHigherOrderComponent() ||
+
+            // Priority 4: Function Patterns
             this.matchFunctionDeclaration() ||
             this.matchArrowFunction() ||
             this.matchAsyncFunction() ||
+            this.matchGeneratorFunction() ||
+            this.matchIIFE() ||
+            this.matchCurriedFunction() ||
+            this.matchFactoryFunction() ||
+
+            // Priority 5: Method Patterns
             this.matchAsyncClassMethod() ||
             this.matchGetter() ||
             this.matchSetter() ||
             this.matchStaticMethod() ||
-            this.matchClassMethod();
+            this.matchPrivateMethod() ||
+            this.matchProtectedMethod() ||
+            this.matchClassMethod() ||
+
+            // Priority 6: Modern JavaScript Patterns
+            this.matchDestructuringAssignment() ||
+            this.matchSpreadOperator() ||
+            this.matchAsyncIterator() ||
+            this.matchProxyHandler() ||
+
+            // Priority 7: Algorithm & Data Structure Patterns
+            this.matchAlgorithmFunction() ||
+            this.matchDataStructureMethod() ||
+            this.matchMathFunction() ||
+
+            // Priority 8: Express.js & Node.js Patterns  
+            this.matchExpressRoute() ||
+            this.matchExpressMiddleware() ||
+            this.matchNodeJSModule();
     }
 
     // รูปแบบ: function name() {} - Function declaration pattern
@@ -810,15 +2089,22 @@ class FunctionPatternMatcher {
                 return null;
             }
 
-            // ตรวจสอบว่าอยู่ในคลาสหรือไม่โดยดูบริบทรอบข้าง
-            if (!this.isInClassContext()) {
+            // ลดความเข้มงวด - ตรวจสอบบริบทแต่ยอมรับกรณีพิเศษ
+            const inClass = this.isInClassContext();
+            const nextTokenAfterParen = this.findTokenAfterParentheses();
+            const hasMethodBody = nextTokenAfterParen && nextTokenAfterParen.type === TOKEN_TYPES.BRACE_OPEN;
+
+            // ต้องอยู่ในคลาสหรือมี method body ที่ชัดเจน
+            if (!inClass && !hasMethodBody) {
                 return null;
             }
 
-            // ตรวจสอบว่าต่อด้วย { (method body) หรือไม่
-            const nextTokenAfterParen = this.findTokenAfterParentheses();
-            if (!nextTokenAfterParen || nextTokenAfterParen.type !== TOKEN_TYPES.BRACE_OPEN) {
-                return null;
+            // ถ้าไม่มี method body ชัดเจนแต่อยู่ในคลาส ก็ยังพอจะรับได้
+            if (inClass && !hasMethodBody) {
+                // ตรวจสอบว่าเป็น method pattern ที่น่าจะใช่หรือไม่
+                if (!this.isLikelyMethodName(nameToken.value)) {
+                    return null;
+                }
             }
 
             // ตรวจสอบว่าไม่ใช่ชื่อที่ว่างเปล่าหรือมีแค่ symbols
@@ -994,8 +2280,8 @@ class FunctionPatternMatcher {
 
             // ตรวจสอบว่าเป็นคลาสที่ top-level หรือไม่ (ไม่ใช่ nested class)
             const currentDepth = abstractToken.braceDepth || 0;
-            // อนุญาติให้ class อยู่ในระดับที่ลึกกว่าได้บ้าง สำหรับไฟล์ที่ซับซ้อน
-            if (currentDepth > 3) {
+            // อนุญาติให้ class อยู่ในระดับที่ลึกกว่าได้บ้าง สำหรับไฟล์ที่ซับซ้อน - แต่ไม่เกิน 2 level
+            if (currentDepth > 2) {
                 return null; // ข้าม deeply nested class
             }
 
@@ -1022,10 +2308,12 @@ class FunctionPatternMatcher {
 
             // ตรวจสอบว่าเป็นคลาสที่ top-level หรือไม่ (ไม่ใช่ nested class)
             const currentDepth = classToken.braceDepth || 0;
-            // อนุญาติให้ class อยู่ในระดับที่ลึกกว่าได้บ้าง สำหรับไฟล์ที่ซับซ้อน
-            if (currentDepth > 3) {
+            // อนุญาติให้ class อยู่ในระดับที่ลึกกว่าได้บ้าง สำหรับไฟล์ที่ซับซ้อน - แต่ไม่เกิน 2 level
+            if (currentDepth > 2) {
                 return null; // ข้าม deeply nested class
-            } this.cursor += 2; // ข้าม 'class', name
+            }
+
+            this.cursor += 2; // ข้าม 'class', name
 
             return {
                 type: 'class_declaration',
@@ -1037,6 +2325,245 @@ class FunctionPatternMatcher {
             };
         }
         return null;
+    }
+
+    // รูปแบบ: interface InterfaceName {} - Interface declaration pattern
+    matchInterfaceDeclaration() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'interface' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER) {
+
+            const interfaceToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            this.cursor += 2; // ข้าม 'interface', name
+
+            return {
+                type: 'interface_declaration',
+                name: nameToken.value,
+                line: interfaceToken.line,
+                column: interfaceToken.column,
+                parameters: [],
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: type TypeName = ... - Type alias declaration pattern  
+    matchTypeAlias() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'type' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.EQUALS) {
+
+            const typeToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            this.cursor += 3; // ข้าม 'type', name, '='
+
+            return {
+                type: 'type_alias',
+                name: nameToken.value,
+                line: typeToken.line,
+                column: typeToken.column,
+                parameters: [],
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: enum EnumName {} - Enum declaration pattern
+    matchEnumDeclaration() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'enum' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER) {
+
+            const enumToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            this.cursor += 2; // ข้าม 'enum', name
+
+            return {
+                type: 'enum_declaration',
+                name: nameToken.value,
+                line: enumToken.line,
+                column: enumToken.column,
+                parameters: [],
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: const ComponentName = () => { - React Functional Component pattern
+    matchReactComponent() {
+        // Pattern: const ComponentName = () => JSX
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'const' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(1)?.value.match(/^[A-Z][a-zA-Z0-9]*$/) && // Component name starts with uppercase
+            this.peekToken(2)?.type === TOKEN_TYPES.EQUALS &&
+            this.peekToken(3)?.type === TOKEN_TYPES.PAREN_OPEN) {
+
+            const constToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+            const params = this.extractParameters(this.cursor + 3);
+
+            this.cursor += 4; // ข้าม 'const', name, '=', '('
+
+            return {
+                type: 'react_component',
+                name: nameToken.value,
+                line: constToken.line,
+                column: constToken.column,
+                parameters: params,
+                isAsync: false,
+                isReactComponent: true
+            };
+        }
+
+        // Pattern: function ComponentName() { return JSX
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'function' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(1)?.value.match(/^[A-Z][a-zA-Z0-9]*$/)) { // Component name starts with uppercase
+
+            const functionToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+            const params = this.extractParameters(this.cursor + 2);
+
+            this.cursor += 3; // ข้าม 'function', name, '('
+
+            return {
+                type: 'react_component',
+                name: nameToken.value,
+                line: functionToken.line,
+                column: functionToken.column,
+                parameters: params,
+                isAsync: false,
+                isReactComponent: true
+            };
+        }
+
+        return null;
+    }
+
+    // รูปแบบ: export const/function ComponentName - Exported Component pattern
+    matchExportedComponent() {
+        // Pattern: export const ComponentName = 
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'export' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(1)?.value === 'const' &&
+            this.peekToken(2)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.value.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+
+            const exportToken = this.currentToken();
+            const nameToken = this.peekToken(2);
+            const params = this.extractParameters(this.cursor + 4); // after 'export const name ='
+
+            this.cursor += 5; // ข้าม 'export', 'const', name, '=', '('
+
+            return {
+                type: 'exported_component',
+                name: nameToken.value,
+                line: exportToken.line,
+                column: exportToken.column,
+                parameters: params,
+                isAsync: false,
+                isExported: true,
+                isReactComponent: true
+            };
+        }
+
+        // Pattern: export function ComponentName
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'export' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(1)?.value === 'function' &&
+            this.peekToken(2)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.value.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+
+            const exportToken = this.currentToken();
+            const nameToken = this.peekToken(2);
+            const params = this.extractParameters(this.cursor + 3);
+
+            this.cursor += 4; // ข้าม 'export', 'function', name, '('
+
+            return {
+                type: 'exported_component',
+                name: nameToken.value,
+                line: exportToken.line,
+                column: exportToken.column,
+                parameters: params,
+                isAsync: false,
+                isExported: true,
+                isReactComponent: true
+            };
+        }
+
+        // Pattern: export default class ComponentName
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'export' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(1)?.value === 'default' &&
+            this.peekToken(2)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(2)?.value === 'class' &&
+            this.peekToken(3)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(3)?.value.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+
+            const exportToken = this.currentToken();
+            const nameToken = this.peekToken(3);
+
+            this.cursor += 4; // ข้าม 'export', 'default', 'class', name
+
+            return {
+                type: 'exported_class_component',
+                name: nameToken.value,
+                line: exportToken.line,
+                column: exportToken.column,
+                parameters: [],
+                isAsync: false,
+                isExported: true,
+                isReactComponent: true
+            };
+        }
+
+        return null;
+    }
+
+    // ตรวจสอบว่าชื่อน่าจะเป็น method หรือไม่
+    isLikelyMethodName(name) {
+        // ตรวจสอบ pattern ต่างๆ ที่มักเป็น method name
+        const methodPatterns = [
+            /^(get|set|is|has|can|should|will|create|make|build|init|setup|config|configure)/, // action verbs
+            /^(process|handle|manage|calculate|compute|validate|check|verify|parse|format)/, // processing verbs
+            /^(render|update|delete|remove|add|insert|save|load|fetch|send|receive|execute)/, // CRUD operations
+            /^(start|stop|pause|resume|restart|reset|clear|clean|refresh|reload|sync)/, // lifecycle verbs
+            /^(connect|disconnect|login|logout|authenticate|authorize|encrypt|decrypt)/, // auth/network
+            /^(on[A-Z]|handle[A-Z]|process[A-Z])/, // event handlers
+            /^[a-z][a-zA-Z]*[A-Z]/, // camelCase with uppercase
+            /^[a-z]+[0-9]+/, // มีตัวเลขปน
+            /.*[A-Z].*[A-Z].*/ // มี uppercase หลายตัว
+        ];
+
+        // ห้าม built-in keywords
+        const excludedPatterns = [
+            /^(if|else|for|while|switch|case|break|continue|return|try|catch|finally|throw)$/,
+            /^(var|let|const|function|class|import|export|default|from|as|typeof|instanceof)$/,
+            /^(null|undefined|true|false|this|super|new|delete|void)$/
+        ];
+
+        // ตรวจสอบว่าไม่ใช่ keyword ที่ต้องห้าม
+        if (excludedPatterns.some(pattern => pattern.test(name))) {
+            return false;
+        }
+
+        // ตรวจสอบว่าตรงกับ pattern ที่เป็น method
+        return methodPatterns.some(pattern => pattern.test(name)) ||
+            (name.length > 2 && /^[a-z][a-zA-Z0-9_]*$/.test(name));
     }
 
     // Helper methods - ฟังก์ชันช่วยเหลือ
@@ -1625,8 +3152,8 @@ class SmartFileAnalyzer {
             // Phase 1: Tokenize และ Parse โครงสร้าง
             const tokenizer = new JavaScriptTokenizer(this.content, this.security);
             const tokens = tokenizer.tokenize();
-            const parser = new StructureParser(tokens, this.security);
-            const structures = parser.parse();
+            const structureAnalyzer = new StructureAnalyzer(tokens, this.content);
+            const structures = structureAnalyzer.analyzeAll();
 
             // Phase 2: วิเคราะห์โครงสร้างลึก
             this.analyzeStructures(structures);
@@ -1644,7 +3171,21 @@ class SmartFileAnalyzer {
             this.aiIntentAnalysis = this.analyzeCodeIntent();
 
             console.log(` Smart Analysis Complete: Found ${this.fileBlueprint.classes.size} classes, ${this.fileBlueprint.functions.size} functions, ${this.fileBlueprint.keywords.size} keywords`);
-            console.log(` AI Intent Analysis: Detected ${this.aiIntentAnalysis.patterns.length} logical patterns, ${this.aiIntentAnalysis.risks.length} potential risks`);
+
+            // Safe access to AI analysis results
+            if (this.aiIntentAnalysis && typeof this.aiIntentAnalysis === 'object') {
+                // Count total intents found across all categories
+                let totalIntents = 0;
+                let totalRisks = 0;
+
+                if (this.aiIntentAnalysis.businessLogic) totalIntents += this.aiIntentAnalysis.businessLogic.size || 0;
+                if (this.aiIntentAnalysis.securityMeasures) totalRisks += this.aiIntentAnalysis.securityMeasures.size || 0;
+                if (this.aiIntentAnalysis.algorithmicPurpose) totalIntents += this.aiIntentAnalysis.algorithmicPurpose.size || 0;
+
+                console.log(` AI Intent Analysis: Detected ${totalIntents} logical patterns, ${totalRisks} security concerns`);
+            } else {
+                console.log(` AI Intent Analysis: Completed basic analysis`);
+            }
 
             return this.fileBlueprint;
 
@@ -1683,7 +3224,7 @@ class SmartFileAnalyzer {
         while ((match = constRegex.exec(this.content)) !== null) {
             const constName = match[1];
             const constValue = match[2].trim();
-            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+            const lineNumber = calculateLineNumber(this.content, match.index);
 
             const constType = this.inferConstType(constName, constValue);
 
@@ -1832,7 +3373,7 @@ class SmartFileAnalyzer {
 
         while ((match = interfaceRegex.exec(this.content)) !== null) {
             const interfaceName = match[1];
-            const lineNumber = this.content.substring(0, match.index).split('\n').length;
+            const lineNumber = calculateLineNumber(this.content, match.index);
 
             const interfaceInfo = {
                 name: interfaceName,
@@ -2391,11 +3932,9 @@ class SmartFileAnalyzer {
     // AI Intent Understanding Engine - เครื่องมืออัจฉริยะเข้าใจความตั้งใจของโค้ด
     // ===================================================================
 
-    /**
-     * วิเคราะห์ความตั้งใจและความหมายของโค้ด
-     * Analyze intent and semantic meaning of code
-     * Evolution: From "Grammar Expert" to "Literary Critic"
-     */
+    // วิเคราะห์ความตั้งใจและความหมายของโค้ด
+// Analyze intent and semantic meaning of code
+// Evolution: From "Grammar Expert" to "Literary Critic"
     analyzeCodeIntent() {
         try {
             console.log('\n AI Intent Understanding Engine: เริ่มการวิเคราะห์ความตั้งใจของโค้ด...');
@@ -2430,9 +3969,7 @@ class SmartFileAnalyzer {
         }
     }
 
-    /**
-     * วิเคราะห์ความตั้งใจของ Classes
-     */
+    // วิเคราะห์ความตั้งใจของ Classes
     analyzeClassesIntent(intentMap) {
         this.fileBlueprint.classes.forEach((classInfo, className) => {
             // Pattern Analysis: Business Logic Intent
@@ -2455,9 +3992,7 @@ class SmartFileAnalyzer {
         });
     }
 
-    /**
-     * วิเคราะห์ความตั้งใจของ Functions
-     */
+    // วิเคราะห์ความตั้งใจของ Functions
     analyzeFunctionsIntent(intentMap) {
         this.fileBlueprint.functions.forEach((funcInfo, funcName) => {
             // Algorithmic Purpose Analysis
@@ -2480,9 +4015,7 @@ class SmartFileAnalyzer {
         });
     }
 
-    /**
-     * วิเคราะห์การไหลของข้อมูล และความสัมพันธ์
-     */
+    // วิเคราะห์การไหลของข้อมูล และความสัมพันธ์
     analyzeDataFlowIntent(intentMap) {
         // Analyze variable assignments and data transformations
         const dataFlowPatterns = this.extractDataFlowPatterns();
@@ -2495,9 +4028,7 @@ class SmartFileAnalyzer {
         });
     }
 
-    /**
-     * วิเคราะห์รูปแบบทางตรรกะและการตัดสินใจ
-     */
+    // วิเคราะห์รูปแบบทางตรรกะและการตัดสินใจ
     analyzeLogicalPatterns(intentMap) {
         // Look for conditional logic patterns
         const conditionalPatterns = this.extractConditionalPatterns();
@@ -2510,9 +4041,7 @@ class SmartFileAnalyzer {
         });
     }
 
-    /**
-     * อนุมานความตั้งใจทางธุรกิจของ Class
-     */
+    // อนุมานความตั้งใจทางธุรกิจของ Class
     inferBusinessIntent(className, classInfo) {
         const name = className.toLowerCase();
         const methods = Array.isArray(classInfo.methods) ? classInfo.methods : [];
@@ -2548,9 +4077,7 @@ class SmartFileAnalyzer {
         }
 
         return null;
-    }    /**
-     * อนุมานบทบาททางสถาปัตยกรรม
-     */
+    }    // อนุมานบทบาททางสถาปัตยกรรม
     inferArchitectureRole(className, classInfo) {
         const name = className.toLowerCase();
 
@@ -2586,9 +4113,7 @@ class SmartFileAnalyzer {
         return null;
     }
 
-    /**
-     * อนุมานบทบาทด้านความปลอดภัย
-     */
+    // อนุมานบทบาทด้านความปลอดภัย
     inferSecurityRole(className, classInfo) {
         const name = className.toLowerCase();
         const methods = Array.isArray(classInfo.methods) ? classInfo.methods : [];
@@ -2609,9 +4134,7 @@ class SmartFileAnalyzer {
         }
 
         return null;
-    }    /**
-     * อนุมานความตั้งใจของ Algorithm
-     */
+    }    // อนุมานความตั้งใจของ Algorithm
     inferAlgorithmicIntent(funcName, funcInfo) {
         const name = funcName.toLowerCase();
         const params = funcInfo.parameters || [];
@@ -2649,9 +4172,7 @@ class SmartFileAnalyzer {
         return null;
     }
 
-    /**
-     * อนุมานความตั้งใจด้าน Performance
-     */
+    // อนุมานความตั้งใจด้าน Performance
     inferPerformanceIntent(funcName, funcInfo) {
         const name = funcName.toLowerCase();
 
@@ -2682,9 +4203,7 @@ class SmartFileAnalyzer {
         return null;
     }
 
-    /**
-     * อนุมานความตั้งใจด้าน Error Handling
-     */
+    // อนุมานความตั้งใจด้าน Error Handling
     inferErrorHandlingIntent(funcName, funcInfo) {
         const name = funcName.toLowerCase();
 
@@ -2707,9 +4226,7 @@ class SmartFileAnalyzer {
         return null;
     }
 
-    /**
-     * สกัดรูปแบบการไหลของข้อมูล
-     */
+    // สกัดรูปแบบการไหลของข้อมูล
     extractDataFlowPatterns() {
         const patterns = new Map();
         const lines = this.content.split('\n');
@@ -2744,9 +4261,7 @@ class SmartFileAnalyzer {
         return patterns;
     }
 
-    /**
-     * สกัดรูปแบบเงื่อนไข
-     */
+    // สกัดรูปแบบเงื่อนไข
     extractConditionalPatterns() {
         const patterns = new Map();
         const lines = this.content.split('\n');
@@ -2777,9 +4292,7 @@ class SmartFileAnalyzer {
         return patterns;
     }
 
-    /**
-     * อนุมานความตั้งใจของการไหลข้อมูล
-     */
+    // อนุมานความตั้งใจของการไหลข้อมูล
     inferDataFlowIntent(operation, pattern) {
         if (pattern.intent === 'data_transformation') {
             return {
@@ -2800,9 +4313,7 @@ class SmartFileAnalyzer {
         return null;
     }
 
-    /**
-     * อนุมานความตั้งใจทางตรรกะ
-     */
+    // อนุมานความตั้งใจทางตรรกะ
     inferLogicalIntent(condition, pattern) {
         if (pattern.intent === 'decision_making') {
             return {
@@ -2823,9 +4334,7 @@ class SmartFileAnalyzer {
         return null;
     }
 
-    /**
-     * สร้าง Smart Comments จาก Intent Analysis
-     */
+    // สร้าง Smart Comments จาก Intent Analysis
     generateIntentBasedComments(intentMap) {
         console.log('\n กำลังสร้าง Smart Comments จาก AI Intent Analysis...');
 
@@ -2856,9 +4365,7 @@ class SmartFileAnalyzer {
         console.log(' Smart Comments สร้างเสร็จแล้ว');
     }
 
-    /**
-     * สร้าง Smart Comment จาก Intent
-     */
+    // สร้าง Smart Comment จาก Intent
     createSmartComment(item, intent, category) {
         switch (category) {
             case 'business':
@@ -2890,9 +4397,7 @@ class SmartFileAnalyzer {
         }
     }
 
-    /**
-     * เพิ่ม Smart Comment ไปยัง Blueprint
-     */
+    // เพิ่ม Smart Comment ไปยัง Blueprint
     addSmartCommentToBlueprint(item, smartComment) {
         if (!this.fileBlueprint.smartComments) {
             this.fileBlueprint.smartComments = new Map();
@@ -2901,9 +4406,7 @@ class SmartFileAnalyzer {
         this.fileBlueprint.smartComments.set(item, smartComment);
     }
 
-    /**
-     * ดึงข้อมูล Intent Analysis ทั้งหมด
-     */
+    // ดึงข้อมูล Intent Analysis ทั้งหมด
     getIntentAnalysisReport() {
         const intentAnalysis = this.analyzeCodeIntent();
 
@@ -2961,15 +4464,34 @@ class StructureAnalyzer {
         const token = this.tokens[startCursor];
         if (!token) return null;
 
+        // วิเคราะห์ interface (TypeScript)
+        if (token.type === TOKEN_TYPES.KEYWORD && token.value === 'interface') {
+            return this.analyzeInterface(startCursor);
+        }
+
+        // วิเคราะห์ type alias (TypeScript)
+        if (token.type === TOKEN_TYPES.KEYWORD && token.value === 'type') {
+            return this.analyzeTypeAlias(startCursor);
+        }
+
         // วิเคราะห์ class
         if (token.type === TOKEN_TYPES.KEYWORD && token.value === 'class') {
             return this.analyzeClass(startCursor);
         }
 
-        // วิเคราะห์ const/let/var object
+        // วิเคราะห์ abstract class
+        if (token.type === TOKEN_TYPES.KEYWORD && token.value === 'abstract') {
+            const nextToken = this.tokens[startCursor + 1];
+            if (nextToken && nextToken.value === 'class') {
+                return this.analyzeAbstractClass(startCursor);
+            }
+        }
+
+        // วิเคราะห์ const/let/var (objects และ arrow functions)
         if (token.type === TOKEN_TYPES.KEYWORD &&
             ['const', 'let', 'var'].includes(token.value)) {
-            return this.analyzeObjectDeclaration(startCursor);
+            const result = this.analyzeVariableDeclaration(startCursor);
+            if (result) return result;
         }
 
         // วิเคราะห์ function
@@ -3014,6 +4536,79 @@ class StructureAnalyzer {
         };
     }
 
+    // วิเคราะห์การประกาศตัวแปร (object และ arrow function) - Analyze variable declaration
+    analyzeVariableDeclaration(startCursor) {
+        const keywordToken = this.tokens[startCursor];
+        const nameToken = this.tokens[startCursor + 1];
+        const equalsToken = this.tokens[startCursor + 2];
+
+        if (!nameToken || nameToken.type !== TOKEN_TYPES.IDENTIFIER ||
+            !equalsToken || equalsToken.type !== TOKEN_TYPES.EQUALS) {
+            return null;
+        }
+
+        // ตรวจสอบว่าเป็น arrow function หรือไม่
+        const arrowFuncResult = this.analyzeArrowFunction(startCursor);
+        if (arrowFuncResult) return arrowFuncResult;
+
+        // ตรวจสอบว่าเป็น object หรือไม่
+        const braceToken = this.tokens[startCursor + 3];
+        if (braceToken && braceToken.type === TOKEN_TYPES.BRACE_OPEN) {
+            return this.analyzeObjectDeclaration(startCursor);
+        }
+
+        return null;
+    }
+
+    // วิเคราะห์ arrow function - Analyze arrow function
+    analyzeArrowFunction(startCursor) {
+        const keywordToken = this.tokens[startCursor];
+        const nameToken = this.tokens[startCursor + 1];
+        const equalsToken = this.tokens[startCursor + 2];
+
+        if (!nameToken || nameToken.type !== TOKEN_TYPES.IDENTIFIER ||
+            !equalsToken || equalsToken.type !== TOKEN_TYPES.EQUALS) {
+            return null;
+        }
+
+        // หา arrow operator (=>)
+        let arrowIndex = -1;
+        for (let i = startCursor + 3; i < startCursor + 15 && i < this.tokens.length; i++) {
+            if (this.tokens[i].type === TOKEN_TYPES.ARROW) {
+                arrowIndex = i;
+                break;
+            }
+        }
+
+        if (arrowIndex === -1) return null;
+
+        // หาพารามิเตอร์
+        const params = this.extractArrowFunctionParameters(startCursor + 3, arrowIndex);
+
+        // หาขอบเขตของฟังก์ชัน
+        const functionBounds = this.findArrowFunctionBounds(arrowIndex);
+        if (!functionBounds) return null;
+
+        const functionContent = this.extractContentBetweenLines(keywordToken.line, functionBounds.endLine);
+        const purpose = {
+            english: `Arrow function: ${nameToken.value}`,
+            thai: `ฟังก์ชันแบบ arrow: ${nameToken.value}`
+        };
+
+        return {
+            type: 'arrow_function',
+            name: nameToken.value,
+            line: keywordToken.line,
+            column: keywordToken.column,
+            startTokenIndex: startCursor,
+            endTokenIndex: functionBounds.endTokenIndex,
+            endLine: functionBounds.endLine,
+            parameters: params,
+            purpose: purpose,
+            content: functionContent
+        };
+    }
+
     // วิเคราะห์การประกาศ object - Analyze object declaration
     analyzeObjectDeclaration(startCursor) {
         const keywordToken = this.tokens[startCursor];
@@ -3049,6 +4644,115 @@ class StructureAnalyzer {
             properties: properties,
             purpose: purpose,
             content: objectContent
+        };
+    }
+
+    // วิเคราะห์ interface (TypeScript) - Analyze interface structure
+    analyzeInterface(startCursor) {
+        const interfaceToken = this.tokens[startCursor];
+        const nameToken = this.tokens[startCursor + 1];
+
+        if (!nameToken || nameToken.type !== TOKEN_TYPES.IDENTIFIER) {
+            return null;
+        }
+
+        // หาขอบเขตของ interface
+        const interfaceBounds = this.findBlockBounds(startCursor, TOKEN_TYPES.BRACE_OPEN);
+        if (!interfaceBounds) return null;
+
+        const interfaceContent = this.extractContentBetweenLines(interfaceToken.line, interfaceBounds.endLine);
+        const purpose = {
+            english: `Interface definition for ${nameToken.value}`,
+            thai: `การกำหนด interface สำหรับ ${nameToken.value}`
+        };
+
+        return {
+            type: 'interface_declaration',
+            name: nameToken.value,
+            line: interfaceToken.line,
+            column: interfaceToken.column,
+            startTokenIndex: startCursor,
+            endTokenIndex: interfaceBounds.endTokenIndex,
+            endLine: interfaceBounds.endLine,
+            purpose: purpose,
+            content: interfaceContent
+        };
+    }
+
+    // วิเคราะห์ type alias (TypeScript) - Analyze type alias structure
+    analyzeTypeAlias(startCursor) {
+        const typeToken = this.tokens[startCursor];
+        const nameToken = this.tokens[startCursor + 1];
+        const equalsToken = this.tokens[startCursor + 2];
+
+        if (!nameToken || nameToken.type !== TOKEN_TYPES.IDENTIFIER ||
+            !equalsToken || equalsToken.type !== TOKEN_TYPES.EQUALS) {
+            return null;
+        }
+
+        // หาจุดสิ้นสุดของ type alias (อาจเป็น ; หรือ \n)
+        let endTokenIndex = startCursor + 3;
+        while (endTokenIndex < this.tokens.length) {
+            const token = this.tokens[endTokenIndex];
+            if (token.type === TOKEN_TYPES.SEMICOLON ||
+                token.type === TOKEN_TYPES.NEWLINE ||
+                token.type === TOKEN_TYPES.EOF) {
+                break;
+            }
+            endTokenIndex++;
+        }
+
+        const endLine = this.tokens[endTokenIndex]?.line || typeToken.line;
+        const typeContent = this.extractContentBetweenLines(typeToken.line, endLine);
+        const purpose = {
+            english: `Type alias definition for ${nameToken.value}`,
+            thai: `การกำหนด type alias สำหรับ ${nameToken.value}`
+        };
+
+        return {
+            type: 'type_alias',
+            name: nameToken.value,
+            line: typeToken.line,
+            column: typeToken.column,
+            startTokenIndex: startCursor,
+            endTokenIndex: endTokenIndex,
+            endLine: endLine,
+            purpose: purpose,
+            content: typeContent
+        };
+    }
+
+    // วิเคราะห์ abstract class - Analyze abstract class structure
+    analyzeAbstractClass(startCursor) {
+        const abstractToken = this.tokens[startCursor];
+        const classToken = this.tokens[startCursor + 1];
+        const nameToken = this.tokens[startCursor + 2];
+
+        if (!classToken || classToken.value !== 'class' ||
+            !nameToken || nameToken.type !== TOKEN_TYPES.IDENTIFIER) {
+            return null;
+        }
+
+        // หาขอบเขตของคลาส
+        const classBounds = this.findBlockBounds(startCursor, TOKEN_TYPES.BRACE_OPEN);
+        if (!classBounds) return null;
+
+        const classContent = this.extractContentBetweenLines(abstractToken.line, classBounds.endLine);
+        const purpose = {
+            english: `Abstract class: ${nameToken.value}`,
+            thai: `คลาสนามธรรม: ${nameToken.value}`
+        };
+
+        return {
+            type: 'abstract_class',
+            name: nameToken.value,
+            line: abstractToken.line,
+            column: abstractToken.column,
+            startTokenIndex: startCursor,
+            endTokenIndex: classBounds.endTokenIndex,
+            endLine: classBounds.endLine,
+            purpose: purpose,
+            content: classContent
         };
     }
 
@@ -3145,6 +4849,108 @@ class StructureAnalyzer {
         if (braceStart === -1) return null;
 
         return this.findBlockBounds(braceStart, TOKEN_TYPES.BRACE_OPEN);
+    }
+
+    // หาขอบเขตของ arrow function - Find arrow function bounds
+    findArrowFunctionBounds(arrowIndex) {
+        // หาเนื้อหาหลัง => 
+        // อาจเป็น { ... } หรือ expression
+        let startIndex = arrowIndex + 1;
+
+        if (startIndex < this.tokens.length) {
+            const nextToken = this.tokens[startIndex];
+
+            if (nextToken.type === TOKEN_TYPES.BRACE_OPEN) {
+                // Block arrow function: () => { ... }
+                return this.findBlockBounds(startIndex, TOKEN_TYPES.BRACE_OPEN);
+            } else {
+                // Expression arrow function: () => expression
+                // หาจุดสิ้นสุด (;, ,, ), } หรือ \n)
+                let endIndex = startIndex;
+                let parenDepth = 0;
+                let braceDepth = 0;
+
+                while (endIndex < this.tokens.length) {
+                    const token = this.tokens[endIndex];
+
+                    if (token.type === TOKEN_TYPES.PAREN_OPEN) {
+                        parenDepth++;
+                    } else if (token.type === TOKEN_TYPES.PAREN_CLOSE) {
+                        parenDepth--;
+                        if (parenDepth < 0) break;
+                    } else if (token.type === TOKEN_TYPES.BRACE_OPEN) {
+                        braceDepth++;
+                    } else if (token.type === TOKEN_TYPES.BRACE_CLOSE) {
+                        braceDepth--;
+                        if (braceDepth < 0) break;
+                    } else if ((token.type === TOKEN_TYPES.SEMICOLON ||
+                        token.type === TOKEN_TYPES.COMMA ||
+                        token.type === TOKEN_TYPES.NEWLINE) &&
+                        parenDepth === 0 && braceDepth === 0) {
+                        break;
+                    }
+                    endIndex++;
+                }
+
+                return {
+                    startIndex: arrowIndex + 1,
+                    endIndex: endIndex - 1,
+                    endTokenIndex: endIndex - 1,
+                    endLine: this.tokens[endIndex - 1]?.line || this.tokens[arrowIndex]?.line
+                };
+            }
+        }
+
+        return null;
+    }
+
+    // แยกพารามิเตอร์ของ arrow function - Extract arrow function parameters
+    extractArrowFunctionParameters(startIndex, arrowIndex) {
+        const params = [];
+
+        // หาพารามิเตอร์ระหว่าง startIndex และ arrowIndex
+        let currentParam = '';
+        let parenDepth = 0;
+
+        for (let i = startIndex; i < arrowIndex; i++) {
+            const token = this.tokens[i];
+
+            if (token.type === TOKEN_TYPES.PAREN_OPEN) {
+                if (parenDepth === 0) {
+                    // เริ่ม parameter list
+                    parenDepth++;
+                    continue;
+                }
+                parenDepth++;
+            } else if (token.type === TOKEN_TYPES.PAREN_CLOSE) {
+                parenDepth--;
+                if (parenDepth === 0) {
+                    // จบ parameter list
+                    if (currentParam.trim()) {
+                        params.push(currentParam.trim());
+                        currentParam = '';
+                    }
+                    break;
+                }
+            } else if (token.type === TOKEN_TYPES.COMMA && parenDepth === 1) {
+                if (currentParam.trim()) {
+                    params.push(currentParam.trim());
+                    currentParam = '';
+                }
+                continue;
+            }
+
+            if (parenDepth > 0 || (parenDepth === 0 && token.type === TOKEN_TYPES.IDENTIFIER)) {
+                currentParam += token.value;
+            }
+        }
+
+        // กรณี single parameter without parentheses: param => ...
+        if (params.length === 0 && currentParam.trim()) {
+            params.push(currentParam.trim());
+        }
+
+        return params;
     }
 
     // วิเคราะห์สมาชิกของคลาส - Analyze class members
@@ -3347,6 +5153,311 @@ class StructureAnalyzer {
         if (token.type === TOKEN_TYPES.BRACE_OPEN) return 'object';
 
         return 'identifier';
+    }
+}
+
+// ======================================================================
+// ENHANCED PATTERN DETECTION METHODS v2.0 - The Next Frontier
+// เมธอดตรวจจับรูปแบบขั้นสูง v2.0 - มิติใหม่ของการพัฒนา  
+// ======================================================================
+
+// เป็นส่วนขยายของ StructureAnalyzer สำหรับแก้ปัญหา "Missed Structures"
+// Integration กับ StructureAnalyzer หลักผ่าน mixin pattern
+class EnhancedPatternDetector extends StructureAnalyzer {
+
+    // ===================================================================
+    // TypeScript Advanced Constructs - โครงสร้าง TypeScript ขั้นสูง
+    // ===================================================================
+
+    // รูปแบบ: namespace Name {} - Namespace declaration pattern
+    matchNamespaceDeclaration() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'namespace' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.BRACE_OPEN) {
+
+            const namespaceToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            this.cursor += 3; // ข้าม 'namespace', name, '{'
+
+            return {
+                type: 'namespace_declaration',
+                name: nameToken.value,
+                line: namespaceToken.line,
+                column: namespaceToken.column,
+                parameters: [],
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: module Name {} - Module declaration pattern
+    matchModuleDeclaration() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'module' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.BRACE_OPEN) {
+
+            const moduleToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            this.cursor += 3; // ข้าม 'module', name, '{'
+
+            return {
+                type: 'module_declaration',
+                name: nameToken.value,
+                line: moduleToken.line,
+                column: moduleToken.column,
+                parameters: [],
+                isAsync: false
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: declare global/module/namespace/etc - Declare statement pattern
+    matchDeclareStatement() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'declare' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD) {
+
+            const declareToken = this.currentToken();
+            const typeToken = this.peekToken(1);
+            const nameToken = this.peekToken(2);
+
+            if (nameToken?.type === TOKEN_TYPES.IDENTIFIER) {
+                this.cursor += 3; // ข้าม 'declare', type, name
+
+                return {
+                    type: 'declare_statement',
+                    name: nameToken.value,
+                    line: declareToken.line,
+                    column: declareToken.column,
+                    parameters: [],
+                    isAsync: false,
+                    declareType: typeToken.value
+                };
+            }
+        }
+        return null;
+    }
+
+    // รูปแบบ: abstract class Name {} - Abstract class pattern
+    matchAbstractClass() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'abstract' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.KEYWORD &&
+            this.peekToken(1)?.value === 'class' &&
+            this.peekToken(2)?.type === TOKEN_TYPES.IDENTIFIER) {
+
+            const abstractToken = this.currentToken();
+            const classToken = this.peekToken(1);
+            const nameToken = this.peekToken(2);
+
+            this.cursor += 3; // ข้าม 'abstract', 'class', name
+
+            return {
+                type: 'abstract_class',
+                name: nameToken.value,
+                line: abstractToken.line,
+                column: abstractToken.column,
+                parameters: [],
+                isAsync: false,
+                isAbstract: true
+            };
+        }
+        return null;
+    }
+
+    // รูปแบบ: class Name<T> {} - Generic class pattern
+    matchGenericClass() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'class' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(2)?.type === TOKEN_TYPES.LESS_THAN) {
+
+            const classToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // หาตำแหน่งปิด generic parameter
+            let genericEnd = -1;
+            let depth = 0;
+            for (let i = this.cursor + 2; i < this.tokens.length; i++) {
+                if (this.tokens[i].type === TOKEN_TYPES.LESS_THAN) {
+                    depth++;
+                } else if (this.tokens[i].type === TOKEN_TYPES.GREATER_THAN) {
+                    depth--;
+                    if (depth === 0) {
+                        genericEnd = i;
+                        break;
+                    }
+                }
+            }
+
+            if (genericEnd !== -1) {
+                this.cursor = genericEnd + 1; // ข้ามไปหลัง >
+
+                return {
+                    type: 'generic_class',
+                    name: nameToken.value,
+                    line: classToken.line,
+                    column: classToken.column,
+                    parameters: [],
+                    isAsync: false,
+                    isGeneric: true
+                };
+            }
+        }
+        return null;
+    }
+
+    // ===================================================================
+    // React/JSX Advanced Patterns - รูปแบบ React/JSX ขั้นสูง
+    // ===================================================================
+
+    // รูปแบบ: const useHook = () => {} - React hooks pattern
+    matchReactHooks() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'const' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(1)?.value?.startsWith('use') &&
+            this.peekToken(2)?.type === TOKEN_TYPES.EQUALS) {
+
+            const constToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // ตรวจสอบว่าเป็น arrow function
+            let arrowPos = -1;
+            for (let i = this.cursor + 3; i < this.cursor + 10 && i < this.tokens.length; i++) {
+                if (this.tokens[i].type === TOKEN_TYPES.ARROW) {
+                    arrowPos = i;
+                    break;
+                }
+            }
+
+            if (arrowPos !== -1) {
+                this.cursor = arrowPos + 1; // ข้ามไปหลัง =>
+
+                return {
+                    type: 'react_hook',
+                    name: nameToken.value,
+                    line: constToken.line,
+                    column: constToken.column,
+                    parameters: [],
+                    isAsync: false
+                };
+            }
+        }
+        return null;
+    }
+
+    // รูปแบบ: React.forwardRef() - React forwardRef pattern
+    matchReactForwardRef() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'const' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER) {
+
+            // หา React.forwardRef pattern
+            let hasReactForwardRef = false;
+            for (let i = this.cursor + 2; i < this.cursor + 15 && i < this.tokens.length; i++) {
+                if (this.tokens[i].type === TOKEN_TYPES.IDENTIFIER &&
+                    this.tokens[i].value === 'React' &&
+                    this.tokens[i + 1]?.value === '.' &&
+                    this.tokens[i + 2]?.value === 'forwardRef') {
+                    hasReactForwardRef = true;
+                    this.cursor = i + 3;
+                    break;
+                }
+            }
+
+            if (hasReactForwardRef) {
+                const constToken = this.currentToken();
+                const nameToken = this.peekToken(1);
+
+                return {
+                    type: 'react_forwardref',
+                    name: nameToken.value,
+                    line: constToken.line,
+                    column: constToken.column,
+                    parameters: [],
+                    isAsync: false
+                };
+            }
+        }
+        return null;
+    }
+
+    // รูปแบบ: React.memo() - React memo pattern
+    matchReactMemo() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'const' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER) {
+
+            // หา React.memo pattern
+            let hasReactMemo = false;
+            for (let i = this.cursor + 2; i < this.cursor + 15 && i < this.tokens.length; i++) {
+                if (this.tokens[i].type === TOKEN_TYPES.IDENTIFIER &&
+                    this.tokens[i].value === 'React' &&
+                    this.tokens[i + 1]?.value === '.' &&
+                    this.tokens[i + 2]?.value === 'memo') {
+                    hasReactMemo = true;
+                    this.cursor = i + 3;
+                    break;
+                }
+            }
+
+            if (hasReactMemo) {
+                const constToken = this.currentToken();
+                const nameToken = this.peekToken(1);
+
+                return {
+                    type: 'react_memo',
+                    name: nameToken.value,
+                    line: constToken.line,
+                    column: constToken.column,
+                    parameters: [],
+                    isAsync: false
+                };
+            }
+        }
+        return null;
+    }
+
+    // รูปแบบ: const withHOC = (Component) => {} - Higher Order Component pattern
+    matchHigherOrderComponent() {
+        if (this.currentToken()?.type === TOKEN_TYPES.KEYWORD &&
+            this.currentToken()?.value === 'const' &&
+            this.peekToken(1)?.type === TOKEN_TYPES.IDENTIFIER &&
+            this.peekToken(1)?.value?.startsWith('with')) {
+
+            const constToken = this.currentToken();
+            const nameToken = this.peekToken(1);
+
+            // ตรวจสอบรูปแบบ HOC
+            let arrowPos = -1;
+            for (let i = this.cursor + 3; i < this.cursor + 15 && i < this.tokens.length; i++) {
+                if (this.tokens[i].type === TOKEN_TYPES.ARROW) {
+                    arrowPos = i;
+                    break;
+                }
+            }
+
+            if (arrowPos !== -1) {
+                this.cursor = arrowPos + 1;
+
+                return {
+                    type: 'higher_order_component',
+                    name: nameToken.value,
+                    line: constToken.line,
+                    column: constToken.column,
+                    parameters: [],
+                    isAsync: false
+                };
+            }
+        }
+        return null;
     }
 }
 
@@ -3841,8 +5952,31 @@ class CommentGenerator {
                 thai: structure.purpose.thai
             };
         } else {
-            // ใช้วิธีเดิม
-            description = this.getFunctionDescription(func.name, func.type);
+            // จัดการ interface, type alias, static method ที่พิเศษ
+            if (func.type === 'interface_declaration') {
+                description = {
+                    english: `Interface definition for ${func.name}`,
+                    thai: `การกำหนด interface สำหรับ ${func.name}`
+                };
+            } else if (func.type === 'type_alias') {
+                description = {
+                    english: `Type alias definition for ${func.name}`,
+                    thai: `การกำหนด type alias สำหรับ ${func.name}`
+                };
+            } else if (func.type === 'static_method') {
+                description = {
+                    english: `Static method: ${func.name}`,
+                    thai: `เมธอดแบบ static: ${func.name}`
+                };
+            } else if (func.type === 'arrow_function') {
+                description = {
+                    english: `Arrow function: ${func.name}`,
+                    thai: `ฟังก์ชันแบบ arrow: ${func.name}`
+                };
+            } else {
+                // ใช้วิธีเดิม
+                description = this.getFunctionDescription(func.name, func.type);
+            }
         }
 
         // สร้าง comment ในรูปแบบ zone header เหมือนกันทั้งหมด
@@ -4022,7 +6156,10 @@ class CommentGenerator {
         let startLine = functionLine;
         const originalLine = lines[functionLine];
 
-        if (!originalLine) return startLine;
+        if (!originalLine) {
+            // ถ้า functionLine ไม่ถูกต้อง ลองหาคลาส/ฟังก์ชันจากชื่อ
+            return functionLine; // คืนค่าเดิมแทนที่จะ return -1
+        }
 
         // ตรวจสอบว่าบรรทัดปัจจุบันเป็นจุดเริ่มต้นที่เหมาะสมหรือไม่
         const currentTrimmed = originalLine.trim();
@@ -4031,15 +6168,15 @@ class CommentGenerator {
         if (currentTrimmed === '}' ||
             currentTrimmed === '});' ||
             currentTrimmed === ');' ||
-            currentTrimmed.match(/^}\s*[,;]?\s*$/) ||
-            !this.isValidStartLine(currentTrimmed)) {
+            currentTrimmed.match(/^}\s*[,;]?\s*$/)) {
 
             // แต่ถ้าเป็น function declaration ที่ถูกต้อง ให้ผ่าน
             if (this.isValidStartLine(currentTrimmed)) {
                 return startLine;
             }
 
-            return -1; // ไม่เหมาะสมที่จะใส่คอมเมนต์
+            // สำหรับกรณี line numbers ผิด ลองหาบรรทัดจริงจากเนื้อหา
+            return this.findAlternativeStartLine(lines, functionLine);
         }        // ตรวจสอบย้อนหลังเพื่อหา decorators, exports, หรือ annotations
         for (let i = functionLine - 1; i >= Math.max(0, functionLine - 10); i--) {
             const line = lines[i];
@@ -4132,10 +6269,16 @@ class CommentGenerator {
 
         const trimmed = currentLine.trim();
 
-        // ไม่ควรใส่คอมเมนต์ที่ตำแหน่งเหล่านี้
+        // ===================================================================
+        // ENHANCED CONTEXT DETECTION SYSTEM v2.0
+        // ระบบตรวจจับบริบทที่เหมาะสมแบบขั้นสูง v2.0
+        // ===================================================================
+
+        // ไม่ควรใส่คอมเมนต์ที่ตำแหน่งเหล่านี้ (Only true inappropriate contexts)
         const inappropriatePatterns = [
             /^}\s*$/,                 // closing braces only
             /^}\);?\s*$/,             // closing function calls
+            /^};?\s*$/,               // closing object/interface definitions - BUT CHECK CONTEXT
             /^\);\s*$/,               // closing parentheses
             /^,\s*$/,                 // comma only
             /^;\s*$/,                 // semicolon only
@@ -4146,61 +6289,267 @@ class CommentGenerator {
             /^else\s*{?\s*$/,         // else statements
             /^catch\s*\(/,            // catch blocks
             /^finally\s*{?\s*$/,      // finally blocks
-            /^\s*$|^$/                // empty lines
+            /^\s*$|^$/,               // empty lines
+            /^<\/\w+>/,               // closing JSX tags
+            /^\/\*/,                  // already commented lines
+            /^\/\//,                  // already single-line commented
+            /^\s*\*+/,                // continuation of block comments
+            /return\s/,               // return statements
+            /app\.\w+/,               // Express app calls
+            /\.map\(/,                // array method calls
+            /\.find\(/,               // array method calls
+            /\.filter\(/,             // array method calls
+            /\.includes\(/,           // string method calls
         ];
 
-        // ตรวจสอบบรรทัดปัจจุบัน
-        if (inappropriatePatterns.some(pattern => pattern.test(trimmed))) {
+        // ===================================================================
+        // SMART CONTEXT DETECTION: Check if this is actually a valid declaration
+        // การตรวจจับบริบทอัจฉริยะ: ตรวจสอบว่าเป็น declaration ที่ถูกต้องหรือไม่
+        // ===================================================================
+
+        // First Priority: Valid Declaration Patterns (allow these even if they match inappropriate patterns)
+        const validDeclarationPatterns = [
+            // TypeScript/JavaScript Declarations
+            /^(class|interface|enum|type)\s+\w+/,                           // TypeScript declarations
+            /^abstract\s+class\s+\w+/,                                      // Abstract classes
+            /^(export\s+)?(default\s+)?(class|interface|type|enum|function|const|let|var)/,  // Exports
+            /^(async\s+)?function\s+\w+/,                                   // Function declarations  
+            /^(const|let|var)\s+\w+\s*=\s*(\w+\s*=>\s*|async\s*\w*\s*=>\s*|\([^)]*\)\s*=>\s*)/,  // Arrow functions
+            /^(const|let|var)\s+\w+\s*=/,                                   // Variable declarations
+            /^(public|private|protected|static|async)\s+\w+/,              // Class methods with modifiers
+            /^\w+\s*\([^)]*\)\s*\{/,                                       // Method definitions
+            /^(get|set)\s+\w+/,                                            // Getters/setters
+            /^@\w+/,                                                        // Decorators
+            // React/JSX Components
+            /^(const|let|var)\s+\w+\s*=\s*React\.forwardRef/,             // React.forwardRef
+            /^(const|let|var)\s+\w+\s*=\s*React\.memo/,                   // React.memo
+            /^(const|let|var)\s+\w+\s*=\s*\([^)]*\)\s*=>\s*\{/,          // React functional components
+            // TypeScript Advanced Patterns
+            /^namespace\s+\w+/,                                             // Namespace declarations
+            /^module\s+\w+/,                                               // Module declarations
+            /^declare\s+(global|module|namespace|class|interface|type|enum|function|var|let|const)/,  // Declare statements
+        ];
+
+        // Check if current line is a valid declaration - if yes, always allow
+        if (validDeclarationPatterns.some(pattern => pattern.test(trimmed))) {
+            return true;
+        }
+
+        // Now check inappropriate patterns (excluding method definitions)
+        const strictInappropriatePatterns = [
+            /^}\s*$/,                 // closing braces only
+            /^}\);?\s*$/,             // closing function calls  
+            /^\);\s*$/,               // closing parentheses
+            /^,\s*$/,                 // comma only
+            /^;\s*$/,                 // semicolon only
+            /^break;?\s*$/,           // break statements
+            /^continue;?\s*$/,        // continue statements
+            /^case\s/,                // case statements
+            /^default:\s*$/,          // default case
+            /^else\s*{?\s*$/,         // else statements
+            /^catch\s*\(/,            // catch blocks
+            /^finally\s*{?\s*$/,      // finally blocks
+            /^\s*$|^$/,               // empty lines
+            /^<\/\w+>/,               // closing JSX tags
+            /^\/\*/,                  // already commented lines
+            /^\/\//,                  // already single-line commented
+            /^\s*\*+/,                // continuation of block comments
+            /return\s/,               // return statements (in function body)
+            /app\.\w+/,               // Express app calls
+            /\.map\(/,                // array method calls
+            /\.find\(/,               // array method calls
+            /\.filter\(/,             // array method calls
+            /\.includes\(/,           // string method calls
+        ];
+
+        // ตรวจสอบบรรทัดปัจจุบันกับ strict patterns
+        if (strictInappropriatePatterns.some(pattern => pattern.test(trimmed))) {
             return false;
         }
 
-        // ตรวจสอบบริบทรอบข้าง - ไม่ควรอยู่ในกลางบล็อค
-        let openBraces = 0;
-        let isInFunction = false;
-        let isInClass = false;
+        // ===================================================================
+        // ENHANCED CONTEXT ANALYSIS: Advanced Pattern Matching
+        // การวิเคราะห์บริบทขั้นสูง: การจับคู่รูปแบบขั้นสูง
+        // ===================================================================
 
-        // ตรวจสอบจากบรรทัดก่อนหน้า
-        for (let i = Math.max(0, lineIndex - 20); i < lineIndex; i++) {
+        // Special handling for method definitions with parameters
+        const methodWithParametersPattern = /^(async\s+)?(\w+)\s*\([^)]*\)\s*\{/;
+        if (methodWithParametersPattern.test(trimmed)) {
+            // This is a method definition - check context to determine if appropriate
+            const contextAnalysis = this.analyzeMethodContext(lines, lineIndex);
+            return contextAnalysis.isAppropriateForComment;
+        }
+
+        // Special handling for closing braces that might be end of declarations
+        if (/^};?\s*$/.test(trimmed)) {
+            // Check if this is end of interface/type/class declaration
+            const declarationEndAnalysis = this.analyzeDeclarationEnd(lines, lineIndex);
+            return declarationEndAnalysis.isDeclarationEnd;
+        }
+
+        // ตรวจสอบบริบทรอบข้าง - นับ braces อย่างแม่นยำ
+        let braceBalance = 0;
+        let contextLevel = 0;
+        let lastDeclarationType = null;
+
+        // วิเคราะห์บริบทจากบรรทัดก่อนหน้า
+        for (let i = Math.max(0, lineIndex - 30); i < lineIndex; i++) {
             const line = lines[i];
             if (!line) continue;
 
             const lineTrimmed = line.trim();
+            if (!lineTrimmed) continue;
 
             // นับ braces
-            for (const char of lineTrimmed) {
-                if (char === '{') openBraces++;
-                if (char === '}') openBraces--;
-            }
+            const openCount = (lineTrimmed.match(/\{/g) || []).length;
+            const closeCount = (lineTrimmed.match(/\}/g) || []).length;
+            braceBalance += openCount - closeCount;
 
-            // ตรวจสอบว่าเรากำลังอยู่ในฟังก์ชันหรือคลาส
-            if (lineTrimmed.includes('function ') || lineTrimmed.includes('class ')) {
-                if (openBraces > 0) {
-                    isInFunction = lineTrimmed.includes('function ');
-                    isInClass = lineTrimmed.includes('class ');
+            // ตรวจสอบ declaration level
+            if (lineTrimmed.match(/^(class|interface|function|const|let|var|export)/)) {
+                if (braceBalance === 0) {
+                    contextLevel = 0; // top-level
+                } else if (braceBalance === 1) {
+                    contextLevel = 1; // inside class/function
                 }
+                lastDeclarationType = lineTrimmed.match(/^(\w+)/)?.[1];
             }
         }
 
-        // ถ้าอยู่ลึกในบล็อค (openBraces > 2) ไม่ควรใส่คอมเมนต์ 
-        // ยกเว้นถ้าเป็น top-level function/class ในไฟล์ หรือ const declarations
-        if (openBraces > 2) {
-            return false;
+        // กำหนดกฎการอนุญาต
+        // Level 0 (top-level): อนุญาตทุกอย่าง
+        if (contextLevel === 0) return true;
+
+        // Level 1 (inside class/function): อนุญาตเฉพาะ methods และ properties
+        if (contextLevel === 1 && lastDeclarationType === 'class') {
+            return this.isValidStartLine(trimmed);
         }
 
-        // ถ้าอยู่ในกลางฟังก์ชันหรือคลาส และไม่ใช่จุดเริ่มต้นของ method ใหม่
-        if ((isInFunction || isInClass) && openBraces > 0) {
-            // ตรวจสอบว่าเป็น method ใหม่หรือไม่
-            if (!this.isValidStartLine(trimmed)) {
-                return false;
+        // Level 2+ (deeply nested): ห้าม
+        if (braceBalance > 1) return false;
+
+        return false;
+    }
+
+    // ===================================================================
+    // ENHANCED CONTEXT ANALYSIS HELPERS
+    // ฟังก์ชันช่วยวิเคราะห์บริบทขั้นสูง
+    // ===================================================================
+
+    // วิเคราะห์บริบทของ method definition เพื่อตัดสินใจว่าควรใส่คอมเมนต์หรือไม่
+// @param {Array} lines - บรรทัดทั้งหมดในไฟล์
+// @param {number} lineIndex - index ของบรรทัดปัจจุบัน
+// @returns {Object} ผลการวิเคราะห์บริบท
+    analyzeMethodContext(lines, lineIndex) {
+        const currentLine = lines[lineIndex].trim();
+
+        // Check for class context
+        let inClass = false;
+        let classLevel = 0;
+        let braceLevel = 0;
+
+        // Look backwards to find class context
+        for (let i = lineIndex - 1; i >= Math.max(0, lineIndex - 50); i--) {
+            const line = lines[i];
+            if (!line) continue;
+
+            const trimmed = line.trim();
+
+            // Count braces
+            const openCount = (trimmed.match(/\{/g) || []).length;
+            const closeCount = (trimmed.match(/\}/g) || []).length;
+            braceLevel += closeCount - openCount; // counting backwards
+
+            // Check for class declaration
+            if (/^(class|interface|abstract\s+class)\s+\w+/.test(trimmed) && braceLevel === 0) {
+                inClass = true;
+                classLevel = 0;
+                break;
+            }
+
+            // If we hit another function at same level, stop
+            if (/^(function|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=)/.test(trimmed) && braceLevel === 0) {
+                break;
             }
         }
 
-        // พิเศษ: ยอมรับ top-level const declarations (openBraces === 0)
-        if (openBraces === 0 && trimmed.startsWith('const ')) {
-            return true;
+        // Method in class context
+        if (inClass && braceLevel <= 1) {
+            return {
+                isAppropriateForComment: true,
+                context: 'class_method',
+                reason: 'Method definition within class context'
+            };
         }
 
-        return true;
+        // Top-level function
+        if (braceLevel === 0) {
+            return {
+                isAppropriateForComment: true,
+                context: 'top_level_function',
+                reason: 'Top-level function definition'
+            };
+        }
+
+        // Nested function or implementation details
+        return {
+            isAppropriateForComment: false,
+            context: 'nested_implementation',
+            reason: 'Nested function in implementation details'
+        };
+    }
+
+    // วิเคราะห์ว่าวงเล็บปิด }; เป็นการจบ declaration หรือไม่
+// @param {Array} lines - บรรทัดทั้งหมดในไฟล์
+// @param {number} lineIndex - index ของบรรทัดปัจจุบัน
+// @returns {Object} ผลการวิเคราะห์
+    analyzeDeclarationEnd(lines, lineIndex) {
+        // Look backwards to find what declaration this closing brace belongs to
+        let braceLevel = 1; // Start with 1 since we're at a closing brace
+
+        for (let i = lineIndex - 1; i >= Math.max(0, lineIndex - 100); i--) {
+            const line = lines[i];
+            if (!line) continue;
+
+            const trimmed = line.trim();
+
+            // Count braces
+            const openCount = (trimmed.match(/\{/g) || []).length;
+            const closeCount = (trimmed.match(/\}/g) || []).length;
+            braceLevel += closeCount - openCount; // counting backwards
+
+            // If we reach brace level 0, we found the opening declaration
+            if (braceLevel === 0) {
+                // Check if this line contains a declaration pattern
+                const declarationPatterns = [
+                    /^(interface|type|enum|namespace|module)\s+\w+/,
+                    /^(const|let|var)\s+\w+\s*=\s*\{/,  // Object literal declarations
+                    /^(export\s+)?(interface|type|enum)\s+\w+/,
+                ];
+
+                const isDeclaration = declarationPatterns.some(pattern => pattern.test(trimmed));
+
+                return {
+                    isDeclarationEnd: isDeclaration,
+                    declarationType: isDeclaration ? trimmed.match(/^(\w+)/)?.[1] : null,
+                    reason: isDeclaration ? 'End of type/interface/enum declaration' : 'End of implementation block'
+                };
+            }
+        }
+
+        return {
+            isDeclarationEnd: false,
+            declarationType: null,
+            reason: 'Cannot determine declaration context'
+        };
+    }
+
+    // หาบรรทัดเริ่มต้นทางเลือกเมื่อ line number ผิด
+    findAlternativeStartLine(lines, originalLine) {
+        // ถ้า line number ผิด ให้หาจากการค้นหาจริง
+        // คืนบรรทัดเดิมแล้วปล่อยให้ระบบจัดการ
+        console.log(`  Warning: Line number might be incorrect for line ${originalLine}, using fallback`);
+        return Math.max(0, originalLine);
     }
 
     // สร้าง zone header - Generate zone header
@@ -4228,13 +6577,11 @@ class CommentGenerator {
 // Smart Learning Functions/ฟังก์ชันเรียนรู้อัจฉริยะ
 // ======================================================================
 
-/**
- * วิเคราะห์ไฟล์ด้วยระบบ Smart Learning
- * Analyze file with Smart Learning system
- * @param {string} content - เนื้อหาไฟล์
- * @param {Object} options - ตัวเลือกการวิเคราะห์
- * @returns {Object} ผลการวิเคราะห์และ blueprint ของไฟล์
- */
+// วิเคราะห์ไฟล์ด้วยระบบ Smart Learning
+// Analyze file with Smart Learning system
+// @param {string} content - เนื้อหาไฟล์
+// @param {Object} options - ตัวเลือกการวิเคราะห์
+// @returns {Object} ผลการวิเคราะห์และ blueprint ของไฟล์
 function analyzeFileWithSmartLearning(content, options = {}) {
     try {
         console.log(' Starting Smart Learning Analysis...');
@@ -4287,15 +6634,13 @@ function analyzeFileWithSmartLearning(content, options = {}) {
     }
 }
 
-/**
- * สร้างคอมเมนต์อัจฉริยะจากข้อมูล blueprint
- * Generate smart comment from blueprint data
- * @param {string} functionName - ชื่อฟังก์ชันหรือคลาส
- * @param {string} type - ประเภท (function, class, method)
- * @param {Object} blueprint - ข้อมูล blueprint จาก SmartFileAnalyzer
- * @param {Object} structureInfo - ข้อมูลโครงสร้างเพิ่มเติม
- * @returns {Object} คอมเมนต์ที่สร้างขึ้น
- */
+// สร้างคอมเมนต์อัจฉริยะจากข้อมูล blueprint
+// Generate smart comment from blueprint data
+// @param {string} functionName - ชื่อฟังก์ชันหรือคลาส
+// @param {string} type - ประเภท (function, class, method)
+// @param {Object} blueprint - ข้อมูล blueprint จาก SmartFileAnalyzer
+// @param {Object} structureInfo - ข้อมูลโครงสร้างเพิ่มเติม
+// @returns {Object} คอมเมนต์ที่สร้างขึ้น
 function generateSmartComment(functionName, type, blueprint, structureInfo = {}) {
     try {
         // ถ้าไม่มี blueprint ใช้วิธีเดิม
@@ -4346,10 +6691,8 @@ function generateSmartComment(functionName, type, blueprint, structureInfo = {})
         const generator = new CommentGenerator();
         return generator.getFunctionDescription(functionName, type);
     }
-}/**
- * สร้างคอมเมนต์อัจฉริยะสำหรับคลาส
- * Generate smart comment for class
- */
+}// สร้างคอมเมนต์อัจฉริยะสำหรับคลาส
+// Generate smart comment for class
 function generateSmartClassComment(className, blueprint, structureInfo) {
     const classInfo = blueprint.classes.get(className);
 
@@ -4419,10 +6762,8 @@ function generateSmartClassComment(className, blueprint, structureInfo) {
     };
 }
 
-/**
- * สร้างคอมเมนต์อัจฉริยะสำหรับฟังก์ชัน
- * Generate smart comment for function
- */
+// สร้างคอมเมนต์อัจฉริยะสำหรับฟังก์ชัน
+// Generate smart comment for function
 function generateSmartFunctionComment(functionName, blueprint, structureInfo) {
     // ค้นหาฟังก์ชันใน blueprint
     let functionInfo = blueprint.functions.get(functionName);
@@ -4585,9 +6926,7 @@ function generateSmartFunctionComment(functionName, blueprint, structureInfo) {
 // TypeScript Comment Generators/ตัวสร้างคอมเมนต์ TypeScript
 // ===================================================================
 
-/**
- * สร้างคอมเมนต์สำหรับ Interface
- */
+// สร้างคอมเมนต์สำหรับ Interface
 function generateInterfaceComment(interfaceName, blueprint, structureInfo) {
     const interfaceInfo = blueprint.classes.get(interfaceName);
 
@@ -4642,9 +6981,7 @@ function generateInterfaceComment(interfaceName, blueprint, structureInfo) {
     };
 }
 
-/**
- * สร้างคอมเมนต์สำหรับ Type Alias
- */
+// สร้างคอมเมนต์สำหรับ Type Alias
 function generateTypeAliasComment(typeName, blueprint, structureInfo) {
     const typeInfo = blueprint.functions.get(typeName);
 
@@ -4695,9 +7032,7 @@ function generateTypeAliasComment(typeName, blueprint, structureInfo) {
     };
 }
 
-/**
- * สร้างคอมเมนต์สำหรับ Enum
- */
+// สร้างคอมเมนต์สำหรับ Enum
 function generateEnumComment(enumName, blueprint, structureInfo) {
     const enumInfo = blueprint.classes.get(enumName);
 
@@ -4740,9 +7075,7 @@ function generateEnumComment(enumName, blueprint, structureInfo) {
     };
 }
 
-/**
- * สร้างคอมเมนต์สำหรับ Abstract Class
- */
+// สร้างคอมเมนต์สำหรับ Abstract Class
 function generateAbstractClassComment(className, blueprint, structureInfo) {
     const classInfo = blueprint.classes.get(className);
 
@@ -4785,9 +7118,7 @@ function generateAbstractClassComment(className, blueprint, structureInfo) {
     };
 }
 
-/**
- * สร้างคอมเมนต์สำหรับ Const Declaration
- */
+// สร้างคอมเมนต์สำหรับ Const Declaration
 function generateConstComment(constName, blueprint, structureInfo, constType) {
     // หาข้อมูลจาก blueprint
     let constInfo = blueprint.classes.get(constName) || blueprint.functions.get(constName);
@@ -4888,7 +7219,15 @@ function generateConstComment(constName, blueprint, structureInfo, constType) {
 // Process file/ประมวลผลไฟล์
 // ======================================================================
 function processFile(filePath, options = {}) {
+    const startTime = Date.now();
+
     try {
+        // เริ่มต้น logging
+        logger.debug('FILE_PROCESSING', `Starting to process file: ${filePath}`, {
+            options: options,
+            startTime: new Date().toISOString()
+        });
+
         //  SECURITY: File Size Limit Protection (DoS Prevention)
         const stat = fs.statSync(filePath);
         const fileSizeInMB = stat.size / (1024 * 1024);
@@ -4902,7 +7241,17 @@ function processFile(filePath, options = {}) {
                 success: true,
                 changes: false,
                 skipped: true,
-                reason: `File too large (${fileSizeInMB.toFixed(2)} MB)`
+                reason: `File too large (${fileSizeInMB.toFixed(2)} MB)`,
+                statistics: {
+                    totalStructures: 0,
+                    detectedStructures: 0,
+                    missedStructures: 0,
+                    skippedStructures: 0,
+                    inappropriateContexts: 0,
+                    lineNumberCorrections: 0,
+                    commentsAdded: 0,
+                    errorDetails: []
+                }
             };
         }
 
@@ -4915,7 +7264,17 @@ function processFile(filePath, options = {}) {
                 success: true,
                 changes: false,
                 skipped: true,
-                reason: 'Symbolic link protection'
+                reason: 'Symbolic link protection',
+                statistics: {
+                    totalStructures: 0,
+                    detectedStructures: 0,
+                    missedStructures: 0,
+                    skippedStructures: 0,
+                    inappropriateContexts: 0,
+                    lineNumberCorrections: 0,
+                    commentsAdded: 0,
+                    errorDetails: []
+                }
             };
         }
 
@@ -4924,11 +7283,13 @@ function processFile(filePath, options = {}) {
 
         // สร้าง backup ถ้าต้องการ
         if (options.backup) {
+            logger.debug('BACKUP', `Creating backup for: ${filePath}`);
             createBackup(filePath);
         }
 
         // ประมวลผลเนื้อหา
         let processedContent = content;
+        let fileStatistics = null;
 
         // ตรวจสอบโหมดการทำงาน
         if (options.removeComments) {
@@ -4936,13 +7297,29 @@ function processFile(filePath, options = {}) {
             processedContent = removeComments(processedContent);
         } else {
             // โหมดปกติ: เพิ่ม/แก้ไขคอมเมนต์
-            // 1. แปลง /** */ comments เป็น // format
+            // 1. แปลง  comments เป็น // format
             processedContent = fixComments(processedContent);
 
             // 2. ใช้ tokenizer เพื่อหาฟังก์ชันและเพิ่มคอมเมนต์
             if (options.addMissing || options.aiMode) {
-                processedContent = addMissingComments(processedContent, options);
+                const result = addMissingComments(processedContent, options);
+                processedContent = result.processedContent;
+                fileStatistics = result.statistics;
             }
+        }
+
+        // สร้าง default statistics ถ้ายังไม่มี
+        if (!fileStatistics) {
+            fileStatistics = {
+                totalStructures: 0,
+                detectedStructures: 0,
+                missedStructures: 0,
+                skippedStructures: 0,
+                inappropriateContexts: 0,
+                lineNumberCorrections: 0,
+                commentsAdded: 0,
+                errorDetails: []
+            };
         }
 
         // 3. จัดระเบียบ zones ถ้าต้องการ
@@ -4950,23 +7327,98 @@ function processFile(filePath, options = {}) {
             processedContent = organizeCodeByZones(processedContent);
         }
 
+        // 4. File Comparison & Detailed Analysis (ใช้ระบบอ่านไฟล์ 2 ตัวที่มีอยู่)
+        let comparisonReport = null;
+        if (content !== processedContent) {
+            comparisonReport = fileComparisonAnalyzer.compareAndAnalyze(
+                content,           // ไฟล์ต้นฉบับ
+                processedContent,  // ไฟล์หลังแก้ไข
+                filePath
+            );
+
+            // อัพเดท statistics จาก comparison report
+            if (comparisonReport && fileStatistics) {
+                fileStatistics.comparisonAnalysis = {
+                    structuresSkipped: comparisonReport.changes.structuresSkipped,
+                    skippedFunctions: comparisonReport.skippedStructures.functions,
+                    skippedClasses: comparisonReport.skippedStructures.classes,
+                    totalOriginalStructures: comparisonReport.original.totalStructures,
+                    totalModifiedStructures: comparisonReport.modified.totalStructures
+                };
+            }
+        }
+
         // เขียนไฟล์กลับ (ถ้าไม่ใช่ dry-run)
         if (!options.dryRun) {
             fs.writeFileSync(filePath, processedContent, 'utf8');
+            logger.audit('FILE_MODIFIED', filePath, {
+                originalSize: content.length,
+                newSize: processedContent.length,
+                commentsAdded: fileStatistics?.commentsAdded || 0,
+                comparisonReport: comparisonReport ? {
+                    structuresSkipped: comparisonReport.changes.structuresSkipped,
+                    functionsSkipped: comparisonReport.skippedStructures.functions.length,
+                    classesSkipped: comparisonReport.skippedStructures.classes.length
+                } : null
+            });
         }
+
+        // Performance logging
+        const duration = Date.now() - startTime;
+        logger.performance('FILE_PROCESSING', duration, {
+            filePath: filePath,
+            originalSize: content.length,
+            newSize: processedContent.length,
+            changes: content !== processedContent,
+            statistics: fileStatistics
+        });
+
+        // Success logging
+        logger.debug('FILE_PROCESSING', `Successfully processed: ${filePath}`, {
+            changes: content !== processedContent,
+            duration: duration,
+            statistics: fileStatistics
+        });
 
         return {
             success: true,
             originalSize: content.length,
             newSize: processedContent.length,
             changes: content !== processedContent,
-            preview: options.dryRun ? processedContent : null
+            preview: options.dryRun ? processedContent : null,
+            statistics: fileStatistics
         };
 
     } catch (error) {
+        const duration = Date.now() - startTime;
+
+        // Error logging
+        logger.error('FILE_PROCESSING', `Failed to process file: ${filePath}`, error, {
+            duration: duration,
+            options: options
+        });
+
+        console.error(`Error processing file ${filePath}: ${error.message}`);
+
         return {
             success: false,
-            error: error.message
+            error: error.message,
+            statistics: {
+                totalStructures: 0,
+                detectedStructures: 0,
+                missedStructures: 0,
+                skippedStructures: 0,
+                inappropriateContexts: 0,
+                lineNumberCorrections: 0,
+                commentsAdded: 0,
+                errorDetails: [{
+                    file: filePath,
+                    type: 'file_processing_error',
+                    message: error.message,
+                    stack: error.stack,
+                    timestamp: new Date().toISOString()
+                }]
+            }
         };
     }
 }
@@ -4977,24 +7429,41 @@ function processFile(filePath, options = {}) {
 function removeComments(content) {
     try {
         let result = content;
-        
+
+        // ป้องกันการลบ comment ที่อยู่ใน string หรือ regex
+        const protectedStrings = [];
+        let stringIndex = 0;
+
+        // เก็บ strings และ regex patterns ไว้ก่อน
+        result = result.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1|\/(?:[^\/\\]|\\.)+\/[gimuy]*/g, (match) => {
+            const placeholder = `__PROTECTED_STRING_${stringIndex}__`;
+            protectedStrings[stringIndex] = match;
+            stringIndex++;
+            return placeholder;
+        });
+
         // 1. ลบ single-line comments (// แต่อย่าลบ URLs หรือ file paths)
         result = result.replace(/(?<!:)\/\/(?!\/).*$/gm, '');
-        
-        // 2. ลบ multi-line comments (/* */ และ /** */)
+
+        // 2. ลบ multi-line comments (/* */ และ )
         result = result.replace(/\/\*[\s\S]*?\*\//g, '');
-        
+
+        // คืน strings และ regex patterns กลับ
+        for (let i = 0; i < protectedStrings.length; i++) {
+            result = result.replace(`__PROTECTED_STRING_${i}__`, protectedStrings[i]);
+        }
+
         // 3. ลบบรรทัดว่างที่เหลือจากการลบคอมเมนต์
         result = result.replace(/^\s*[\r\n]/gm, '');
-        
+
         // 4. ลบบรรทัดว่างที่ซ้ำกัน (เหลือแค่ 1 บรรทัดว่าง)
         result = result.replace(/\n\s*\n\s*\n/g, '\n\n');
-        
+
         // 5. ทำความสะอาดช่องว่างท้ายบรรทัด
         result = result.replace(/[ \t]+$/gm, '');
-        
+
         return result;
-        
+
     } catch (error) {
         console.warn('Warning: Error removing comments, returning original content');
         return content;
@@ -5005,14 +7474,14 @@ function removeComments(content) {
 // Fix comments/แก้ไขคอมเมนต์
 // ======================================================================
 function fixComments(content) {
-    // แปลง /** */ comments ที่มีหลายบรรทัด
+    // แปลง  comments ที่มีหลายบรรทัด
     content = content.replace(/\/\*\*[\s\S]*?\*\//g, (match) => {
         // แยกบรรทัดและลบ * ออก
         const lines = match.split('\n');
         const convertedLines = [];
 
         for (let line of lines) {
-            // ลบ /** และ */ และ * ที่ขึ้นต้น
+            // ลบ // และ และ * ที่ขึ้นต้น
             line = line.replace(/^\s*\/\*\*\s*/, '').replace(/\s*\*\/\s*$/, '').replace(/^\s*\*\s*/, '').trim();
 
             if (line) {
@@ -5031,6 +7500,24 @@ function fixComments(content) {
 // ======================================================================
 function addMissingComments(content, options = {}) {
     try {
+        // Debug: ตรวจสอบประเภทของ content
+        if (typeof content !== 'string') {
+            console.error(`Error: content is not a string, got ${typeof content}:`, content);
+            return content || '';
+        }
+
+        // สถิติการประมวลผล
+        const statistics = {
+            totalStructures: 0,
+            detectedStructures: 0,
+            missedStructures: 0,
+            skippedStructures: 0,
+            inappropriateContexts: 0,
+            lineNumberCorrections: 0,
+            commentsAdded: 0,
+            errorDetails: []
+        };
+
         // SECURITY: กำหนดขีดจำกัดความปลอดภัยสำหรับการประมวลผล
         const securityOptions = {
             maxDepth: 50,           // ลดความลึกสำหรับการวิเคราะห์โค้ด
@@ -5043,16 +7530,52 @@ function addMissingComments(content, options = {}) {
         // ===================================================================
         let smartAnalysis = null;
         if (options.enableSmartLearning !== false) {
-            smartAnalysis = analyzeFileWithSmartLearning(content, { security: securityOptions });
+            try {
+                const smartAnalyzer = new SmartFileAnalyzer(content, securityOptions);
+                smartAnalysis = smartAnalyzer.analyzeFile();
+                if (options.verbose) {
+                    console.log("  Using smart analysis: enabled");
+                }
+            } catch (error) {
+                if (options.verbose) {
+                    console.log(`  Smart analysis failed: ${error.message}, falling back to traditional method`);
+                }
+            }
         }
 
-        // ใช้ tokenizer และ StructureParser ใหม่เพื่อวิเคราะห์โค้ด
-        const tokenizer = new JavaScriptTokenizer(content, securityOptions);
-        const tokens = tokenizer.tokenize();
+        // ใช้ tokenizer และ StructureAnalyzer เพื่อวิเคราะห์โค้ด
+        let tokens = [];
+        let structures = [];
 
-        // ใช้ StructureParser ตัวใหม่ที่แม่นยำกว่า
-        const parser = new StructureParser(tokens, securityOptions);
-        const structures = parser.parse();
+        try {
+            const tokenizer = new JavaScriptTokenizer(content, securityOptions);
+            tokens = tokenizer.tokenize();
+            if (options.verbose) {
+                console.log(`  Tokenized successfully: ${tokens.length} tokens`);
+            }
+        } catch (error) {
+            if (options.verbose) {
+                console.log(`  Tokenizer failed: ${error.message}`);
+            }
+            // ใช้วิธีการสำรองถ้า tokenizer ล้มเหลว
+            return content;
+        }
+
+        // ใช้ StructureAnalyzer ตัวใหม่ที่แม่นยำกว่า
+        try {
+            const structureAnalyzer = new StructureAnalyzer(tokens, content);
+            structures = structureAnalyzer.analyzeAll();
+            statistics.detectedStructures = structures.length;
+            if (options.verbose) {
+                console.log(`  Structure analysis completed: ${structures.length} structures`);
+            }
+        } catch (error) {
+            if (options.verbose) {
+                console.log(`  Structure analysis failed: ${error.message}`);
+            }
+            structures = [];
+            statistics.errorDetails.push(`Structure analysis failed: ${error.message}`);
+        }
 
         if (structures.length === 0) {
             return content;
@@ -5152,11 +7675,73 @@ function addMissingComments(content, options = {}) {
             return content;
         }
 
+        // ===================================================================
+        // Missing Classes/Functions Detection - ตรวจสอบคลาสและฟังก์ชันที่หายไป
+        // ===================================================================
+        const missingElements = detectMissingElements(content, allItems);
+
+        // แก้ไข line numbers โดยใช้ข้อมูลจาก Missing Elements Detection
+        if (missingElements.length > 0) {
+            console.log(`\n Processing ${missingElements.length} elements for line number corrections:`);
+
+            // บันทึกจำนวน structures ทั้งหมดที่ตรวจพบ
+            statistics.totalStructures = allItems.length;
+
+            // สร้าง mapping ของชื่อกับ line numbers ที่ถูกต้อง
+            const correctLineNumbers = new Map();
+            let actualMissing = 0;
+            let correctedLines = 0; missingElements.forEach(element => {
+                correctLineNumbers.set(element.name, element.line);
+                if (element.type === 'class_correction') {
+                    console.log(`  - Line correction for ${element.name}: will update to line ${element.line}`);
+                    correctedLines++;
+                    statistics.lineNumberCorrections++;
+                } else {
+                    console.log(`  - Missing ${element.type}: ${element.name} at line ${element.line} (${element.reason})`);
+                    actualMissing++;
+                    statistics.missedStructures++;
+                }
+            });
+
+            // แก้ไข line numbers ใน allItems
+            allItems.forEach(item => {
+                if (correctLineNumbers.has(item.name)) {
+                    const correctLine = correctLineNumbers.get(item.name);
+                    if (options.verbose && item.line !== correctLine) {
+                        console.log(`  Correcting line number for ${item.name}: ${item.line}  ${correctLine}`);
+                    }
+                    item.line = correctLine;
+                }
+            });
+
+            if (actualMissing > 0) {
+                console.log(`   ${actualMissing} elements were not detected by parsing system.`);
+            }
+            if (correctedLines > 0) {
+                console.log(`   ${correctedLines} line numbers were corrected.`);
+            }
+            console.log('');
+        }
+
+        if (options.verbose && missingElements.length === 0) {
+            console.log('\n All structures detected correctly with accurate line numbers.\n');
+        }
+
         // สร้าง comment generator
         const generator = new CommentGenerator();
 
-        // แปลงเนื้อหาเป็น array ของบรรทัด
-        const lines = content.split('\n');
+        // ใช้ระบบอ่านไฟล์ช่วยวิเคราะห์ comment status
+        const commentStatusMap = analyzeCommentStatus(content, structures);
+
+        // แปลงเนื้อหาเป็น array ของบรรทัด (normalize line endings ก่อน)
+        if (typeof content !== 'string') {
+            console.error(`Error at line split: content is not a string, got ${typeof content}:`, content);
+            return content || '';
+        }
+
+        // Normalize line endings ก่อนแปลงเป็น array
+        const normalizedContent = normalizeLineEndings(content);
+        const lines = normalizedContent.split('\n');
         let processedLines = [...lines];
 
         // เรียงลำดับตาม line number จากล่างขึ้นบนเพื่อไม่ให้หมายเลขบรรทัดเปลี่ยน
@@ -5166,6 +7751,16 @@ function addMissingComments(content, options = {}) {
         allItems.forEach(item => {
             const originalLineIndex = item.line - 1; // แปลงเป็น 0-based index
 
+            // ตรวจสอบว่า line index อยู่ในช่วงที่ถูกต้อง
+            if (originalLineIndex < 0 || originalLineIndex >= processedLines.length) {
+                if (options.verbose) {
+                    console.log(`  Skipping comment for ${item.name} at line ${item.line} - line index ${originalLineIndex} out of range (file has ${processedLines.length} lines)`);
+                }
+                statistics.skippedStructures++;
+                statistics.errorDetails.push(`${item.name} at line ${item.line}: out of range`);
+                return;
+            }
+
             // หาจุดเริ่มต้นที่แท้จริง (รวม decorators, exports)
             const realStartLine = generator.findRealStartLine(processedLines, originalLineIndex);
 
@@ -5174,24 +7769,56 @@ function addMissingComments(content, options = {}) {
                 if (options.verbose) {
                     console.log(`  Skipping comment for ${item.name} at line ${item.line} - invalid position`);
                 }
+                statistics.skippedStructures++;
+                statistics.errorDetails.push(`${item.name} at line ${item.line}: invalid position`);
                 return;
             }
 
             const lineIndex = realStartLine;
 
-            // ตรวจสอบว่าบรรทัดก่อนหน้ามีคอมเมนต์หรือไม่
+            // ใช้ข้อมูลจาก Structure Analysis เพื่อตรวจสอบ comment status
+            const commentStatus = commentStatusMap.get(item.name);
             let hasComment = false;
-            let checkLines = 0;
-            for (let i = 1; i <= 10 && checkLines < 5; i++) {
-                if (lineIndex - i >= 0) {
-                    const prevLine = processedLines[lineIndex - i];
-                    if (prevLine && prevLine.trim()) {
-                        checkLines++;
-                        if (prevLine.trim().startsWith('//') ||
-                            prevLine.trim().startsWith('/*') ||
-                            prevLine.includes('*/')) {
-                            hasComment = true;
-                            break;
+
+            if (commentStatus) {
+                hasComment = commentStatus.hasComment;
+                if (options.verbose && hasComment) {
+                    console.log(`  Found existing comment for ${item.name} at lines: ${commentStatus.commentLines.join(', ')}`);
+                }
+            } else {
+                // Fallback: ใช้วิธีเดิมถ้าไม่เจอใน commentStatusMap
+                let checkLines = 0;
+                for (let i = 1; i <= 5 && checkLines < 3; i++) {
+                    if (lineIndex - i >= 0) {
+                        const prevLine = processedLines[lineIndex - i];
+                        if (prevLine && prevLine.trim()) {
+                            checkLines++;
+                            const isCommentLine = prevLine.trim().startsWith('//') ||
+                                prevLine.trim().startsWith('/*') ||
+                                prevLine.includes('*/');
+
+                            if (isCommentLine) {
+                                const commentContent = prevLine.toLowerCase();
+                                const itemNameLower = item.name.toLowerCase();
+
+                                if (commentContent.includes(itemNameLower) ||
+                                    commentContent.includes('en:') ||
+                                    commentContent.includes('th:') ||
+                                    commentContent.includes('class') ||
+                                    commentContent.includes('function')) {
+                                    hasComment = true;
+                                    break;
+                                }
+                            }
+
+                            if (!isCommentLine &&
+                                !prevLine.trim().startsWith('export') &&
+                                !prevLine.trim().startsWith('@') &&
+                                prevLine.trim() !== '' &&
+                                prevLine.trim() !== '{' &&
+                                prevLine.trim() !== '}') {
+                                break;
+                            }
                         }
                     }
                 }
@@ -5199,10 +7826,29 @@ function addMissingComments(content, options = {}) {
 
             // ตรวจสอบเพิ่มเติมว่าบรรทัดนี้อยู่ในบริบทที่เหมาะสมหรือไม่
             const currentLine = processedLines[lineIndex];
-            if (!currentLine || !generator.isAppropriateCommentLocation(processedLines, lineIndex)) {
+            if (!currentLine) {
+                if (options.verbose) {
+                    console.log(`  Skipping comment for ${item.name} at line ${item.line} - line not found`);
+                }
+                statistics.skippedStructures++;
+                statistics.errorDetails.push(`${item.name} at line ${item.line}: line not found`);
+                return;
+            }
+
+            const isAppropriate = generator.isAppropriateCommentLocation(processedLines, lineIndex);
+            if (!isAppropriate) {
                 if (options.verbose) {
                     console.log(`  Skipping comment for ${item.name} at line ${item.line} - inappropriate context`);
+                    console.log(`    Current line: "${currentLine.trim()}"`);
+
+                    // Debug: ทดสอบ pattern
+                    const trimmed = currentLine.trim();
+                    const classPattern = /^(class|interface|type|enum)\s+\w+/;
+                    const matchesClass = classPattern.test(trimmed);
+                    console.log(`    Matches class pattern: ${matchesClass}`);
                 }
+                statistics.inappropriateContexts++;
+                statistics.errorDetails.push(`${item.name} at line ${item.line}: inappropriate context - "${currentLine.trim()}"`);
                 return;
             }
 
@@ -5263,6 +7909,7 @@ function addMissingComments(content, options = {}) {
 
                 // แทรกคอมเมนต์
                 processedLines.splice(lineIndex, 0, ...indentedCommentLines);
+                statistics.commentsAdded++;
 
                 if (options.verbose) {
                     console.log(`  Added comment for ${item.type}: ${item.name} at line ${item.line}`);
@@ -5273,11 +7920,50 @@ function addMissingComments(content, options = {}) {
             }
         });
 
-        return processedLines.join('\n');
+        console.log('\nSTATISTICS SUMMARY:');
+        console.log(`Total structures found: ${statistics.totalStructures}`);
+        console.log(`Successfully detected: ${statistics.detectedStructures}`);
+        console.log(`Missed/corrected: ${statistics.missedStructures}`);
+        console.log(`Skipped (various reasons): ${statistics.skippedStructures}`);
+        console.log(`Line corrections applied: ${statistics.lineNumberCorrections}`);
+        console.log(`Comments successfully added: ${statistics.commentsAdded}`);
+        console.log(`Inappropriate context errors: ${statistics.inappropriateContexts}`);
+        if (statistics.errorDetails.length > 0) {
+            console.log(`Error details: ${statistics.errorDetails.length} issues recorded`);
+            statistics.errorDetails.forEach((error, index) => {
+                console.log(`  ${index + 1}. ${error}`);
+            });
+        }
+
+        return {
+            processedContent: processedLines.join('\n'),
+            statistics: statistics
+        };
 
     } catch (error) {
         console.error(`Error in addMissingComments: ${error.message}`);
-        return content;
+
+        // สร้าง error statistics
+        const errorStatistics = {
+            totalStructures: 0,
+            detectedStructures: 0,
+            missedStructures: 0,
+            skippedStructures: 0,
+            inappropriateContexts: 0,
+            lineNumberCorrections: 0,
+            commentsAdded: 0,
+            errorDetails: [{
+                type: 'addMissingComments_error',
+                message: error.message,
+                stack: error.stack,
+                timestamp: new Date().toISOString()
+            }]
+        };
+
+        return {
+            processedContent: content,
+            statistics: errorStatistics
+        };
     }
 }
 
@@ -5360,41 +8046,10 @@ function findMethodsWithRegex(content) {
 // ======================================================================
 function createBackup(filePath) {
     try {
-        //  SECURITY: Validate backup path
-        const resolvedFilePath = path.resolve(filePath);
-        const workingDir = process.cwd();
-
-        if (!resolvedFilePath.startsWith(workingDir)) {
-            console.error(` Security Error: Cannot create backup for file outside working directory: ${filePath}`);
-            return null;
-        }
-
-        const backupDir = '.chahuadev-fix-comments-backups';
-
-        // สร้างโฟลเดอร์ backup ถ้ายังไม่มี
-        if (!fs.existsSync(backupDir)) {
-            fs.mkdirSync(backupDir, { recursive: true });
-        }
-
-        //  SECURITY: Sanitize filename to prevent path injection
-        const fileName = path.basename(filePath).replace(/[<>:"/\\|?*]/g, '_');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupPath = path.join(backupDir, `${fileName}.${timestamp}.backup`);
-
-        //  SECURITY: Double-check backup path is safe
-        const resolvedBackupPath = path.resolve(backupPath);
-        const resolvedBackupDir = path.resolve(backupDir);
-
-        if (!resolvedBackupPath.startsWith(resolvedBackupDir)) {
-            console.error(` Security Error: Invalid backup path detected: ${backupPath}`);
-            return null;
-        }
-
-        // คัดลอกไฟล์
-        fs.copyFileSync(filePath, backupPath);
-
-        return backupPath;
+        // ใช้ระบบ Organized Backup Manager ใหม่
+        return backupManager.createBackup(filePath);
     } catch (error) {
+        logger.error('BACKUP', `Failed to create backup for ${filePath}`, error);
         console.error(`Error creating backup: ${error.message}`);
         return null;
     }
@@ -5432,8 +8087,9 @@ function organizeCodeByZones(content) {
 function showHelp() {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                      Universal Code Magician v1.3.0                           ║
+║                   Universal Code Magician v2.0.0-beta.1                       ║
 ║           Professional Comment & Formatting Standardization Tool               ║
+║                         BETA RELEASE - Community Testing                     ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
 
 USAGE:
@@ -5485,7 +8141,20 @@ SECURITY WARNINGS:
     Tool has built-in protection but exercise caution
     Review changes before committing to version control
 
-For more information: https://github.com/chahuadev/chahuadev-fix-comments
+ BETA RELEASE NOTES:
+  Known Issues (Help us fix these!):
+  • Complex TypeScript interfaces/abstract classes may not be detected
+  • Some comments may be placed inappropriately in complex JSX structures
+  • Advanced TypeScript constructs need expanded pattern recognition
+  
+  Beta Testing Guidelines:
+  • Always use --backup flag for safety
+  • Try --dry-run first to preview changes
+  • Report issues with minimal reproducible code samples
+  • Check diagnostic.log for detailed analysis
+  
+  Community Feedback: https://github.com/chahuadev/chahuadev-fix-comments/issues
+For documentation: https://github.com/chahuadev/chahuadev-fix-comments
 `);
 }
 
@@ -5493,9 +8162,18 @@ For more information: https://github.com/chahuadev/chahuadev-fix-comments
 // Show version/แสดงเวอร์ชัน
 // ======================================================================
 function showVersion() {
-    console.log('Universal Code Magician v1.3.0');
+    console.log('Universal Code Magician v2.0.0-beta.1');
     console.log('Professional Comment & Formatting Standardization Tool');
+    console.log(' BETA RELEASE - Ready for Community Testing!');
     console.log('Copyright (c) 2025 Chahua Development Co., Ltd.');
+    console.log('');
+    console.log(' Known Issues in Beta:');
+    console.log('  • Parser may misinterpret complex TypeScript interfaces/abstract classes');
+    console.log('  • Some comments might be placed inappropriately in complex JSX/arrow functions');
+    console.log('  • Advanced TypeScript constructs need more pattern recognition');
+    console.log('');
+    console.log(' Help us improve: Report issues with code samples at:');
+    console.log('   https://github.com/chahuadev/chahuadev-fix-comments/issues');
 }
 
 // ======================================================================
@@ -5507,7 +8185,18 @@ function processDirectory(dirPath, options = {}) {
         total: 0,
         processed: 0,
         errors: 0,
-        files: []
+        files: [],
+        // เพิ่มสถิติรายละเอียด
+        statistics: {
+            totalStructures: 0,
+            detectedStructures: 0,
+            missedStructures: 0,
+            skippedStructures: 0,
+            inappropriateContexts: 0,
+            lineNumberCorrections: 0,
+            commentsAdded: 0,
+            errorDetails: []
+        }
     };
 
     try {
@@ -5550,6 +8239,18 @@ function processDirectory(dirPath, options = {}) {
                 results.errors += subResults.errors;
                 results.files.push(...subResults.files);
 
+                // รวมสถิติรายละเอียด
+                if (subResults.statistics) {
+                    results.statistics.totalStructures += subResults.statistics.totalStructures;
+                    results.statistics.detectedStructures += subResults.statistics.detectedStructures;
+                    results.statistics.missedStructures += subResults.statistics.missedStructures;
+                    results.statistics.skippedStructures += subResults.statistics.skippedStructures;
+                    results.statistics.inappropriateContexts += subResults.statistics.inappropriateContexts;
+                    results.statistics.lineNumberCorrections += subResults.statistics.lineNumberCorrections;
+                    results.statistics.commentsAdded += subResults.statistics.commentsAdded;
+                    results.statistics.errorDetails.push(...subResults.statistics.errorDetails);
+                }
+
             } else if (stat.isFile()) {
                 const ext = path.extname(file);
                 if (extensions.includes(ext)) {
@@ -5570,9 +8271,31 @@ function processDirectory(dirPath, options = {}) {
                                 newSize: result.newSize
                             });
                         }
+
+                        // รวมสถิติรายละเอียด
+                        if (result.statistics) {
+                            results.statistics.totalStructures += result.statistics.totalStructures;
+                            results.statistics.detectedStructures += result.statistics.detectedStructures;
+                            results.statistics.missedStructures += result.statistics.missedStructures;
+                            results.statistics.skippedStructures += result.statistics.skippedStructures;
+                            results.statistics.inappropriateContexts += result.statistics.inappropriateContexts;
+                            results.statistics.lineNumberCorrections += result.statistics.lineNumberCorrections;
+                            results.statistics.commentsAdded += result.statistics.commentsAdded;
+                            if (result.statistics.errorDetails) {
+                                results.statistics.errorDetails.push(...result.statistics.errorDetails);
+                            }
+                        }
                     } else {
                         results.errors++;
                         console.error(`Error processing ${filePath}: ${result.error}`);
+
+                        // เพิ่ม error ลง statistics
+                        results.statistics.errorDetails.push({
+                            file: filePath,
+                            type: 'processing_error',
+                            message: result.error,
+                            timestamp: new Date().toISOString()
+                        });
                     }
                 }
             }
@@ -5594,15 +8317,13 @@ function processDirectory(dirPath, options = {}) {
 // Code Formatter Engine/เครื่องมือจัดรูปแบบโค้ด  
 // ======================================================================
 
-/**
- * Code Formatter - เครื่องมือจัดรูปแบบโค้ดให้สวยงาม
- * ทำงานร่วมกับ StructureParser เพื่อ rewrite โค้ดในรูปแบบที่สวยงาม
- */
+//
+// Code Formatter - เครื่องมือจัดรูปแบบโค้ดให้สวยงาม
+// ทำงานร่วมกับ StructureParser เพื่อ rewrite โค้ดในรูปแบบที่สวยงาม
+//
 
-/**
- * จัดรูปแบบโค้ดให้สวยงาม - Professional Surgeon v3.0
- * ใช้หลักการ "วินิจฉัยก่อน จึงลงมือ" เหมือนศัลยแพทย์
- */
+// จัดรูปแบบโค้ดให้สวยงาม - Professional Surgeon v3.0
+// ใช้หลักการ "วินิจฉัยก่อน จึงลงมือ" เหมือนศัลยแพทย์
 function formatCode(content, options = {}) {
     try {
         // ========================================================================
@@ -5727,10 +8448,8 @@ function formatCode(content, options = {}) {
 // Code Health Diagnosis System/ระบบวินิจฉัยสุขภาพโค้ด
 // ======================================================================
 
-/**
- * ตรวจสอบสุขภาพโค้ดก่อนการจัดรูปแบบ
- * ใช้ Tokenizer และ StructureParser เพื่อวิเคราะห์ความถูกต้องของ syntax
- */
+// ตรวจสอบสุขภาพโค้ดก่อนการจัดรูปแบบ
+// ใช้ Tokenizer และ StructureParser เพื่อวิเคราะห์ความถูกต้องของ syntax
 function performCodeHealthCheck(content) {
     const healthReport = {
         isHealthy: false,
@@ -5802,9 +8521,7 @@ function performCodeHealthCheck(content) {
     }
 }
 
-/**
- * ตรวจสอบ syntax ด้วย token analysis
- */
+// ตรวจสอบ syntax ด้วย token analysis
 function validateSyntax(content, tokens) {
     const result = {
         isValid: true,
@@ -5866,9 +8583,7 @@ function validateSyntax(content, tokens) {
     }
 }
 
-/**
- * นับจำนวน functions
- */
+// นับจำนวน functions
 function countFunctions(structures) {
     let count = 0;
     if (structures && structures.functions) {
@@ -5877,9 +8592,7 @@ function countFunctions(structures) {
     return count;
 }
 
-/**
- * นับจำนวน classes
- */
+// นับจำนวน classes
 function countClasses(structures) {
     let count = 0;
     if (structures && structures.classes) {
@@ -5888,9 +8601,7 @@ function countClasses(structures) {
     return count;
 }
 
-/**
- * ประเมินความซับซ้อนของโค้ด
- */
+// ประเมินความซับซ้อนของโค้ด
 function assessComplexity(structures) {
     const functionCount = countFunctions(structures);
     const classCount = countClasses(structures);
@@ -5899,9 +8610,7 @@ function assessComplexity(structures) {
     if (totalElements <= 5) return 'simple';
     if (totalElements <= 15) return 'moderate';
     return 'complex';
-}/**
- * เพิ่มช่องว่างที่ครอบคลุม
- */
+}// เพิ่มช่องว่างที่ครอบคลุม
 function addComprehensiveSpacing(content) {
     let formatted = content;
 
@@ -5948,9 +8657,7 @@ function addComprehensiveSpacing(content) {
     return formatted;
 }
 
-/**
- * Smart cleanup with better logic
- */
+// Smart cleanup with better logic
 function smartCleanup(content) {
     let cleaned = content;
 
@@ -5999,9 +8706,7 @@ function smartCleanup(content) {
 
 
 
-/**
- * จัดรูปแบบไฟล์โค้ด
- */
+// จัดรูปแบบไฟล์โค้ด
 function formatFile(filePath, options = {}) {
     try {
         // ตรวจสอบนามสกุลไฟล์
@@ -6041,7 +8746,16 @@ function formatFile(filePath, options = {}) {
     }
 }
 function main() {
+    const sessionStartTime = Date.now();
     const args = process.argv.slice(2);
+
+    // Session logging
+    logger.info('SESSION', 'Code Magician session started', {
+        args: args,
+        cwd: process.cwd(),
+        nodeVersion: process.version,
+        platform: process.platform
+    });
 
     // ตรวจสอบคำสั่ง
     if (args.length === 0 || args.includes('-h') || args.includes('--help')) {
@@ -6142,7 +8856,8 @@ function main() {
     }
 
     // เริ่มประมวลผล
-    console.log(`Starting Code Magician v1.3.0...`);
+    console.log(` Starting Code Magician v2.0.0-beta.1...`);
+    console.log(` Beta Release - Help us improve with your feedback!`);
     console.log(`Target: ${target}`);
     console.log(`Mode: ${options.dryRun ? 'DRY RUN' : 'LIVE'}`);
     if (options.formatOnly) {
@@ -6208,6 +8923,73 @@ function main() {
         console.log(`  Errors: ${results.errors}`);
         console.log(`  Duration: ${duration}s`);
 
+        // เพิ่มสถิติรายละเอียด
+        if (results.statistics) {
+            console.log(`\nSTRUCTURE ANALYSIS STATISTICS:`);
+            console.log(`  Total structures found: ${results.statistics.totalStructures}`);
+            console.log(`  Successfully detected: ${results.statistics.detectedStructures}`);
+            console.log(`  Missed by parser: ${results.statistics.missedStructures}`);
+            console.log(`  Comments added: ${results.statistics.commentsAdded}`);
+            console.log(`  Skipped (inappropriate context): ${results.statistics.inappropriateContexts}`);
+            console.log(`  Line number corrections: ${results.statistics.lineNumberCorrections}`);
+
+            // คำนวณ success rate
+            const detectionRate = results.statistics.totalStructures > 0
+                ? ((results.statistics.detectedStructures / results.statistics.totalStructures) * 100).toFixed(1)
+                : '0.0';
+            console.log(`  Detection success rate: ${detectionRate}%`);
+
+            // แสดง error details ถ้ามี
+            if (results.statistics.errorDetails && results.statistics.errorDetails.length > 0) {
+                console.log(`\nERROR DETAILS:`);
+                const errorSummary = {};
+                results.statistics.errorDetails.forEach(error => {
+                    const key = error.type || 'unknown_error';
+                    errorSummary[key] = (errorSummary[key] || 0) + 1;
+                });
+
+                Object.entries(errorSummary).forEach(([type, count]) => {
+                    console.log(`  ${type}: ${count} occurrences`);
+                });
+
+                // แสดงรายละเอียด error ถ้าเป็น verbose mode
+                if (options.verbose && results.statistics.errorDetails.length <= 10) {
+                    console.log(`\nDETAILED ERRORS:`);
+                    results.statistics.errorDetails.forEach(error => {
+                        console.log(`  • ${error.file || 'unknown'}: ${error.message || error.type}`);
+                    });
+                } else if (results.statistics.errorDetails.length > 10) {
+                    console.log(`  (Use --verbose to see detailed error list)`);
+                }
+            }
+
+            // แสดง bugs/issues summary
+            const totalIssues = results.statistics.missedStructures +
+                results.statistics.inappropriateContexts +
+                results.errors;
+
+            if (totalIssues > 0) {
+                console.log(`\n BETA TESTING INSIGHTS:`);
+                console.log(`   Total learning opportunities: ${totalIssues}`);
+                if (results.statistics.missedStructures > 0) {
+                    console.log(`     TypeScript patterns to enhance: ${results.statistics.missedStructures}`);
+                    console.log(`       Help us: Share your .ts files with interfaces/abstract classes!`);
+                }
+                if (results.statistics.inappropriateContexts > 0) {
+                    console.log(`     Context analysis improvements needed: ${results.statistics.inappropriateContexts}`);
+                    console.log(`       Help us: Submit JSX/arrow function examples that caused issues!`);
+                }
+                if (results.errors > 0) {
+                    console.log(`      Processing challenges: ${results.errors}`);
+                    console.log(`       Help us: Report these with --verbose logs to our GitHub!`);
+                }
+            } else {
+                console.log(`\n EXCELLENT! All structures processed successfully!`);
+                console.log(`    Your code is a perfect example for our pattern recognition!`);
+                console.log(`    Consider sharing your project structure to help other developers!`);
+            }
+        }
+
         if (options.dryRun && results.files.length > 0) {
             console.log(`\nFiles that would be modified:`);
             results.files.forEach(file => {
@@ -6218,7 +9000,119 @@ function main() {
         console.log(`═══════════════════════════════════════════════════════════════════════════════════`);
     }
 
-    console.log(`\nComment Fixer completed ${options.dryRun ? '(DRY RUN)' : 'successfully'}!`);
+    console.log(`\n Universal Code Magician Beta completed ${options.dryRun ? '(DRY RUN)' : 'successfully'}!`);
+    console.log(` Your feedback helps us build better tools for the developer community!`);
+    console.log(` Found issues? Report them: https://github.com/chahuadev/chahuadev-fix-comments/issues`);
+
+    // Session summary logging
+    const sessionDuration = Date.now() - sessionStartTime;
+    logger.performance('SESSION_COMPLETE', sessionDuration, {
+        mode: options.dryRun ? 'DRY_RUN' : 'LIVE',
+        totalFiles: results?.total || 0,
+        processedFiles: results?.processed || 0,
+        modifiedFiles: results?.files?.length || 0,
+        errors: results?.errors || 0,
+        options: options
+    });
+
+    // Cleanup old backups
+    backupManager.cleanupOldBackups(7); // Keep backups for 7 days
+
+    logger.info('SESSION', 'Code Magician session completed successfully', {
+        duration: sessionDuration,
+        summary: results
+    });
+}
+
+// ======================================================================
+// Missing Elements Detection/ตรวจสอบองค์ประกอบที่หายไป
+// ======================================================================
+function detectMissingElements(content, detectedItems) {
+    const missing = [];
+    // ใช้ normalize line endings เพื่อจัดการ \r\n และ \r
+    const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = normalizedContent.split('\n');
+    const detectedNames = new Set(detectedItems.map(item => item.name));
+
+    // ค้นหาคลาสที่อาจจะหายไป - และส่งคืนข้อมูล line numbers ที่ถูกต้อง
+    const classRegex = /^\s*class\s+(\w+)/gm;
+    let match;
+    while ((match = classRegex.exec(normalizedContent)) !== null) {
+        const className = match[1];
+        const lineNumber = normalizedContent.substring(0, match.index).split('\n').length;
+
+        // เพิ่มเฉพาะคลาสที่ไม่ได้ถูกตรวจพบ หรือที่มี line number ผิด
+        if (!detectedNames.has(className)) {
+            missing.push({
+                type: 'class',
+                name: className,
+                line: lineNumber,
+                reason: 'Class not detected by parsing system'
+            });
+        } else {
+            // ถ้าคลาสถูกตรวจพบแล้ว แต่ line number อาจจะผิด
+            const existingItem = detectedItems.find(item => item.name === className);
+            if (existingItem && existingItem.line === 1 && lineNumber > 1) {
+                missing.push({
+                    type: 'class_correction',
+                    name: className,
+                    line: lineNumber,
+                    reason: 'Line number correction needed'
+                });
+            }
+        }
+    }
+
+    // ค้นหาฟังก์ชันที่อาจจะหายไป
+    const functionRegex = /^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)/gm;
+    let funcMatch;
+    while ((funcMatch = functionRegex.exec(normalizedContent)) !== null) {
+        const funcName = funcMatch[1];
+        const lineNumber = normalizedContent.substring(0, funcMatch.index).split('\n').length;
+
+        if (!detectedNames.has(funcName)) {
+            missing.push({
+                type: 'function',
+                name: funcName,
+                line: lineNumber,
+                reason: 'Function not detected by parsing system'
+            });
+        }
+    }
+
+    // ค้นหา arrow functions ที่อาจจะหายไป
+    const arrowFuncRegex = /^\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/gm;
+    let arrowMatch;
+    while ((arrowMatch = arrowFuncRegex.exec(normalizedContent)) !== null) {
+        const funcName = arrowMatch[1];
+        const lineNumber = normalizedContent.substring(0, arrowMatch.index).split('\n').length;
+
+        if (!detectedNames.has(funcName)) {
+            missing.push({
+                type: 'arrow_function',
+                name: funcName,
+                line: lineNumber,
+                reason: 'Arrow function not detected by parsing system'
+            });
+        }
+    }
+
+    // ค้นหา methods ภายในคลาสที่อาจจะหายไป (สำหรับสถิติเท่านั้น)
+    const methodRegex = /^\s+(?:async\s+)?(\w+)\s*\([^)]*\)\s*{/gm;
+    let methodMatch;
+    while ((methodMatch = methodRegex.exec(normalizedContent)) !== null) {
+        const methodName = methodMatch[1];
+        const lineNumber = normalizedContent.substring(0, methodMatch.index).split('\n').length;
+
+        // ข้าม constructor และ keywords - แต่นับเป็นสถิติ
+        if (methodName !== 'constructor' &&
+            !['if', 'for', 'while', 'switch', 'catch', 'function'].includes(methodName) &&
+            !detectedNames.has(methodName)) {
+            // เพิ่มเป็นสถิติเท่านั้น ไม่ได้เป็นข้อผิดพลาด
+        }
+    }
+
+    return missing;
 }
 
 // เรียกใช้ฟังก์ชันหลักถ้าไฟล์นี้ถูกเรียกใช้โดยตรง
@@ -6228,18 +9122,67 @@ if (require.main === module) {
 
 // Export สำหรับการใช้งานเป็น module
 module.exports = {
-    processFile,
-    processDirectory,
-    fixComments,
-    addMissingComments,
-    JavaScriptTokenizer,
-    FunctionPatternMatcher,
-    CommentGenerator,
-    SmartFileAnalyzer,
-    StructureAnalyzer,
-    TokenizerSecurityManager,
-    formatCode,
-    formatFile,
-    createBackup,
-    organizeCodeByZones
+    // === Core Processing Functions ===
+    processFile,                     // Line 7331 - ประมวลผลไฟล์หลัก
+    processDirectory,                // Line 8269 - ประมวลผลไดเรกทอรี  
+    fixComments,                     // Line 7586 - แก้ไขรูปแบบคอมเมนต์
+    addMissingComments,              // Line 7611 - เพิ่มคอมเมนต์ที่ขาดหาย
+    removeComments,                  // Line 7539 - ลบคอมเมนต์ออกจากโค้ด
+
+    // === Code Analysis & Tokenization Classes ===
+    JavaScriptTokenizer,             // Line 1417 - ตัวแยกโทเค็น JavaScript/TypeScript
+    FunctionPatternMatcher,          // Line 1720 - ตัวจับคู่แพทเทิร์นฟังก์ชัน
+    StructureParser,                 // Line 2774 - ตัววิเคราะห์โครงสร้างโค้ด
+    SmartFileAnalyzer,               // Line 3173 - ตัววิเคราะห์ไฟล์อัจฉริยะ
+    StructureAnalyzer,               // Line 4525 - ตัววิเคราะห์โครงสร้างขั้นสูง
+    EnhancedPatternDetector,         // Line 5254 - ตัวตรวจจับแพทเทิร์นขั้นสูง
+    CommentGenerator,                // Line 5557 - ตัวสร้างคอมเมนต์อัจฉริยะ
+
+    // === Security & Utility Classes ===
+    TokenizerSecurityManager,        // Line 1341 - ตัวจัดการความปลอดภัย Tokenizer
+    ProfessionalLogger,              // Line 29 - ระบบ Logging แบบมืออาชีพ
+    OrganizedBackupManager,          // Line 154 - ตัวจัดการ Backup แบบจัดระเบียบ
+    FileComparisonAnalyzer,          // Line 258 - ตัววิเคราะห์การเปรียบเทียบไฟล์
+
+    // === Code Formatting Functions ===
+    formatCode,                      // Line 8416 - จัดรูปแบบโค้ดให้สวยงาม
+    formatFile,                      // Line 8815 - จัดรูปแบบไฟล์โค้ด
+    performCodeHealthCheck,          // Line 8544 - ตรวจสอบสุขภาพโค้ด
+    validateSyntax,                  // Line 8618 - ตรวจสอบไวยากรณ์
+    addComprehensiveSpacing,         // Line 8715 - เพิ่มช่องว่างแบบครอบคลุม
+    smartCleanup,                    // Line 8764 - ทำความสะอาดโค้ดอัจฉริยะ
+
+    // === Smart Learning & AI Functions ===
+    analyzeFileWithSmartLearning,    // Line 6679 - วิเคราะห์ไฟล์ด้วย Smart Learning
+    generateSmartComment,            // Line 6740 - สร้างคอมเมนต์อัจฉริยะ
+    generateSmartClassComment,       // Line 6794 - สร้างคอมเมนต์คลาสอัจฉริยะ
+    generateSmartFunctionComment,    // Line 6867 - สร้างคอมเมนต์ฟังก์ชันอัจฉริยะ
+
+    // === TypeScript Comment Generators ===
+    generateInterfaceComment,        // Line 7032 - สร้างคอมเมนต์ Interface
+    generateTypeAliasComment,        // Line 7089 - สร้างคอมเมนต์ Type Alias
+    generateEnumComment,             // Line 7142 - สร้างคอมเมนต์ Enum
+    generateAbstractClassComment,    // Line 7187 - สร้างคอมเมนต์ Abstract Class
+    generateConstComment,            // Line 7232 - สร้างคอมเมนต์ Const Declaration
+
+    // === Backup & Organization Functions ===
+    createBackup,                    // Line 8157 - สร้างไฟล์สำรอง
+    organizeCodeByZones,             // Line 8171 - จัดระเบียบโค้ดตาม Zone
+
+    // === CLI & Helper Functions ===
+    showHelp,                        // Line 8197 - แสดงคำแนะนำการใช้งาน
+    showVersion,                     // Line 8260 - แสดงเวอร์ชันโปรแกรม
+    main,                            // Line 8853 - ฟังก์ชันหลักของโปรแกรม
+
+    // === Analysis & Detection Functions ===
+    detectMissingElements,           // Line 9127 - ตรวจสอบองค์ประกอบที่หายไป
+    findMethodsWithRegex,            // Line 8081 - ค้นหา Methods ด้วย Regex
+    countFunctions,                  // Line 8682 - นับจำนวนฟังก์ชัน
+    countClasses,                    // Line 8693 - นับจำนวนคลาส
+    assessComplexity,                // Line 8704 - ประเมินความซับซ้อนโค้ด
+
+    // === Utility Helper Functions ===
+    calculateLineNumber,             // Line 1088 - คำนวณหมายเลขบรรทัด
+    normalizeLineEndings,            // Line 1098 - ปรับ Line Endings ให้มาตรฐาน
+    analyzeCommentStatus,            // Line 1108 - วิเคราะห์สถานะคอมเมนต์
 };

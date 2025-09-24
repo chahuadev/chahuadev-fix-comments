@@ -811,8 +811,13 @@ async function demonstrateTypeScriptRepository(): Promise<void> {
     }
 }
 
-if (require.main === module) {
-    demonstrateTypeScriptRepository().catch(console.error);
+
+async function runDemo() {
+    try {
+        await demonstrateTypeScriptRepository();
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 export {

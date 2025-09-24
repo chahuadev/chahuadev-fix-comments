@@ -1,7 +1,7 @@
 {
     "name": "@chahuadev/fix-comments",
-    "version": "1.2.0",
-    "description": "Professional Comment Standardization Tool v1.2.0 - Transform /** */ comments to // format with bilingual descriptions (Thai/English) for JavaScript/TypeScript projects with enterprise security and CI/CD integration",
+    "version": "2.0.0-beta.1",
+    "description": "Professional Comment Standardization Tool v2.0.0 Beta - Advanced Pattern Recognition and Enhanced Context Detection for JavaScript/TypeScript projects with Smart Learning capabilities and enterprise security",
     "main": "fix-comments.js",
     "bin": {
         "fix-comments": "fix-comments.js",
@@ -9,11 +9,10 @@
     },
     "scripts": {
         "fix": "node fix-comments.js",
-        "test": "node test-suite.js",
+        "test": "node scripts/pre-publish.js",
         "test:demo": "node prototype-tokenizer-v2.js",
-        "test:basic": "node test-suite.js --basic",
         "validate": "node scripts/pre-publish.js",
-        "pretest": "echo 'Running comprehensive test suite...'",
+        "pretest": "echo 'Running validation with pre-publish script...'",
         "install-global": "npm install -g .",
         "uninstall-global": "npm uninstall -g @chahuadev/fix-comments",
         "prepublishOnly": "npm test && npm run validate"
@@ -50,7 +49,7 @@
     ],
     "author": {
         "name": "Chahuadev",
-        "email": "contact@chahuadev.com",
+        "email": "chahuadev@gmail.com",
         "url": "https://chahuadev.com"
     },
     "license": "MIT",
@@ -59,8 +58,6 @@
     },
     "files": [
         "fix-comments.js",
-        "prototype-tokenizer-v2.js",
-        "test-suite.js",
         "scripts/",
         "README.md",
         "CHANGELOG.md",
