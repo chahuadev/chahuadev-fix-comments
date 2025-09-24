@@ -779,7 +779,7 @@ class AdvancedChatInterface {
                 this.state.typingUsers = this.state.typingUsers.filter(u => u.id !== userId);
                 this.userTypingTimeouts.delete(userId);
                 this.notifyStateChange();
-            }, 3000);
+            }, 3000) as unknown as number;
 
             this.userTypingTimeouts.set(userId, timeout);
         } else {
