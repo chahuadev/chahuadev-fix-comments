@@ -1,87 +1,90 @@
-# Universal Comment Fixer v2.0.0-beta.1
+# Universal Comm## Quick Start | การเริ่มใช้งาน---
 
-**Professional Comment Standardization Tool for JavaScript/TypeScript Projects with Revolutionary AI-Powered Code Analysis**
+## Features | ฟีเจอร์**English**: Ready to use in one command!  
+**ไทย**: พร้อมใช้งานใน 1 คำสั่ง!
 
-**เครื่องมือมาตรฐานคอมเมนต์มืออาชีพสำหรับโปรเจกต์ JavaScript/TypeScript พร้อมการวิเคราะห์โค้ดด้วย AI ที่ปฏิวัติวงการ**
+```bash
+# Recommended: Add missing comments with backup
+# แนะนำ: เพิ่มคอมเมนต์ที่ขาดหายพร้อมสำรองข้อมูล
+npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
+
+# Preview changes first (Safe!)
+# ดูผลลัพธ์ก่อน (ปลอดภัย!)
+npx @chahuadev/fix-comments@beta . --dry-run --verbose
+```
+
+**No installation needed! | ไม่ต้องติดตั้ง!**-beta.2
+# เครื่องมือแก้ไขคอมเมนต์แบบสากล v2.0.0-beta.2
+
+**Professional Comment Standardization Tool for JavaScript/TypeScript Projects**  
+**เครื่องมือมาตรฐานคอมเมนต์มืออาชีพสำหรับโปรเจกต์ JavaScript/TypeScript**
 
 <div align="center">
 
-[![npm version](https://img.shields.io/badge/npm-v2.0.0--beta.1-blue.svg?style=flat-square)](https://www.npmjs.com/package/@chahuadev/fix-comments)
-[![license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/blob/main/LICENSE)
+[![npm version](https://img.shields.io/badge/npm-v2.0.0--beta.2-blue.svg?style=flat-square)](https://www.npmjs.com/package/@chahuadev/fix-comments)
+[![license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 [![beta status](https://img.shields.io/badge/status-BETA-orange.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/releases)
-
-[![security](https://img.shields.io/badge/security-hardened-green.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/blob/main/SECURITY.md)
-[![typescript](https://img.shields.io/badge/typescript-advanced_support-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
-[![ci/cd](https://img.shields.io/badge/ci%2Fcd-github_actions-brightgreen.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/actions)
 
 </div>
 
 ---
 
-##  QUICK START - เริ่มใช้งานทันที
+##  Quick Start | การเริ่มใช้งาน
 
-**Ready to use in one command! - พร้อมใช้งานใน 1 คำสั่ง!**
+**English**: Ready to use in one command!  
+**ไทย**: พร้อมใช้งานใน 1 คำสั่ง!
 
 ```bash
-#  PRODUCTION-READY COMMAND (Recommended!)
+# Recommended: Add missing comments with backup
+# แนะนำ: เพิ่มคอมเมนต์ที่ขาดหายพร้อมสำรองข้อมูล
 npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
 
-#  Preview changes first (Safe!)
+# Preview changes first (Safe!)
+# ดูผลลัพธ์ก่อน (ปลอดภัย!)
 npx @chahuadev/fix-comments@beta . --dry-run --verbose
 ```
 
-** No installation needed! Works immediately anywhere!**
-** ไม่ต้องติดตั้ง! ใช้งานได้ทันทีทุกที่!**
+* No installation needed! |  ไม่ต้องติดตั้ง!**
 
 ---
 
-## BETA RELEASE NOTICE - ประกาศเวอร์ชัน Beta
+##  Features | ฟีเจอร์
 
-**Welcome to the Revolutionary AI-Powered Comment Analysis Beta!**
-**ยินดีต้อนรับสู่เวอร์ชัน Beta การวิเคราะห์คอมเมนต์ด้วย AI ที่ปฏิวัติวงการ!**
+| English | ไทย |
+|---------|-----|
+| **Smart Comment Detection** | **ตรวจจับคอมเมนต์อัจฉริยะ** |
+| Convert `/* */` to `//` automatically | แปลง `/* */` เป็น `//` อัตโนมัติ |
+| **Bilingual Support** | **รองรับ 2 ภาษา** |
+| Add Thai/English comments | เพิ่มคอมเมนต์ไทย/อังกฤษ |
+| **AI-Friendly Format** | **รูปแบบที่เป็นมิตรกับ AI** |
+| Generate compatible comments for AI | สร้างคอมเมนต์ที่เข้ากันได้กับ AI |
+| **Safe Processing** | **ประมวลผลปลอดภัย** |
+| Automatic backup & dry-run mode | สำรองข้อมูลอัตโนมัติและโหมดดูผลลัพธ์ |
 
-This Beta release introduces groundbreaking features that transform how we analyze and document code.
-เวอร์ชัน Beta นี้นำเสนอฟีเจอร์ปฏิวัติที่เปลี่ยนแปลงวิธีการวิเคราะห์และจัดทำเอกสารโค้ด
+## Key Features v2.0.0-beta.2 | ฟีเจอร์หลัก v2.0.0-beta.2
 
-**Join our Beta community and help shape the future of code documentation!**
-**เข้าร่วมชุมชน Beta และช่วยสร้างอนาคตของการจัดทำเอกสารโค้ด!**
+| English | ไทย |
+|---------|-----|
+| **Advanced Pattern Recognition** | **ระบบรู้จำรูปแบบขั้นสูง** |
+| High accuracy function detection | ตรวจจับฟังก์ชันได้แม่นยำสูง |
+| TypeScript & JSX support | รองรับ TypeScript และ JSX |
+| **Professional Logging** | **ระบบบันทึกมืออาชีพ** |
+| Organized by project & timestamp | จัดระเบียบตามโปรเจกต์และเวลา |
+| Performance metrics included | รวมตัวชี้วัดประสิทธิภาพ |
+| **Smart Learning** | **การเรียนรู้อัจฉริยะ** |
+| AI context understanding | เข้าใจบริบทด้วย AI |
+| Bilingual comment generation | สร้างคอมเมนต์สองภาษา |
 
-### Revolutionary Features in v2.0.0-beta.1
+## Beta Testing Guidelines | แนวทางการทดสอบ Beta
 
-**Advanced Pattern Recognition Engine**
-- **106.9% Detection Success Rate**: Breakthrough pattern recognition technology
-- **50+ Specialized Patterns**: TypeScript interfaces, React components, Modern ES6+, Algorithm patterns
-- **Enhanced Context Detection v2.0**: 60.6% reduction in inappropriate context errors
-- **Zero "Unknown Pattern" Issues**: Complete elimination of unrecognized patterns
-
-**Professional Logging System**
-- **Session-Based Organization**: Logs organized by project and timestamp in `/logs/[project]/[datetime]/`
-- **Comprehensive Diagnostics**: Performance metrics, error analysis, and improvement recommendations
-- **Real-Time Monitoring**: Track processing progress with detailed statistics
-
-**Smart Learning & AI Integration**
-- **AI Intent Understanding Engine**: Analyzes code purpose and generates contextual comments
-- **Enhanced TypeScript Support**: Full support for interfaces, type aliases, abstract classes, enums
-- **Bilingual Comment Generation**: Intelligent Thai/English comment creation
-- **Code Health Diagnostics**: Pre-processing syntax validation and complexity assessment
-
-### Known Issues in Beta (Help Us Improve!)
-
-**Parser Context Detection**
-- May occasionally misinterpret complex TypeScript interface declarations
-- Some comments might be placed inappropriately in complex JSX component structures
-- Arrow function patterns with complex destructuring may need manual review
-
-**Advanced TypeScript Constructs**
-- Generic type constraints with multiple inheritance may require additional pattern recognition
-- Conditional types and mapped types need expanded detection patterns
-- Template literal types may not be fully recognized
-
-**Community Testing Guidelines**
-- Always use `--dry-run` first to preview changes
-- Use `--backup` flag for important projects
-- Report issues with minimal code samples at: https://github.com/chahuadev/chahuadev-fix-comments/issues
-- Join our Beta testing community for priority support
+| English | ไทย |
+|---------|-----|
+| **Safety First** | **ความปลอดภัยเป็นหลัก** |
+| Always use `--dry-run` first | ใช้ `--dry-run` ก่อนเสมอ |
+| Use `--backup` for important files | ใช้ `--backup` สำหรับไฟล์สำคัญ |
+| **Report Issues** | **รายงานปัญหา** |
+| GitHub Issues with code samples | GitHub Issues พร้อมตัวอย่างโค้ด |
+| Include expected vs actual behavior | ระบุพฤติกรรมที่คาดหวัง vs จริง |
 
 ### Beta Performance Metrics
 - **Processing Speed**: 1.56 seconds for 18 files (vs 3.2s in v1.x)
@@ -178,23 +181,23 @@ SECURITY ALERT: Binary execution attempt blocked
 ### Method 1: Beta Testing (Recommended)
 ```bash
 # Install Beta version for testing
-npm install @chahuadev/fix-comments@2.0.0-beta.1 --save-dev
+npm install @chahuadev/fix-comments@2.0.0-beta.2 --save-dev
 
 # Or use NPX for instant testing
-npx @chahuadev/fix-comments@2.0.0-beta.1 --dry-run
+npx @chahuadev/fix-comments@2.0.0-beta.2 --dry-run
 
 # Always test with dry-run first (Beta safety)
-npx @chahuadev/fix-comments@2.0.0-beta.1 . --dry-run --verbose
+npx @chahuadev/fix-comments@2.0.0-beta.2 . --dry-run --verbose
 ```
 
 ### Method 2: Global Beta Installation
 ```bash
 # Install Beta globally for system-wide testing
-npm install -g @chahuadev/fix-comments@2.0.0-beta.1
+npm install -g @chahuadev/fix-comments@2.0.0-beta.2
 
 # Test installation
 fix-comments --version
-# Should display: Universal Code Magician v2.0.0-beta.1
+# Should display: Universal Code Magician v2.0.0-beta.2
 
 # Uninstall when switching to stable
 npm uninstall -g @chahuadev/fix-comments
@@ -244,84 +247,43 @@ rm -rf ~/.npm/_npx
 
 ## Quick Start - เริ่มต้นใช้งาน
 
-### Basic Usage - การใช้งานพื้นฐาน
+### Basic Usage | การใช้งานพื้นฐาน
+
+| Command | Description | คำอธิบาย |
+|---------|-------------|----------|
+| `npx @chahuadev/fix-comments@beta . --add-missing --backup` | Process current directory with backup | ประมวลผลโฟลเดอร์ปัจจุบันพร้อมสำรองข้อมูล |
+| `npx @chahuadev/fix-comments@beta . --dry-run` | Preview changes only | ดูผลลัพธ์เท่านั้น |
+| `npx @chahuadev/fix-comments@beta myfile.js --backup` | Process single file | ประมวลผลไฟล์เดียว |
+
+### Simple Examples | ตัวอย่างง่ายๆ
+
 ```bash
-# RECOMMENDED: Add missing comments with backup (Production-Ready Command!)
-npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
+# English: Add comments to current folder with backup
+# ไทย: เพิ่มคอมเมนต์ให้โฟลเดอร์ปัจจุบันพร้อมสำรองข้อมูล
+npx @chahuadev/fix-comments@beta . --add-missing --backup
 
-# Preview changes (recommended first step)
-npx @chahuadev/fix-comments@beta . --dry-run --verbose
-
-# Fix current directory with backup
-npx @chahuadev/fix-comments@beta . --backup --verbose
-
-# Fix specific project
-npx @chahuadev/fix-comments@beta /path/to/project --add-missing --backup --verbose
-
-# Fix single file
-npx @chahuadev/fix-comments@beta myfile.js --add-missing --dry-run --verbose
+# English: Check what will be changed first  
+# ไทย: ตรวจสอบสิ่งที่จะเปลี่ยนแปลงก่อน
+npx @chahuadev/fix-comments@beta . --dry-run
 ```
 
-### Direct Usage (After Installation)
-```bash
-# After global or project installation
-fix-comments . --add-missing --backup --verbose
-fix-comments ./src --add-missing --backup --verbose
-fix-comments myfile.js --add-missing --verbose --dry-run
+## Command Options | ตัวเลือกคำสั่ง
 
-# Or call directly with node (in tool folder)
-node fix-comments.js --help
-node fix-comments.js . --add-missing --backup --verbose
-```
+### Essential Options | ตัวเลือกจำเป็น
+| Option | Description | คำอธิบาย |
+|---------|-------------|----------|
+| `--add-missing` | Add comments to functions | เพิ่มคอมเมนต์ให้ฟังก์ชัน |
+| `--backup` | Create backup before changes | สำรองข้อมูลก่อนเปลี่ยนแปลง |
+| `--dry-run` | Preview changes only | ดูผลลัพธ์เท่านั้น |
+| `--verbose` | Show detailed information | แสดงรายละเอียด |
+| `--help` | Show help message | แสดงคำแนะนำ |
 
-### Advanced Options
-```bash
-# PRODUCTION COMMAND: Complete processing with all features
-npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose --recursive
-
-# Code formatting with comment addition
-npx @chahuadev/fix-comments@beta . --format --add-missing --backup --verbose
-
-# Specific file extensions only
-npx @chahuadev/fix-comments@beta . --ext .js,.ts,.jsx --add-missing --backup
-
-# Custom target with comprehensive dry-run
-npx @chahuadev/fix-comments@beta ./src --add-missing --dry-run --verbose --recursive
-```
-
-## Command Options - ตัวเลือกคำสั่ง (Complete Reference)
-
-### Core Options
-| Option | Short | Description | Beta Notes |
-|---------|---------|----------|-----------|
-| `--dry-run` | `-d` | Preview changes without modifying files | **Required for Beta testing** |
-| `--verbose` | `-v` | Show detailed processing information | Enhanced diagnostics in Beta |
-| `--backup` | `-b` | Create backup before making changes | **Highly recommended for Beta** |
-| `--help` | `-h` | Show help message and Beta guidelines | |
-| `--version` | | Show version (should show v2.0.0-beta.1) | |
-
-### File Processing Options
-| Option | Short | Description | Example |
-|---------|---------|----------|---------|
-| `--recursive` | `-r` | Process all files in subdirectories | `npx @chahuadev/fix-comments@beta ./src --add-missing --backup -r` |
-| `--ext <list>` | | Specify file extensions (comma-separated) | `--ext .js,.ts,.jsx,.tsx` |
-| `--add-missing` | | Add comments to functions without comments | Enhanced detection in Beta |
-| `--remove-comments` | | Remove existing comments from code | |
-| `--organize-zones` | | Organize code into logical zones | |
-
-### Advanced Beta Features
-| Option | Short | Description | Beta Enhancement |
-|---------|---------|----------|----------------|
-| `--ai-mode` | | AI-friendly comment format generation | Enhanced context awareness |
-| `--smart-learning` | `-s` | Enable AI Intent Understanding Engine | **New in Beta** |
-| `--format` | | Code beautification with health check | **New formatting engine** |
-
-### Security & Performance Options
-| Option | Description | Security Level |
-|---------|----------|----------------|
-| `--max-file-size` | Set maximum file size limit (default: 10MB) | Enterprise |
-| `--timeout` | Set processing timeout (default: 30s) | DoS Protection |
-| `--skip-binary` | Skip binary and executable files | Malware Protection |
+### File Processing | การประมวลผลไฟล์
+| Option | Description | คำอธิบาย |
+|---------|-------------|----------|
+| `--recursive` | Process subdirectories | ประมวลผลโฟลเดอร์ย่อย |
+| `--ext .js,.ts` | Specific file types | ไฟล์ประเภทเฉพาะ |
+| `--format` | Code beautification | ปรับรูปแบบโค้ด |
 
 ## Features - ฟีเจอร์
 
@@ -409,33 +371,23 @@ async function getUserData(userId) {
 }
 ```
 
-### Node.js Library Usage
-```javascript
-const commentFixer = require('@chahuadev/fix-comments');
+## Safety Guidelines | แนวทางความปลอดภัย
 
-// Analyze single file
-const result = commentFixer.analyzeFile('myfile.js', true); // dry-run
-console.log(`Found ${result.commentCount} comment blocks`);
+### Step by Step | ขั้นตอนการใช้งาน
 
-// Process directory
-const stats = commentFixer.processDirectory('./src', false, true, ['.js', '.ts']);
-console.log(`Processed ${stats.totalFiles} files`);
+| Step | English | ไทย |
+|------|---------|-----|
+| 1 | Always preview first | ดูผลลัพธ์ก่อนเสมอ |
+| 2 | Use backup for important files | ใช้สำรองข้อมูลสำหรับไฟล์สำคัญ |
+| 3 | Test results before committing | ทดสอบผลลัพธ์ก่อน commit |
+
+```bash
+# Step 1: Preview | ขั้นตอนที่ 1: ดูผลลัพธ์
+npx @chahuadev/fix-comments@beta . --dry-run
+
+# Step 2: Apply with backup | ขั้นตอนที่ 2: ประยุกต์ใช้พร้อมสำรองข้อมูล  
+npx @chahuadev/fix-comments@beta . --add-missing --backup
 ```
-
-## Beta Testing Guidelines - แนวทางการทดสอบ Beta
-
-### IMPORTANT BETA WARNINGS - คำเตือนสำคัญสำหรับ Beta
-**Critical Safety Measures - มาตรการความปลอดภัยที่สำคัญ**
-
-1. **ALWAYS USE --dry-run FIRST - ใช้ --dry-run ก่อนเสมอ**
-   ```bash
-   # CORRECT: Preview first
-   fix-comments --dry-run
-   # Then if satisfied:
-   fix-comments --backup
-   ```
-
-2. **BACKUP EVERYTHING - สำรองข้อมูลทุกอย่าง**
    ```bash
    # CRITICAL: Always use backup flag
    fix-comments ./src --backup --dry-run
@@ -475,10 +427,10 @@ fix-comments --dry-run --verbose > beta-report.txt
 
 ## Performance Metrics - ตัวชี้วัดประสิทธิภาพ
 
-### Beta v2.0.0-beta.1 Performance
+### Beta v2.0.0-beta.2 Performance
 **Production Testing Results - ผลการทดสอบการใช้งานจริง**
 
-| Metric | v1.x Baseline | v2.0.0-beta.1 | Improvement |
+| Metric | v1.x Baseline | v2.0.0-beta.2 | Improvement |
 |--------|---------------|---------------|-------------|
 | Processing Speed | 3.2s/18 files | 1.56s/18 files | **51% faster** |
 | Detection Rate | 85.2% | 106.9% | **25% better** |
@@ -518,7 +470,7 @@ Create a configuration file in your project root:
 
 ```json
 {
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "defaultOptions": {
     "backup": true,
     "verbose": false,

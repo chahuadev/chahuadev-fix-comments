@@ -8087,7 +8087,7 @@ function organizeCodeByZones(content) {
 function showHelp() {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                   Universal Code Magician v2.0.0-beta.1                       ║
+║                   Universal Code Magician v2.0.0-beta.2                       ║
 ║           Professional Comment & Formatting Standardization Tool               ║
 ║                         BETA RELEASE - Community Testing                     ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -8162,7 +8162,7 @@ For documentation: https://github.com/chahuadev/chahuadev-fix-comments
 // Show version/แสดงเวอร์ชัน
 // ======================================================================
 function showVersion() {
-    console.log('Universal Code Magician v2.0.0-beta.1');
+    console.log('Universal Code Magician v2.0.0-beta.2');
     console.log('Professional Comment & Formatting Standardization Tool');
     console.log(' BETA RELEASE - Ready for Community Testing!');
     console.log('Copyright (c) 2025 Chahua Development Co., Ltd.');
@@ -8856,7 +8856,7 @@ function main() {
     }
 
     // เริ่มประมวลผล
-    console.log(` Starting Code Magician v2.0.0-beta.1...`);
+    console.log(` Starting Code Magician v2.0.0-beta.2...`);
     console.log(` Beta Release - Help us improve with your feedback!`);
     console.log(`Target: ${target}`);
     console.log(`Mode: ${options.dryRun ? 'DRY RUN' : 'LIVE'}`);

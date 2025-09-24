@@ -1,6 +1,6 @@
 {
     "name": "@chahuadev/fix-comments",
-    "version": "2.0.0-beta.1",
+    "version": "2.0.0-beta.2",
     "description": "Professional Comment Standardization Tool v2.0.0 Beta - Advanced Pattern Recognition and Enhanced Context Detection for JavaScript/TypeScript projects with Smart Learning capabilities and enterprise security",
     "main": "fix-comments.js",
     "bin": {
