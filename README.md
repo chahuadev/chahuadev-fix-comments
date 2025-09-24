@@ -18,20 +18,20 @@
 
 ---
 
-## 🚀 QUICK START - เริ่มใช้งานทันที
+##  QUICK START - เริ่มใช้งานทันที
 
 **Ready to use in one command! - พร้อมใช้งานใน 1 คำสั่ง!**
 
 ```bash
-# 🎯 PRODUCTION-READY COMMAND (Recommended!)
+#  PRODUCTION-READY COMMAND (Recommended!)
 npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
 
-# 👀 Preview changes first (Safe!)
+#  Preview changes first (Safe!)
 npx @chahuadev/fix-comments@beta . --dry-run --verbose
 ```
 
-**✅ No installation needed! Works immediately anywhere!**
-**✅ ไม่ต้องติดตั้ง! ใช้งานได้ทันทีทุกที่!**
+** No installation needed! Works immediately anywhere!**
+** ไม่ต้องติดตั้ง! ใช้งานได้ทันทีทุกที่!**
 
 ---
 
