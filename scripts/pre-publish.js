@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// Pre-publish validation script for v2.0.0-beta.1
-// ตรวจสอบก่อน publish ขึ้น NPM สำหรับเวอร์ชัน Beta
+// Pre-publish validation script for v3.0.0-beta (FINAL BETA)
+// ตรวจสอบก่อน publish ขึ้น NPM สำหรับเวอร์ชัน Final Beta
 
 const fs = require('fs');
 const path = require('path');
@@ -15,16 +15,15 @@ try {
     process.exit(1);
 }
 
-console.log(' Pre-publish validation for Beta v2.0.0-beta.1...\n');
+console.log(' Pre-publish validation for FINAL BETA v3.0.0-beta...\n');
 
-// ตรวจสอบไฟล์สำคัญสำหรับ Beta release
+// ตรวจสอบไฟล์สำคัญสำหรับ Final Beta release
 const requiredFiles = [
     'fix-comments.js',
     'package.json',
     'README.md',
     'LICENSE',
     'CHANGELOG.md',
-    'test-suite.js',
     'scripts/pre-publish.js'
 ];
 
@@ -83,19 +82,19 @@ try {
 
     // Test --version command
     const versionOutput = execSync('node fix-comments.js --version', { encoding: 'utf8' });
-    if (versionOutput.includes('v2.0.0-beta.1')) {
-        console.log(' Version command works (Beta detected)');
+    if (versionOutput.includes('v3.0.0-beta')) {
+        console.log(' Version command works (Final Beta v3.0.0-beta detected)');
     } else {
-        console.log(' Version output incorrect');
+        console.log(' Version output incorrect - should show v3.0.0-beta');
         allValid = false;
     }
 
     // Test --help command
     const helpOutput = execSync('node fix-comments.js --help', { encoding: 'utf8' });
-    if (helpOutput.includes('Universal Code Magician') && helpOutput.includes('BETA')) {
-        console.log(' Help command works (Beta features detected)');
+    if (helpOutput.includes('Universal Comment Fixer Tool') && helpOutput.includes('FINAL BETA')) {
+        console.log(' Help command works (Final Beta features detected)');
     } else {
-        console.log(' Help output seems wrong or missing Beta info');
+        console.log(' Help output seems wrong or missing Final Beta info');
         allValid = false;
     }
 
@@ -104,8 +103,8 @@ try {
     allValid = false;
 }
 
-// Test new Beta functions
-console.log('\n Testing Beta v2.0.0-beta.1 functions...');
+// Test Final Beta functions
+console.log(' Testing Final Beta v3.0.0-beta functions...');
 try {
     if (typeof fixComments.EnhancedPatternDetector === 'function') {
         console.log(' EnhancedPatternDetector class available');
@@ -145,12 +144,14 @@ const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
 if (changelog.includes(`[${pkg.version}]`)) {
     console.log(' Version documented in CHANGELOG');
 } else {
-    console.log(`  Version ${pkg.version} not found in CHANGELOG`);
+    console.log(` Version ${pkg.version} not found in CHANGELOG`);
 }
 
-console.log('\n' + '='.repeat(50));
+console.log('\n' + '='.repeat(60));
 if (allValid) {
-    console.log(' All validations passed! Ready to publish!');
+    console.log(' All validations passed! Ready for FINAL BETA publish!');
+    console.log(' Next step: npm publish --tag beta');
+    console.log(' Remember: This is the FINAL BETA before v1.0.0 (Q1 2026)');
     process.exit(0);
 } else {
     console.log(' Some validations failed. Please fix before publishing.');

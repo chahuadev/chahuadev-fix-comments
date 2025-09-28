@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 // ======================================================================
-// Universal Comment Fixer v2.0.0/เครื่องมือแก้ไขคอมเมนต์สากล v2.0.0
+// Universal Comment Fixer 3.0.0-beta/เครื่องมือแก้ไขคอมเมนต์สากล v3.0.0-beta
 // ======================================================================
 
 // @author บริษัท ชาหัว ดีเวลลอปเมนต์ จำกัด (Chahua Development Co., Ltd.)
-// @version 2.0.0
+// @version v3.0.0-beta
 // @description Professional comment standardization tool with AI-friendly format
 // @security_features Path Traversal Protection, File Size Limits, Symlink Protection
 
@@ -3933,8 +3933,8 @@ class SmartFileAnalyzer {
     // ===================================================================
 
     // วิเคราะห์ความตั้งใจและความหมายของโค้ด
-// Analyze intent and semantic meaning of code
-// Evolution: From "Grammar Expert" to "Literary Critic"
+    // Analyze intent and semantic meaning of code
+    // Evolution: From "Grammar Expert" to "Literary Critic"
     analyzeCodeIntent() {
         try {
             console.log('\n AI Intent Understanding Engine: เริ่มการวิเคราะห์ความตั้งใจของโค้ด...');
@@ -6437,9 +6437,9 @@ class CommentGenerator {
     // ===================================================================
 
     // วิเคราะห์บริบทของ method definition เพื่อตัดสินใจว่าควรใส่คอมเมนต์หรือไม่
-// @param {Array} lines - บรรทัดทั้งหมดในไฟล์
-// @param {number} lineIndex - index ของบรรทัดปัจจุบัน
-// @returns {Object} ผลการวิเคราะห์บริบท
+    // @param {Array} lines - บรรทัดทั้งหมดในไฟล์
+    // @param {number} lineIndex - index ของบรรทัดปัจจุบัน
+    // @returns {Object} ผลการวิเคราะห์บริบท
     analyzeMethodContext(lines, lineIndex) {
         const currentLine = lines[lineIndex].trim();
 
@@ -6500,9 +6500,9 @@ class CommentGenerator {
     }
 
     // วิเคราะห์ว่าวงเล็บปิด }; เป็นการจบ declaration หรือไม่
-// @param {Array} lines - บรรทัดทั้งหมดในไฟล์
-// @param {number} lineIndex - index ของบรรทัดปัจจุบัน
-// @returns {Object} ผลการวิเคราะห์
+    // @param {Array} lines - บรรทัดทั้งหมดในไฟล์
+    // @param {number} lineIndex - index ของบรรทัดปัจจุบัน
+    // @returns {Object} ผลการวิเคราะห์
     analyzeDeclarationEnd(lines, lineIndex) {
         // Look backwards to find what declaration this closing brace belongs to
         let braceLevel = 1; // Start with 1 since we're at a closing brace
@@ -8087,9 +8087,9 @@ function organizeCodeByZones(content) {
 function showHelp() {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                   Universal Code Magician v2.0.0-beta.2                       ║
-║           Professional Comment & Formatting Standardization Tool               ║
-║                         BETA RELEASE - Community Testing                     ║
+║                 Universal Comment Fixer Tool v3.0.0-beta                   ║
+║          Professional Comment Standardization for JS/TS Projects            ║
+║               FINAL BETA - No more beta updates after this                ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
 
 USAGE:
@@ -8141,20 +8141,23 @@ SECURITY WARNINGS:
     Tool has built-in protection but exercise caution
     Review changes before committing to version control
 
- BETA RELEASE NOTES:
-  Known Issues (Help us fix these!):
-  • Complex TypeScript interfaces/abstract classes may not be detected
-  • Some comments may be placed inappropriately in complex JSX structures
-  • Advanced TypeScript constructs need expanded pattern recognition
+ FINAL BETA RELEASE NOTES:
+   This is the LAST BETA VERSION - Next release: v1.0.0 Production Ready (Q1 2026)
+   Current users can continue using this version normally
+   No more beta version updates will be released
   
-  Beta Testing Guidelines:
+  Known Issues (Final Beta):
+  • Complex TypeScript interface chains may need manual review
+  • Arrow functions with complex destructuring might generate warnings
+  • JSX components with conditional rendering require additional validation
+  
+  Final Beta Guidelines:
   • Always use --backup flag for safety
   • Try --dry-run first to preview changes
   • Report issues with minimal reproducible code samples
   • Check diagnostic.log for detailed analysis
   
-  Community Feedback: https://github.com/chahuadev/chahuadev-fix-comments/issues
-For documentation: https://github.com/chahuadev/chahuadev-fix-comments
+  Issues & Documentation: https://github.com/chahuadev/chahuadev-fix-comments
 `);
 }
 
@@ -8162,17 +8165,20 @@ For documentation: https://github.com/chahuadev/chahuadev-fix-comments
 // Show version/แสดงเวอร์ชัน
 // ======================================================================
 function showVersion() {
-    console.log('Universal Code Magician v2.0.0-beta.2');
-    console.log('Professional Comment & Formatting Standardization Tool');
-    console.log(' BETA RELEASE - Ready for Community Testing!');
+    console.log('Universal Comment Fixer Tool v3.0.0-beta');
+    console.log('Professional Comment Standardization Tool for JavaScript/TypeScript Projects');
+    console.log(' FINAL BETA RELEASE - No more beta updates after this version');
     console.log('Copyright (c) 2025 Chahua Development Co., Ltd.');
     console.log('');
-    console.log(' Known Issues in Beta:');
-    console.log('  • Parser may misinterpret complex TypeScript interfaces/abstract classes');
-    console.log('  • Some comments might be placed inappropriately in complex JSX/arrow functions');
-    console.log('  • Advanced TypeScript constructs need more pattern recognition');
+    console.log(' Next Release: v1.0.0 Production Ready (Q1 2026)');
+    console.log(' Current users can continue using this version normally');
     console.log('');
-    console.log(' Help us improve: Report issues with code samples at:');
+    console.log(' Known Issues in Final Beta:');
+    console.log('  • Complex TypeScript interface chains may need manual review');
+    console.log('  • Arrow functions with complex destructuring might generate warnings');
+    console.log('  • JSX components with conditional rendering require additional validation');
+    console.log('');
+    console.log(' Report issues with code samples at:');
     console.log('   https://github.com/chahuadev/chahuadev-fix-comments/issues');
 }
 
@@ -8856,7 +8862,7 @@ function main() {
     }
 
     // เริ่มประมวลผล
-    console.log(` Starting Code Magician v2.0.0-beta.2...`);
+    console.log(` Starting Code Magician v3.0.0-beta...`);
     console.log(` Beta Release - Help us improve with your feedback!`);
     console.log(`Target: ${target}`);
     console.log(`Mode: ${options.dryRun ? 'DRY RUN' : 'LIVE'}`);
