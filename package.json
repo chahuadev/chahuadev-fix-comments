@@ -54,7 +54,7 @@
     },
     "license": "MIT",
     "engines": {
-        "node": ">=12.0.0"
+        "node": ">=22.0.0"
     },
     "files": [
         "fix-comments.js",

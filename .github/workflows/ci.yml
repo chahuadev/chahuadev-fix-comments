@@ -14,7 +14,7 @@ on:
 
 # Environment variables
 env:
-  NODE_VERSION_MATRIX: '[18, 20, 22]'
+  NODE_VERSION_MATRIX: '[22]'
   ARTIFACT_RETENTION_DAYS: 30
   PACKAGE_VERSION: '2.0.0-beta.1'
   BETA_TESTING: true
@@ -38,8 +38,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: package-lock.json
     
     - name: Install Dependencies
       run: npm ci --prefer-offline --no-audit
@@ -81,7 +79,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18, 20, 22]
+        node-version: [22]
         exclude:
           # Skip some combinations to reduce CI time
           - os: macos-latest
@@ -95,7 +93,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
     
     - name: Install Dependencies
       run: npm ci --prefer-offline
@@ -153,7 +150,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
     
     - name: Install Dependencies
       run: npm ci
@@ -214,7 +210,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
     
     - name: Install Dependencies
       run: npm ci
@@ -266,7 +261,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
     
     - name: Install Dependencies

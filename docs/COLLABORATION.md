@@ -64,7 +64,7 @@ npm test
 ```
 
 #### 2. Development Environment
-- **Node.js**: Version 16 or higher
+- **Node.js**: Version 22 or higher
 - **Git**: Latest stable version
 - **Editor**: Any editor with JavaScript/TypeScript support
 - **Optional**: VS Code for enhanced development experience

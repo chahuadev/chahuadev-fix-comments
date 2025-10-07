@@ -163,7 +163,7 @@ We are committed to creating high-quality, secure, and maintainable software sol
 - **Status**: Beta Complete - Preparing for Stable Release
 - **Maintenance**: Actively Maintained
 - **Next Release**: 1.0.0 (Q1 2026)
-- **Node.js**: >=16.0.0
+- **Node.js**: >=22.0.0
 
 ---
 
@@ -506,7 +506,7 @@ fix-comments --dry-run --verbose > issue-report.txt
 **Testing Environment**
 - Test Project: 18 JavaScript/TypeScript files, 15,000+ lines
 - Hardware: Intel i7, 16GB RAM, NVMe SSD
-- OS: Windows 11, Node.js v20.x
+- OS: Windows 11, Node.js v22.x
 - Metrics: Average of 15 test runs
 
 ### Performance Characteristics
@@ -648,7 +648,7 @@ npx @chahuadev/fix-comments@beta ./chahua-forum/assets/js/forum-ui.js --backup
 ## Development Setup
 
 ### Prerequisites
-- Node.js 22.18.0 or higher
+- Node.js 22.0.0 or higher
 - npm 6.0.0 or higher
 - Git
 

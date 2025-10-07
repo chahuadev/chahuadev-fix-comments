@@ -26,7 +26,7 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 
 ### Prerequisites - ข้อกำหนดเบื้องต้น
 
-- **Node.js**: Version 16.0.0 or higher
+- **Node.js**: Version 22.0.0 or higher
 - **npm**: Version 7.0.0 or higher
 - **Git**: Latest stable version
 - **Text Editor**: VS Code recommended with extensions:

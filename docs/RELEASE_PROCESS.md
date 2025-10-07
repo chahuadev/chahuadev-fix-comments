@@ -220,7 +220,7 @@ gh release create v1.0.0 --title "Version 1.0.0 - Stable Release" --notes-file R
 - [ ] Documentation accuracy confirmed
 
 #### Compatibility Testing
-- [ ] Node.js version compatibility (16, 18, 20, 22)
+- [ ] Node.js version compatibility (22+)
 - [ ] Operating system compatibility (Windows, macOS, Linux)
 - [ ] Package manager compatibility (npm, yarn, pnpm)
 - [ ] JavaScript/TypeScript version compatibility
