@@ -89,16 +89,16 @@ jobs:
         node-version: ${{ matrix.node-version }}
     
     
-    - name: Create Test File
+    - name: Test with Real Test Files
       run: |
-        echo "// Test comment for CLI" > test-file.js
-        echo "function testFunction() { return true; }" >> test-file.js
+        echo "Testing entire test directory with all JS/TS files..."
+        node fix-comments.js test/ --dry-run --verbose
         
-    - name: Run CLI Test
-      run: |
-        echo "Testing CLI processing..."
-        node fix-comments.js test-file.js
-        echo "CLI test completed successfully"
+        echo "Testing specific complex files..."
+        node fix-comments.js test/crazy-messy-code.js --dry-run
+        node fix-comments.js test/brutal-ai-no-comments.js --dry-run --add-missing
+        
+        echo "Test completed - Check results above for comment processing"
     
     - name: Test Beta CLI Functionality
       run: |
@@ -118,16 +118,7 @@ jobs:
         node fix-comments.js --verbose --dry-run . || echo "Pattern Recognition test completed"
       shell: bash
     
-    # Upload test results and coverage (if available)
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ matrix.os }}-node${{ matrix.node-version }}
-        path: |
-          test-results/
-          coverage/
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+    # Test completed successfully
 
   # ══════════════════════════════════════════════════════════════════════
   # Job 3: Integration Tests
@@ -155,26 +146,23 @@ jobs:
         node fix-comments.js --version
         echo "CLI integration test completed"
     
-    - name: Test with Sample Projects
+    - name: Test with Real Test Files
       run: |
-        # Create test JavaScript files
-        mkdir -p test-samples
-        cat > test-samples/sample.js << 'EOF'
-        /**
-         * Test function for integration
-         */
-        function testFunction() {
-            console.log("Hello World");
-        }
-        EOF
+        echo "Testing with comprehensive test suite..."
         
-        # Test the tool
-        node fix-comments.js test-samples/sample.js --dry-run
+        # Test all files in test directory
+        node fix-comments.js test/ --dry-run --verbose
+        
+        # Test specific challenging files
+        echo "Testing brutal AI engine..."
+        node fix-comments.js test/brutal-ai-engine.js --dry-run --add-missing
+        
+        echo "Testing complex algorithms..."
+        node fix-comments.js test/advanced-algorithms.js --dry-run --format
     
-    - name: Cleanup Test Files
+    - name: Test Complete
       run: |
-        rm -rf test-samples/
-        rm -f *.tgz
+        echo "All tests completed successfully!"
 
   # ══════════════════════════════════════════════════════════════════════
   # Job 4: Performance Benchmarks
