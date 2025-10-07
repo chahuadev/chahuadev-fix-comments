@@ -1,7 +1,7 @@
 {
     "name": "@chahuadev/fix-comments",
-    "version": "3.0.0-beta",
-    "description": "Universal Comment Fixer Tool v3.0.0-beta (FINAL BETA) - Professional Comment Standardization for JavaScript/TypeScript projects with Advanced AI-Powered Intelligence and Enterprise Security. Next release: v1.0.0 Production Ready (Q1 2026)",
+    "version": "3.0.1-beta",
+    "description": "Universal Comment Fixer Tool v3.0.1-beta (FINAL BETA) - Professional Comment Standardization for JavaScript/TypeScript projects with Advanced AI-Powered Intelligence and Enterprise Security. Next release: v1.0.0 Production Ready (Q1 2026)",
     "main": "fix-comments.js",
     "bin": {
         "fix-comments": "fix-comments.js",

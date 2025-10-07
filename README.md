@@ -1,82 +1,173 @@
 
-# Universal Comment Fixer Tool v3.0.0-beta
+# Chahuadev Fix Comments Tool
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-3.0.1--beta-blue.svg)](https://github.com/chahuadev/chahuadev-fix-comments)
+[![npm](https://img.shields.io/badge/npm-@chahuadev%2Ffix--comments-brightgreen.svg)](https://www.npmjs.com/package/@chahuadev/fix-comments)
 
 **Professional Comment Standardization Tool for JavaScript/TypeScript Projects**
 
-<div align="center">
+A comprehensive CLI tool that intelligently adds, converts, and improves comments in JavaScript and TypeScript codebases with advanced AST-based analysis, bilingual support, and AI-friendly formatting.
 
-[![npm version](https://img.shields.io/badge/npm-v3.0.0--beta-blue.svg?style=flat-square)](https://www.npmjs.com/package/@chahuadev/fix-comments)
-[![license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
-[![beta status](https://img.shields.io/badge/status-FINAL_BETA-red.svg?style=flat-square)](https://github.com/chahuadev/chahuadev-fix-comments/releases)
+## Features
 
-</div>
+- **Smart Comment Detection** - AST-based analysis with intelligent comment generation
+- **Comment Style Conversion** - Convert `/* */` to `//` comments automatically
+- **Bilingual Support** - Add Thai/English comments intelligently
+- **AI-Friendly Format** - Generate compatible comments for AI tools
+- **Safe Processing** - Automatic backup and dry-run preview mode
+- **Performance Optimized** - Fast processing for large codebases with TypeScript support
 
-##  BETA DEVELOPMENT END NOTICE
+## Beta Development Status
 
-**v3.0.0-beta is the FINAL BETA VERSION**
+**v3.0.1-beta is the FINAL BETA VERSION**
 
--  **Current users can continue using this version normally**
--  **No more beta version updates will be released**
--  **Next release will be v1.0.0 (Production Ready)**
--  **Expected v1.0.0 release: Q1 2026**
+- **Current users can continue using this version normally**
+- **No more beta version updates will be released**
+- **Next release will be v1.0.0 (Production Ready)**
+- **Expected v1.0.0 release: Q1 2026**
 
 This beta version remains fully functional and safe to use, but future development will focus on the stable v1.0.0 release.
 
----
-
 ## Quick Start
 
-**Ready to use in one command!**
+### Installation
 
+#### NPX (Recommended)
 ```bash
-# Recommended: Add missing comments with backup
+# Always use beta version for latest features
+npx @chahuadev/fix-comments@beta
+```
+
+#### Global Installation
+```bash
+npm install -g @chahuadev/fix-comments@beta
+```
+
+### Usage
+
+#### Basic Usage
+```bash
+# Add missing comments with backup (Recommended)
 npx @chahuadev/fix-comments@beta . --add-missing --backup --verbose
 
 # Preview changes first (Safe!)
 npx @chahuadev/fix-comments@beta . --dry-run --verbose
+
+# Convert comment styles only
+npx @chahuadev/fix-comments@beta src/ --convert-style
 ```
 
-**No installation needed!**
+#### Advanced Options
+```bash
+# Bilingual comment generation
+npx @chahuadev/fix-comments@beta . --add-missing --bilingual --backup
+
+# AI-friendly format
+npx @chahuadev/fix-comments@beta . --ai-friendly --add-missing
+
+# Specific file types
+npx @chahuadev/fix-comments@beta . --extensions js,ts,jsx,tsx
+```
+
+##  Command Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--add-missing` | Add missing comments to functions | `false` |
+| `--convert-style` | Convert /* */ to // comments | `true` |
+| `--bilingual` | Add Thai/English comments | `false` |
+| `--ai-friendly` | Generate AI-compatible format | `false` |
+| `--backup` | Create backup before processing | `false` |
+| `--dry-run` | Preview changes without applying | `false` |
+| `--verbose` | Enable detailed logging | `false` |
+| `--extensions` | File extensions to process | `.js,.ts,.jsx,.tsx` |
+
+##  Supported Languages
+
+### Programming Languages
+- **JavaScript** (ES2022+) - Functions, classes, arrow functions
+- **TypeScript** (4.0+) - Type annotations, interfaces, generics
+- **JSX/TSX** (React 18+) - Components, hooks, props
+
+### Comment Formats
+- **JSDoc Standard** - Professional documentation format
+- **Bilingual Comments** - English/Thai dual language support
+- **AI-Friendly** - Optimized for AI code analysis tools
+
+##  Performance Metrics
+
+- **Processing Speed**: 0.89 seconds for 18 files (43% faster than v2.x)
+- **Detection Accuracy**: 98.7% success rate with refined algorithms
+- **Error Reduction**: 75% fewer inappropriate context errors
+- **Memory Usage**: Optimized for large codebases
+
+##  Documentation
+
+### Essential Documentation
+- **[Code of Conduct](docs/CODE_OF_CONDUCT.md)** - Community standards and behavior guidelines
+- **[Contributing Guidelines](docs/CONTRIBUTING.md)** - How to contribute to the project
+- **[Security Policy](docs/SECURITY.md)** - Security policies and vulnerability reporting
+
+### Development Documentation
+- **[API Reference](docs/API.md)** - Complete programming interface documentation
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - System design and architecture overview
+- **[Commit Guidelines](docs/COMMIT_GUIDELINES.md)** - Professional commit message standards
+
+### Project Management
+- **[Governance Model](docs/GOVERNANCE.md)** - Project leadership and decision-making
+- **[Collaboration Guidelines](docs/COLLABORATION.md)** - Open source collaboration practices
+- **[Release Process](docs/RELEASE_PROCESS.md)** - Release procedures and quality assurance
+
+##  Contributing
+
+We welcome contributions from the community! Please read our documentation before getting started:
+
+- **[Contributing Guidelines](docs/CONTRIBUTING.md)** - Complete contribution procedures
+- **[Commit Guidelines](docs/COMMIT_GUIDELINES.md)** - Professional commit message standards
+- **[Collaboration Guidelines](docs/COLLABORATION.md)** - Open source collaboration practices
+
+### Quick Contribution Steps
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes following our coding standards
+4. Run tests: `npm test`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+##  License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+##  About Chahua Development
+
+**บริษัท ชาหัว ดีเวลลอปเมนต์ จำกัด (Chahua Development Co., Ltd.)**
+
+We are committed to creating high-quality, secure, and maintainable software solutions. Our tools and standards reflect our dedication to excellence in software development.
+
+- **Website**: [Coming Soon]
+- **Email**: chahuadev@gmail.com
+- **Repository**: https://github.com/chahuadev/chahuadev-fix-comments.git
+
+##  Support
+
+- **Issues**: [GitHub Issues](https://github.com/chahuadev/chahuadev-fix-comments/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/chahuadev/chahuadev-fix-comments/discussions)
+- **Email**: chahuadev@gmail.com
+
+##  Project Status
+
+- **Version**: 3.0.1-beta (Final Beta)
+- **Status**: Beta Complete - Preparing for Stable Release
+- **Maintenance**: Actively Maintained
+- **Next Release**: 1.0.0 (Q1 2026)
+- **Node.js**: >=16.0.0
 
 ---
 
-## Features
-
-- **Smart Comment Detection**: Convert `/* */` to `//` automatically
-- **Bilingual Support**: Add Thai/English comments intelligently  
-- **AI-Friendly Format**: Generate compatible comments for AI tools
-- **Safe Processing**: Automatic backup & dry-run mode
-- **TypeScript Support**: Full compatibility with TS/TSX files
-- **Performance Optimized**: Fast processing for large codebases
-
-## Key Features v3.0.0-beta
-
-### Advanced Pattern Recognition
-- High accuracy function detection with improved algorithms
-- Full TypeScript & JSX support with enhanced parsing
-- Smart detection of React hooks and components
-
-### Professional Logging System
-- Organized logs by project & timestamp
-- Performance metrics and statistics included
-- Detailed error reporting and debugging information
-
-### AI-Powered Intelligence
-- Context-aware comment generation
-- Bilingual comment support (English/Thai)
-- Smart learning from existing code patterns
-
-## Final Beta Guidelines
-
-### Safety First
-- **Always use `--dry-run` first** to preview changes
-- **Use `--backup` for important files** to prevent data loss
-- **Test your code after processing** to ensure functionality
-
-### Performance Metrics (v3.0.0-beta)
-- **Processing Speed**: 0.89 seconds for 18 files (43% faster than v2.x)
-- **Detection Accuracy**: 98.7% success rate with refined algorithms  
-- **Error Reduction**: 75% fewer inappropriate context errors
+**Made with  by Chahua Development Co., Ltd.**
 - **Comments Added**: 300+ intelligent comments per typical project scan
 
 ### Issue Reporting
@@ -171,7 +262,7 @@ npx @chahuadev/fix-comments@beta . --dry-run --verbose
 ### Method 2: Project Installation
 ```bash
 # Install as dev dependency
-npm install @chahuadev/fix-comments@3.0.0-beta --save-dev
+npm install @chahuadev/fix-comments@3.0.1-beta --save-dev
 
 # Use in package.json scripts
 npm run fix-comments
@@ -183,11 +274,11 @@ npm uninstall @chahuadev/fix-comments
 ### Method 3: Global Installation
 ```bash
 # Install globally for system-wide access
-npm install -g @chahuadev/fix-comments@3.0.0-beta
+npm install -g @chahuadev/fix-comments@3.0.1-beta
 
 # Test installation
 fix-comments --version
-# Should display: Universal Comment Fixer v3.0.0-beta
+# Should display: Universal Comment Fixer v3.0.1-beta
 
 # Uninstall when ready for v1.0.0
 npm uninstall -g @chahuadev/fix-comments
@@ -376,7 +467,7 @@ cd test-project
 fix-comments . --backup
 ```
 
-### Known Beta Issues (v3.0.0-beta)
+### Known Beta Issues (v3.0.1-beta)
 
 **Parser Context Improvements Needed**
 - Complex TypeScript interface chains may need manual review
@@ -402,9 +493,9 @@ fix-comments --dry-run --verbose > issue-report.txt
 
 ## Performance Metrics
 
-### v3.0.0-beta Performance Results
+### v3.0.1-beta Performance Results
 
-| Metric | v2.x Baseline | v3.0.0-beta | Improvement |
+| Metric | v2.x Baseline | v3.0.1-beta | Improvement |
 |--------|---------------|-------------|-------------|
 | Processing Speed | 1.56s/18 files | 0.89s/18 files | **43% faster** |
 | Detection Accuracy | 106.9% | 98.7% | Refined algorithms |
@@ -444,7 +535,7 @@ Create a configuration file in your project root:
 
 ```json
 {
-  "version": "3.0.0-beta",
+  "version": "3.0.1-beta",
   "defaultOptions": {
     "backup": true,
     "verbose": false,
@@ -654,7 +745,7 @@ MIT License - See [LICENSE](LICENSE) for details
 
 **If you find this project useful, please give it a star!**
 
-[⭐ Star this project](https://github.com/chahuadev/chahuadev-fix-comments) | [🐛 Report Bug](https://github.com/chahuadev/chahuadev-fix-comments/issues) | [💡 Request Feature](https://github.com/chahuadev/chahuadev-fix-comments/issues)
+[ Star this project](https://github.com/chahuadev/chahuadev-fix-comments) | [ Report Bug](https://github.com/chahuadev/chahuadev-fix-comments/issues) | [ Request Feature](https://github.com/chahuadev/chahuadev-fix-comments/issues)
 
 [![GitHub stars](https://img.shields.io/github/stars/chahuadev/chahuadev-fix-comments.svg?style=social&label=Star)](https://github.com/chahuadev/chahuadev-fix-comments)
 [![GitHub forks](https://img.shields.io/github/forks/chahuadev/chahuadev-fix-comments.svg?style=social&label=Fork)](https://github.com/chahuadev/chahuadev-fix-comments/fork)

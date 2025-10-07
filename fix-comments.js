@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 // ======================================================================
-// Universal Comment Fixer 3.0.0-beta/เครื่องมือแก้ไขคอมเมนต์สากล v3.0.0-beta
+// Universal Comment Fixer 3.0.1-beta/เครื่องมือแก้ไขคอมเมนต์สากล v3.0.1-beta
 // ======================================================================
 
 // @author บริษัท ชาหัว ดีเวลลอปเมนต์ จำกัด (Chahua Development Co., Ltd.)
-// @version v3.0.0-beta
+// @version v3.0.1-beta
 // @description Professional comment standardization tool with AI-friendly format
 // @security_features Path Traversal Protection, File Size Limits, Symlink Protection
 
@@ -8087,7 +8087,7 @@ function organizeCodeByZones(content) {
 function showHelp() {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                 Universal Comment Fixer Tool v3.0.0-beta                   ║
+║                 Universal Comment Fixer Tool v3.0.1-beta                   ║
 ║          Professional Comment Standardization for JS/TS Projects            ║
 ║               FINAL BETA - No more beta updates after this                ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -8165,7 +8165,7 @@ SECURITY WARNINGS:
 // Show version/แสดงเวอร์ชัน
 // ======================================================================
 function showVersion() {
-    console.log('Universal Comment Fixer Tool v3.0.0-beta');
+    console.log('Universal Comment Fixer Tool v3.0.1-beta');
     console.log('Professional Comment Standardization Tool for JavaScript/TypeScript Projects');
     console.log(' FINAL BETA RELEASE - No more beta updates after this version');
     console.log('Copyright (c) 2025 Chahua Development Co., Ltd.');
@@ -8862,7 +8862,7 @@ function main() {
     }
 
     // เริ่มประมวลผล
-    console.log(` Starting Code Magician v3.0.0-beta...`);
+    console.log(` Starting Code Magician v3.0.1-beta...`);
     console.log(` Beta Release - Help us improve with your feedback!`);
     console.log(`Target: ${target}`);
     console.log(`Mode: ${options.dryRun ? 'DRY RUN' : 'LIVE'}`);

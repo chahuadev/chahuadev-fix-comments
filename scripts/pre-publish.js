@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Pre-publish validation script for v3.0.0-beta (FINAL BETA)
+// Pre-publish validation script for v3.0.1-beta (FINAL BETA)
 // ตรวจสอบก่อน publish ขึ้น NPM สำหรับเวอร์ชัน Final Beta
 
 const fs = require('fs');
@@ -15,7 +15,7 @@ try {
     process.exit(1);
 }
 
-console.log(' Pre-publish validation for FINAL BETA v3.0.0-beta...\n');
+console.log(' Pre-publish validation for FINAL BETA v3.0.1-beta...\n');
 
 // ตรวจสอบไฟล์สำคัญสำหรับ Final Beta release
 const requiredFiles = [
@@ -82,10 +82,10 @@ try {
 
     // Test --version command
     const versionOutput = execSync('node fix-comments.js --version', { encoding: 'utf8' });
-    if (versionOutput.includes('v3.0.0-beta')) {
-        console.log(' Version command works (Final Beta v3.0.0-beta detected)');
+    if (versionOutput.includes('v3.0.1-beta')) {
+        console.log(' Version command works (Final Beta v3.0.1-beta detected)');
     } else {
-        console.log(' Version output incorrect - should show v3.0.0-beta');
+        console.log(' Version output incorrect - should show v3.0.1-beta');
         allValid = false;
     }
 
@@ -104,7 +104,7 @@ try {
 }
 
 // Test Final Beta functions
-console.log(' Testing Final Beta v3.0.0-beta functions...');
+console.log(' Testing Final Beta v3.0.1-beta functions...');
 try {
     if (typeof fixComments.EnhancedPatternDetector === 'function') {
         console.log(' EnhancedPatternDetector class available');
