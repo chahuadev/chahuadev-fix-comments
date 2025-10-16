@@ -197,21 +197,21 @@ Increases bilingual feature test coverage to 95%.
 
 ### Do's
 
-- ✅ Keep commits atomic (one logical change per commit)
-- ✅ Write clear, descriptive subject lines
-- ✅ Explain the reasoning behind changes in the body
-- ✅ Reference relevant issues and pull requests
-- ✅ Use consistent formatting and terminology
-- ✅ Write commit messages for future maintainers
+-  Keep commits atomic (one logical change per commit)
+-  Write clear, descriptive subject lines
+-  Explain the reasoning behind changes in the body
+-  Reference relevant issues and pull requests
+-  Use consistent formatting and terminology
+-  Write commit messages for future maintainers
 
 ### Don'ts
 
-- ❌ Don't write vague messages like "fix stuff" or "update code"
-- ❌ Don't include file names in the subject (use scope instead)
-- ❌ Don't exceed character limits (50 for subject, 72 for body)
-- ❌ Don't commit unrelated changes together
-- ❌ Don't use past tense ("fixed" instead of "fix")
-- ❌ Don't commit commented-out code or debug logs
+-  Don't write vague messages like "fix stuff" or "update code"
+-  Don't include file names in the subject (use scope instead)
+-  Don't exceed character limits (50 for subject, 72 for body)
+-  Don't commit unrelated changes together
+-  Don't use past tense ("fixed" instead of "fix")
+-  Don't commit commented-out code or debug logs
 
 ## Git Workflow Integration
 

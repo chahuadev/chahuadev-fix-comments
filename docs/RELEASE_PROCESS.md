@@ -90,7 +90,7 @@ MAJOR.MINOR.PATCH-beta
 #### Development Completion
 - [ ] All planned features implemented and tested
 - [ ] Code review completed for all changes
-- [ ] Unit test coverage ≥ 90%
+- [ ] Unit test coverage  90%
 - [ ] Integration tests passing
 - [ ] Bilingual features tested and verified
 - [ ] Translation quality assured
@@ -188,7 +188,7 @@ gh release create v1.0.0 --title "Version 1.0.0 - Stable Release" --notes-file R
 ### Automated Quality Gates
 
 #### Test Coverage Requirements
-- **Unit Tests**: ≥ 90% line coverage
+- **Unit Tests**:  90% line coverage
 - **Integration Tests**: All critical paths covered
 - **Bilingual Tests**: 100% pass rate for language features
 - **Performance Tests**: No regressions > 10%

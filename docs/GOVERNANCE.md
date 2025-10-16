@@ -66,7 +66,7 @@ This document outlines the governance structure, decision-making processes, and 
 ### Decision Process
 
 ```
-Proposal → Discussion → Review → Decision → Implementation
+Proposal  Discussion  Review  Decision  Implementation
 ```
 
 #### 1. Proposal Phase

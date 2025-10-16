@@ -70,8 +70,8 @@ The Chahuadev Fix Comments Tool is designed as a sophisticated code analysis and
 #### Parser Pipeline
 
 ```
-Source Code → Lexical Analysis → Syntax Analysis → 
-AST Generation → Symbol Table → Type Inference → Analysis
+Source Code  Lexical Analysis  Syntax Analysis  
+AST Generation  Symbol Table  Type Inference  Analysis
 ```
 
 #### AST Node Processing
@@ -202,8 +202,8 @@ interface TemplateEngine {
 #### Processing Pipeline
 
 ```
-Input Files → File Validation → AST Parsing → Analysis → 
-Comment Generation → Code Modification → Backup Creation → Output
+Input Files  File Validation  AST Parsing  Analysis  
+Comment Generation  Code Modification  Backup Creation  Output
 ```
 
 #### Safe File Modification
@@ -253,7 +253,7 @@ interface BackupManager {
 #### Configuration Hierarchy
 
 ```
-Default Config → Project Config → User Config → CLI Arguments
+Default Config  Project Config  User Config  CLI Arguments
 ```
 
 #### Configuration Schema
